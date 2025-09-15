@@ -451,11 +451,11 @@ def oceanbase_text_search(
         f"Calling tool: oceanbase_text_search  with arguments: {table_name}, {full_text_search_column_name}, {full_text_search_expr}"
     )
     client = ObVecClient(
-            uri=db_conn_info.host + ":" + str(db_conn_info.port),
-            user=db_conn_info.user,
-            password=db_conn_info.password,
-            db_name=db_conn_info.database,
-        )
+        uri=db_conn_info.host + ":" + str(db_conn_info.port),
+        user=db_conn_info.user,
+        password=db_conn_info.password,
+        db_name=db_conn_info.database,
+    )
     where_clause = [MatchAgainst(full_text_search_expr, *full_text_search_column_name)]
     for item in other_where_clause or []:
         where_clause.append(text(item))
@@ -501,11 +501,11 @@ def oceabase_vector_search(
         f"Calling tool: oceabase_vector_search  with arguments: {table_name}, {vector_data[:10]}, {vec_column_name}"
     )
     client = ObVecClient(
-            uri=db_conn_info.host + ":" + str(db_conn_info.port),
-            user=db_conn_info.user,
-            password=db_conn_info.password,
-            db_name=db_conn_info.database,
-        )
+        uri=db_conn_info.host + ":" + str(db_conn_info.port),
+        user=db_conn_info.user,
+        password=db_conn_info.password,
+        db_name=db_conn_info.database,
+    )
     match distance_func:
         case "l2":
             search_distance_func = l2_distance
@@ -560,11 +560,11 @@ def oceanbase_hybrid_search(
         ,{filter_expr}"""
     )
     client = ObVecClient(
-            uri=db_conn_info.host + ":" + str(db_conn_info.port),
-            user=db_conn_info.user,
-            password=db_conn_info.password,
-            db_name=db_conn_info.database,
-        )
+        uri=db_conn_info.host + ":" + str(db_conn_info.port),
+        user=db_conn_info.user,
+        password=db_conn_info.password,
+        db_name=db_conn_info.database,
+    )
     match distance_func.lower():
         case "l2":
             search_distance_func = l2_distance
