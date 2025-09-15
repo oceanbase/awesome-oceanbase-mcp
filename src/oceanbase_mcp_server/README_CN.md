@@ -100,10 +100,10 @@ OB_DATABASE=your_database
 }
 ```
 ### SSE 模式
-在 mcp-oceanbase/src/oceanbase_mcp_server 目录下，执行下面的命令，端口号是可配置的。<br>
-'--transport'： MCP 的传输模式，stdio 或者 sse，默认是 stdio<br>
-'--host'： sse 模式绑定的 host，默认是 127.0.0.1，也就是只能本机访问，如果需要远程访问，可以设置为 0.0.0.0<br>
-'--port'： sse 模式监听的端口，默认是 8000
+在 mcp-oceanbase/src/oceanbase_mcp_server 目录下，执行下面的命令，端口号是可配置的。  
+'--transport'： MCP 的传输模式，默认是 stdio  
+'--host'： 绑定的 host，默认是 127.0.0.1，也就是只能本机访问，如果需要远程访问，可以设置为 0.0.0.0  
+'--port'： 监听的端口，默认是 8000
 ```bash
 uv run oceanbase_mcp_server --transport sse --port 8000
 ```
@@ -113,16 +113,52 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 sse 模式访问地址示例： `http://ip:port/sse`
 
-#### 鉴权
+### Streamable HTTP 模式
+在 mcp-oceanbase/src/oceanbase_mcp_server 目录下，执行下面的命令，端口号是可配置的。  
+'--transport'： MCP 的传输模式，默认是 stdio  
+'--host'：绑定的 host，默认是 127.0.0.1，也就是只能本机访问，如果需要远程访问，可以设置为 0.0.0.0  
+'--port'：监听的端口，默认是 8000
+```bash
+uv run oceanbase_mcp_server --transport streamable-http --port 8000
+```
+如果不想使用 uv，也可以用下面的方式启动
+```bash
+cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
+```
+Streamable HTTP 模式访问地址示例： `http://ip:port/mcp`
+
+#### VsCode 插件 Cline 的示例配置
+```json
+"streamable-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": "http://ip:port/mcp"
+    }
+```
+#### Cursor 的示例配置
+```json
+"streamable-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp", // “type”: “http” 也是可以的
+      "url": "http://ip:port/mcp"
+    }
+```
+#### CherryStudio 的示例配置
+在 MCP->General->Type 的下拉框中选择 Streamable HTTP (streamableHttp)
+### 鉴权
 可以在环境变量或者 env 文件中配置 ALLOWED_TOKENS 变量，然后在 MCP Client 的请求头中增加“Authorization”: “Bearer \<token\>” 配置。只有携带有效 token 的请求可以访问 MCP 服务，如果有多个
 token，可以使用英文的逗号分隔。  
 示例配置：
 ```
 ALLOWED_TOKENS=tokenOne,tokenTwo
 ``` 
-##### CherryStudio
+#### CherryStudio
 在 MCP->General->Headers 的输入框中增加 `Authorization=Bearer <token>` 的配置
-##### Cursor
+#### Cursor
 在 MCP 的配置文件里，像下面这样配置：
 ```json
 {
@@ -140,7 +176,7 @@ ALLOWED_TOKENS=tokenOne,tokenTwo
   }
 }
 ```
-##### Cline
+#### Cline
 目前 Cline 在请求头增加的配置无法发送到 server 端。  
 可以参考这个 [issue](https://github.com/cline/cline/issues/4391)。
 ### 🧠 AI 记忆系统

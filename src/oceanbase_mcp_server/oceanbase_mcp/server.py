@@ -450,12 +450,11 @@ def oceanbase_text_search(
     logger.info(
         f"Calling tool: oceanbase_text_search  with arguments: {table_name}, {full_text_search_column_name}, {full_text_search_expr}"
     )
-    config = db_conn_info.model_dump()
     client = ObVecClient(
-        uri=config["host"] + ":" + str(config["port"]),
-        user=config["user"],
-        password=config.get("password", ""),
-        db_name=config.get("database", ""),
+        uri=db_conn_info.host + ":" + str(db_conn_info.port),
+        user=db_conn_info.user,
+        password=db_conn_info.password,
+        db_name=db_conn_info.database,
     )
     where_clause = [MatchAgainst(full_text_search_expr, *full_text_search_column_name)]
     for item in other_where_clause or []:
@@ -501,12 +500,11 @@ def oceabase_vector_search(
     logger.info(
         f"Calling tool: oceabase_vector_search  with arguments: {table_name}, {vector_data[:10]}, {vec_column_name}"
     )
-    config = db_conn_info.model_dump()
     client = ObVecClient(
-        uri=config["host"] + ":" + str(config["port"]),
-        user=config["user"],
-        password=config.get("password", ""),
-        db_name=config.get("database", ""),
+        uri=db_conn_info.host + ":" + str(db_conn_info.port),
+        user=db_conn_info.user,
+        password=db_conn_info.password,
+        db_name=db_conn_info.database,
     )
     match distance_func:
         case "l2":
@@ -561,12 +559,11 @@ def oceanbase_hybrid_search(
         f"""Calling tool: oceanbase_hybrid_search  with arguments: {table_name}, {vector_data[:10]}, {vec_column_name}
         ,{filter_expr}"""
     )
-    config = db_conn_info.model_dump()
     client = ObVecClient(
-        uri=config["host"] + ":" + str(config["port"]),
-        user=config["user"],
-        password=config.get("password", ""),
-        db_name=config.get("database", ""),
+        uri=db_conn_info.host + ":" + str(db_conn_info.port),
+        user=db_conn_info.user,
+        password=db_conn_info.password,
+        db_name=db_conn_info.database,
     )
     match distance_func.lower():
         case "l2":
@@ -896,14 +893,14 @@ def main():
         "--transport",
         type=str,
         default="stdio",
-        help="Specify the MCP server transport type as stdio or sse.",
+        help="Specify the MCP server transport type as stdio or sse or streamable-http.",
     )
-    parser.add_argument("--host", default="127.0.0.1", help="SSE Host to bind to")
-    parser.add_argument("--port", type=int, default=8000, help="SSE Port to listen on")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
+    parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
     args = parser.parse_args()
     transport = args.transport
     logger.info(f"Starting OceanBase MCP server with {transport} mode...")
-    if transport == "sse":
+    if transport in {"sse", "streamable-http"}:
         app.settings.host = args.host
         app.settings.port = args.port
     app.run(transport=transport)
