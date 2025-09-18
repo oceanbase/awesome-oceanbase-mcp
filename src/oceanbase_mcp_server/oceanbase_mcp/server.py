@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from typing import Optional, List, Tuple
+from typing import Optional, List
 from urllib import request, error
 import json
 import argparse
