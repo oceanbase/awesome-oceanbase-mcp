@@ -663,7 +663,7 @@ if ENABLE_MEMORY:
 
     ob_memory = OBMemory()
 
-    def ob_memory_query(query: str, topk: int = 5) -> List[Tuple[int, str]]:
+    def ob_memory_query(query: str, topk: int = 5) -> str:
         """
         🚨 MULTILINGUAL MEMORY SEARCH 🚨 - SMART CROSS-LANGUAGE RETRIEVAL!
 
@@ -705,7 +705,7 @@ if ENABLE_MEMORY:
         📝 PARAMETERS:
         - query: Use CATEGORY + SEMANTIC keywords ("sports preference", "food drink preference")
         - topk: Increase to 8-10 for thorough category analysis before saving/updating
-        - Returns: [(mem_id, content)] - Analyze ALL results for category overlap before decisions!
+        - Returns: JSON string with [{"mem_id": int, "content": str}] format - Analyze ALL results for category overlap before decisions!
 
         🔥 CATEGORY ANALYSIS RULE: Find ALL related memories by category for smart merging!
         """
@@ -724,7 +724,10 @@ if ENABLE_MEMORY:
             topk=topk,
             output_column_names=["mem_id", "content"],
         )
-        return res
+        results = []
+        for row in res.fetchall():
+            results.append({"mem_id": row[0], "content": row[1]})
+        return json.dumps(results)
 
     def ob_memory_insert(content: str, meta: dict):
         """
