@@ -1,6 +1,6 @@
 [project]
 name = "oceanbase-mcp"
-version = "0.0.2"
+version = "0.0.3"
 description = "A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. This server allows AI assistants to list tables, read data, and execute SQL queries through a controlled interface, making database exploration and analysis safer and more structured."
 readme = "README.md"
 license = { file = "LICENSE" }
