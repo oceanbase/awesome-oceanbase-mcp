@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/oceanbase-mcp-oceanbase-badge.png)](https://mseep.ai/app/oceanbase-mcp-oceanbase)
+
 # mcp-oceanbase
 
 MCP Server for OceanBase database and its tools
