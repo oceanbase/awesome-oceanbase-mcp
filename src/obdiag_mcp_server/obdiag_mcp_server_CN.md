@@ -17,6 +17,22 @@ obdiag (OceanBase Diagnostic Tool) MCP Server.
 
 [obdiag 安装文档](https://www.oceanbase.com/docs/common-obdiag-cn-1000000003892386)
 
+## 启动
+### 通过uvx安装
+```shell
+uvx obdiag_mcp
+```
+### 支持多种类型的mcp
+可通过如下指令启动不同协议的 obdiag mcp
+
+```shell
+obdiag_mcp sse # sse 模式，默认端口 8000。 （推荐使用）
+obdiag_mcp stdio # stdio 模式
+obdiag_mcp sse 8001 # sse 模式，指定端口 8001
+obdiag_mcp streamable-http # streamable-http 模式，默认端口 8000
+obdiag_mcp streamable-http 8001 # streamable-http 模式，指定端口 8001
+```
+
 ## 使用方式
 
 配合 MCP Client 使用，必须使用支持 Prompt 的客户端，如：Claude Desktop。输入请求前需要手动选取所需的 Prompt，然后输入请求。
@@ -31,21 +47,6 @@ Claude Desktop config example:
     }
   }
 }
-```
-## 安装及启动
-### 从pip安装及启动
-```shell
-pip install obdiag-mcp
-```
-### 支持多种类型的mcp
-可通过如下指令启动不同协议的 obdiag mcp
-
-```shell
-obdiag-mcp stdio # stdio 模式
-obdiag-mcp sse # sse 模式，默认端口 8000
-obdiag-mcp sse 8001 # sse 模式，指定端口 8001
-obdiag-mcp streamable-http # streamable-http 模式，默认端口 8000
-obdiag-mcp streamable-http 8001 # streamable-http 模式，指定端口 8001
 ```
 
 

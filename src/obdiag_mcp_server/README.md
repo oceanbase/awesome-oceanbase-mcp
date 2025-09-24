@@ -17,6 +17,26 @@ For obdiag installation, please refer to:
 
 [obdiag Installation Documentation](https://www.oceanbase.com/docs/common-obdiag-cn-1000000003892386)
 
+## Startup
+
+### Install via uvx
+
+```shell
+uvx obdiag_mcp
+```
+
+### Support for multiple types of MCP
+
+You can start obdiag MCP with different protocols using the following commands:
+
+```shell
+obdiag_mcp sse # sse mode, default port 8000 (recommended)
+obdiag_mcp stdio # stdio mode
+obdiag_mcp sse 8001 # sse mode, specify port 8001
+obdiag_mcp streamable-http # streamable-http mode, default port 8000
+obdiag_mcp streamable-http 8001 # streamable-http mode, specify port 8001
+```
+
 ## Usage
 
 Use with MCP Client, must use a client that supports Prompts, such as: Claude Desktop. Before entering a request, you need to manually select the required Prompt, then enter the request.
@@ -31,26 +51,6 @@ Claude Desktop config example:
     }
   }
 }
-```
-
-## Installation and Startup
-
-### Install from pip and start
-
-```shell
-pip install obdiag-mcp
-```
-
-### Support for multiple types of MCP
-
-You can start obdiag MCP with different protocols using the following commands:
-
-```shell
-obdiag-mcp stdio # stdio mode
-obdiag-mcp sse # sse mode, default port 8000
-obdiag-mcp sse 8001 # sse mode, specify port 8001
-obdiag-mcp streamable-http # streamable-http mode, default port 8000
-obdiag-mcp streamable-http 8001 # streamable-http mode, specify port 8001
 ```
 
 ## Available Tools
