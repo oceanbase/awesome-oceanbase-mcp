@@ -21,13 +21,14 @@ def read_readme():
 def get_requirements():
     requirements = []
     try:
+        # tomllib is available in Python 3.11+
         import tomllib
 
         with open("pyproject.toml", "rb") as f:
             data = tomllib.load(f)
             requirements = data.get("project", {}).get("dependencies", [])
     except ImportError:
-        # Fallback for Python < 3.11
+        # Fallback for Python 3.10
         try:
             import tomli as tomllib
 
@@ -35,7 +36,7 @@ def get_requirements():
                 data = tomllib.load(f)
                 requirements = data.get("project", {}).get("dependencies", [])
         except ImportError:
-            # Manual fallback
+            # Manual fallback for Python 3.10
             requirements = [
                 "fastmcp>=1.0",
                 "uvicorn>=0.27.1",
@@ -45,7 +46,7 @@ def get_requirements():
 
 setup(
     name="obdiag-mcp",
-    version="0.0.1",
+    version="0.0.3",
     description="OBDiag MCP Server - Model Context Protocol server for OceanBase Diagnostic Tool",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
@@ -60,6 +61,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Topic :: Database",
@@ -74,7 +76,7 @@ setup(
         "database",
         "monitoring",
     ],
-    python_requires=">=3.11",
+    python_requires=">=3.10",
     install_requires=get_requirements(),
     extras_require={
         "dev": [

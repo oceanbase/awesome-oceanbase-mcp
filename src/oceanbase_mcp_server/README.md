@@ -11,6 +11,7 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 - Execute SQL queries with proper error handling
 - AI Memory System
 - Full text search, vector search and hybrid search
+- Authorization
 - Secure database access through environment variables
 - Comprehensive logging
 
@@ -101,9 +102,9 @@ Add the following content to the configuration file that supports the MCP server
 ```
 ### SSE Mode
 Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.  
-'--transport': MCP server transport type as stdio or sse, default is stdio  
-'--host': sse Host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0  
-'--port': sse port to listen on, default is 8000
+'--transport': MCP server transport type, default is stdio  
+'--host': host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0  
+'--port': port to listen on, default is 8000
 ```bash
 uv run oceanbase_mcp_server --transport sse --port 8000
 ```
@@ -113,6 +114,72 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 The URL address for the general SSE mode configuration is `http://ip:port/sse`
 
+### Streamable HTTP
+Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.  
+'--transport': MCP server transport type, default is stdio  
+'--host': host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0  
+'--port': port to listen on, default is 8000
+```bash
+uv run oceanbase_mcp_server --transport streamable-http --port 8000
+```
+If you don't want to use uv, you can start it in the following way
+```bash
+cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
+```
+The URL address for the general Streamable HTTP mode configuration is `http://ip:port/mcp`
+
+#### VSCode Extension Cline Sample Configuration
+```json
+"streamable-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": "http://ip:port/mcp"
+    }
+```
+#### Cursor Sample Configuration
+```json
+"streamable-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp", // “type”: “http” is also acceptable
+      "url": "http://ip:port/mcp"
+    }
+```
+#### Cherry Studio Sample Configuration
+MCP->General->Type, select Streamable HTTP (streamableHttp) from the dropdown menu.
+
+### Authorization
+The ALLOWED_TOKENS variable can be configured in environment variables or an env file. Then, add “Authorization”: “Bearer \<token\>” to the request header of the MCP Client. Only requests carrying a valid token can access the MCP server service. Multiple tokens can be separated by commas.  
+For Example:
+```
+ALLOWED_TOKENS=tokenOne,tokenTwo
+``` 
+#### CherryStudio 
+Add `Authorization=Bearer <token>` to the MCP->General->Headers input field.
+#### Cursor
+In the MCP configuration file, configure it as follows:
+```json
+{
+  "mcpServers": {
+    "ob-sse": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "sse",
+      "url": "http://ip:port/sse",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      }
+    }
+  }
+}
+```
+#### Cline
+Cline does not support setting Authorization in request headers.  
+You can refer to this [issue](https://github.com/cline/cline/issues/4391).
 
 ### 🧠 AI Memory System
 

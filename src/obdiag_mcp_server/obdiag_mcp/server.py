@@ -22,17 +22,11 @@ mcp = FastMCP("OBDiag MCP Server")
 
 # 确认obdiag是否安装,是否存在 obdiag 命令
 def check_obdiag_installed():
-    try:
-        return shutil.which("obdiag") is not None
-    except ImportError:
-        return False
+    return shutil.which("obdiag") is not None
 
 
 def check_config_exist():
-    try:
-        return Path(os.path.expanduser("~/.obdiag/config.yml")).exists()
-    except ImportError:
-        return False
+    return Path(os.path.expanduser("~/.obdiag/config.yml")).exists()
 
 
 def run_obdiag_command(command: str, silent=True) -> str:
@@ -44,7 +38,7 @@ def run_obdiag_command(command: str, silent=True) -> str:
     """
     try:
         if silent:
-            command += " --inner_config obdiag.logger.silent=Ture"
+            command += " --inner_config obdiag.logger.silent=True"
         else:
             pass
         # 使用 subprocess 执行命令
@@ -144,7 +138,7 @@ def main():
             mcp.run(transport="sse", host="0.0.0.0", port=8000, path="/mcp")
     else:
         print("run mcp with streamable-http")
-        if len(sys.argv) > 1:
+        if len(sys.argv) > 2:
             mcp.run(
                 transport="streamable-http",
                 host="0.0.0.0",
