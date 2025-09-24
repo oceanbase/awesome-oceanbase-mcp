@@ -1,12 +1,38 @@
-# mcp-oceanbase
+# obdiag MCP Server
 
-MCP Server for OBDiag (OceanBase Diagnostic Tool).
+obdiag (OceanBase Diagnostic Tool) MCP Server.
 
 English | [简体中文](obdiag_mcp_server_CN.md)
 
+## Prerequisites
+
+Before using the obdiag MCP Server, please ensure:
+
+1. **obdiag is installed**: The server requires obdiag to be installed and accessible via the `obdiag` command.
+2. **Configuration file exists**: The obdiag configuration file should exist at `~/.obdiag/config.yml`.
+
+For obdiag installation, please refer to:
+
+[obdiag Download Link](https://www.oceanbase.com/softwarecenter)
+
+[obdiag Installation Documentation](https://www.oceanbase.com/docs/common-obdiag-cn-1000000003892386)
+
+## Startup
+### Support for multiple types of MCP
+
+You can start obdiag MCP with different protocols using the following commands:
+
+```shell
+uvx obdiag-mcp sse # sse mode, default port 8000 (recommended)
+uvx obdiag-mcp stdio # stdio mode
+uvx obdiag-mcp sse 8001 # sse mode, specify port 8001
+uvx obdiag-mcp streamable-http # streamable-http mode, default port 8000
+uvx obdiag-mcp streamable-http 8001 # streamable-http mode, specify port 8001
+```
+
 ## Usage
 
-To use with the MCP Client, it is necessary to utilize a client that supports Prompt, such as Claude Desktop. Before entering a request, you need to manually select the desired Prompt and then input your request.
+Use with MCP Client, must use a client that supports Prompts, such as: Claude Desktop. Before entering a request, you need to manually select the required Prompt, then enter the request.
 
 Claude Desktop config example:
 
@@ -20,44 +46,21 @@ Claude Desktop config example:
 }
 ```
 
-## Supporting Multiple MCP Types
-
-You can start the obdiag mcp with different protocols using the following commands:
-
-```shell
-cd src/obdiag_mcp_server
-python server.py stdio # stdio mode
-python server.py sse # sse mode, default port 8000
-python server.py sse 8001 # sse mode, specify port 8001
-python server.py streamable-http # streamable-http mode, default port 8000
-python server.py streamable-http 8001 # streamable-http mode, specify port 8001
-```
-
-
-## Prerequisites
-
-Before using the OBDiag MCP Server, ensure that:
-
-1. **OBDiag is installed**: The server requires OBDiag to be installed and accessible via the `obdiag` command.
-2. **Configuration file exists**: The OBDiag configuration file should be present at `~/.obdiag/config.yml`.
-
 ## Available Tools
 
-The OBDiag MCP Server provides the following diagnostic tools:
+The obdiag MCP Server provides the following diagnostic tools:
 
-- **obdiag_check_run**: Performs cluster inspection and returns inspection reports
-- **obdiag_analyze_log**: Analyzes cluster logs to identify error messages
-- **obdiag_display_list**: Queries available diagnostic commands and returns the list of supported commands
-- **obdiag_display_run**: Executes specific diagnostic commands with optional environment variables
+- **obdiag_check_run**: Execute cluster inspection and return inspection report
+- **obdiag_analyze_log**: Analyze cluster logs to find error messages that have occurred
+- **obdiag_display_list**: Query available diagnostic commands and return supported command list
+- **obdiag_display_run**: Execute specific diagnostic commands with optional environment variables
 
 ## Community
 
-Don't hesitate to ask!
+When you need help, you can find developers and other community partners at [https://ask.oceanbase.com](https://ask.oceanbase.com).
 
-Contact the developers and community at [https://ask.oceanbase.com](https://ask.oceanbase.com) if you need any help.
+When you discover project defects, please create a new issue on the [issues](https://github.com/oceanbase/mcp-oceanbase/issues) page.
 
-[Open an issue](https://github.com/oceanbase/mcp-oceanbase/issues) if you found a bug.
+## License
 
-## Licensing
-
-See [LICENSE](../LICENSE) for more information. 
+For more information, see [LICENSE](../LICENSE).
