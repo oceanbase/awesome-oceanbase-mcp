@@ -18,23 +18,16 @@ For obdiag installation, please refer to:
 [obdiag Installation Documentation](https://www.oceanbase.com/docs/common-obdiag-cn-1000000003892386)
 
 ## Startup
-
-### Install via uvx
-
-```shell
-uvx obdiag_mcp
-```
-
 ### Support for multiple types of MCP
 
 You can start obdiag MCP with different protocols using the following commands:
 
 ```shell
-obdiag_mcp sse # sse mode, default port 8000 (recommended)
-obdiag_mcp stdio # stdio mode
-obdiag_mcp sse 8001 # sse mode, specify port 8001
-obdiag_mcp streamable-http # streamable-http mode, default port 8000
-obdiag_mcp streamable-http 8001 # streamable-http mode, specify port 8001
+uvx obdiag-mcp sse # sse mode, default port 8000 (recommended)
+uvx obdiag-mcp stdio # stdio mode
+uvx obdiag-mcp sse 8001 # sse mode, specify port 8001
+uvx obdiag-mcp streamable-http # streamable-http mode, default port 8000
+uvx obdiag-mcp streamable-http 8001 # streamable-http mode, specify port 8001
 ```
 
 ## Usage
