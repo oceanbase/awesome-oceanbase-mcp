@@ -1,68 +1,109 @@
-English | [简体中文](README_CN.md)<br>
+English | [简体中文](README_CN.md)  
+
 # OceanBase MCP Server
 
-A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. 
-This server allows AI assistants to list tables, read data, and execute SQL queries through a controlled interface, making database exploration and analysis safer and more structured.
+A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. This server allows AI assistants to list tables, read data, and execute SQL queries through a controlled interface, making database exploration and analysis safer and more structured.
 
-## Features
+## 📋 Table of Contents
 
-- List available OceanBase tables as resources
-- Read table contents
-- Execute SQL queries with proper error handling
-- AI Memory System
-- Full text search, vector search and hybrid search
-- Authorization
-- Secure database access through environment variables
-- Comprehensive logging
+- [Features](#-features)
+- [Available Tools](#-available-tools)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+  - [From Source Code](#from-source-code)
+  - [From PyPI Repository](#from-pypi-repository)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+  - [Stdio Mode](#stdio-mode)
+  - [SSE Mode](#sse-mode)
+  - [Streamable HTTP](#streamable-http)
+- [Authorization](#-authorization)
+- [AI Memory System](#-ai-memory-system)
+- [Examples](#-examples)
+- [Security](#-security)
+- [License](#-license)
+- [Contributing](#-contributing)
 
-## Tools
-- [✔️] Execute SQL queries
-- [✔️] Get current tenant
-- [✔️] Get all server nodes (sys tenant only)
-- [✔️] Get resource capacity (sys tenant only)
-- [✔️] Get [ASH](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002013776) report
-- [✔️] Search OceanBase document from official website(experimental)  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This tool is experimental because the API on the official website may change.
-- [✔️] Simple memory based on OB Vector(experimental)
-- [✔️] Search for documents using full text search in an OceanBase table
-- [✔️] Perform vector similarity search on an OceanBase table
-- [✔️] Perform hybird search combining relational condition filtering(that is, scalar) and vector search
-## Prerequisites
-You need to have an Oceanbase database, you can refer to [this documentation](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003378290) to install or use [OceanBase Cloud](https://www.oceanbase.com/free-trial) for free trial.
+## ✨ Features
 
-## Install from source code
+- **Database Operations**: List tables, read data, execute SQL queries
+- **AI Memory System**: Persistent vector-based memory powered by OceanBase
+- **Advanced Search**: Full text search, vector search, and hybrid search
+- **Security**: Authorization support and secure database access
+- **Monitoring**: Comprehensive logging and ASH reports
+- **Multi-Transport**: Support for stdio, SSE, and Streamable HTTP modes
 
-### Clone the repository
+## 🛠️ Available Tools
+
+### Core Database Tools
+- [✔️] **Execute SQL queries** - Run custom SQL commands
+- [✔️] **Get current tenant** - Retrieve current tenant information
+- [✔️] **Get all server nodes** - List all server nodes (sys tenant only)
+- [✔️] **Get resource capacity** - View resource capacity (sys tenant only)
+- [✔️] **Get ASH report** - Generate [Active Session History](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002013776) reports
+
+### Search & Memory Tools
+- [✔️] **Search OceanBase documents** - Search official documentation (experimental)
+- [✔️] **AI Memory System** - Vector-based persistent memory (experimental)
+- [✔️] **Full text search** - Search documents in OceanBase tables
+- [✔️] **Vector similarity search** - Perform vector-based similarity searches
+- [✔️] **Hybrid search** - Combine relational filtering with vector search
+
+> **Note**: Experimental tools may have API changes as they evolve.
+## 📋 Prerequisites
+
+You need to have an OceanBase database. You can:
+- **Install locally**: Refer to [this documentation](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003378290)
+- **Use OceanBase Cloud**: Try [OceanBase Cloud](https://www.oceanbase.com/free-trial) for free
+
+## 🚀 Installation
+
+### From Source Code
+
+#### 1. Clone the repository
 ```bash
-git clone https://github.com/oceanbase/mcp-oceanbase.git
-cd mcp-oceanbase/src/oceanbase_mcp_server
+git clone https://github.com/oceanbase/awesome-oceanbase-mcp.git
+cd awesome-oceanbase-mcp/src/oceanbase_mcp_server
 ```
-### Install the Python package manager uv and create virtual environment
+
+#### 2. Install Python package manager and create virtual environment
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv
 source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
 ```
-### If you configure the OceanBase connection information using .env file. You should copy .env.template to .env and modify .env
+
+#### 3. Configure environment (optional)
+If you want to use `.env` file for configuration:
 ```bash
 cp .env.template .env
+# Edit .env with your OceanBase connection details
 ```
-### If the dependency packages cannot be downloaded via uv due to network issues, you can change the mirror source to the Alibaba Cloud mirror source.
+
+#### 4. Handle network issues (optional)
+If you encounter network issues with uv, use Alibaba Cloud mirror:
 ```bash
 export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
 ```
-### Install dependencies
+
+#### 5. Install dependencies
 ```bash
 uv pip install .
 ```
-## Install from PyPI Repository
-If you wish to use it via pip install, please execute the following command.
+
+### From PyPI Repository
+
+For quick installation via pip:
 ```bash
 uv pip install oceanbase-mcp
 ```
-## Configuration
-There are two ways to configure the connection information of OceanBase
-1. Set the following environment variables:
+
+## ⚙️ Configuration
+
+There are two ways to configure OceanBase connection information:
+
+### Method 1: Environment Variables
+Set the following environment variables:
 
 ```bash
 OB_HOST=localhost     # Database host
@@ -71,12 +112,16 @@ OB_USER=your_username
 OB_PASSWORD=your_password
 OB_DATABASE=your_database
 ```
-2. Configure in the .env file
-## Usage
+
+### Method 2: .env File
+Configure in the `.env` file (copy from `.env.template` and modify as needed).
+## 🚀 Usage
+
+The OceanBase MCP Server supports three transport modes:
 
 ### Stdio Mode
 
-Add the following content to the configuration file that supports the MCP server client:
+Add the following content to your MCP client configuration file:
 
 ```json
 {
@@ -100,67 +145,84 @@ Add the following content to the configuration file that supports the MCP server
   }
 }
 ```
+
 ### SSE Mode
-Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.  
-'--transport': MCP server transport type, default is stdio  
-'--host': host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0  
-'--port': port to listen on, default is 8000
+
+Start the server in SSE mode:
+
 ```bash
 uv run oceanbase_mcp_server --transport sse --port 8000
 ```
-If you don't want to use uv, you can start it in the following way
+
+**Parameters:**
+- `--transport`: MCP server transport type (default: stdio)
+- `--host`: Host to bind to (default: 127.0.0.1, use 0.0.0.0 for remote access)
+- `--port`: Port to listen on (default: 8000)
+
+**Alternative startup (without uv):**
 ```bash
 cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
-The URL address for the general SSE mode configuration is `http://ip:port/sse`
+
+**Configuration URL:** `http://ip:port/sse`
 
 ### Streamable HTTP
-Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.  
-'--transport': MCP server transport type, default is stdio  
-'--host': host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0  
-'--port': port to listen on, default is 8000
+
+Start the server in Streamable HTTP mode:
+
 ```bash
 uv run oceanbase_mcp_server --transport streamable-http --port 8000
 ```
-If you don't want to use uv, you can start it in the following way
+
+**Alternative startup (without uv):**
 ```bash
 cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
 ```
-The URL address for the general Streamable HTTP mode configuration is `http://ip:port/mcp`
 
-#### VSCode Extension Cline Sample Configuration
+**Configuration URL:** `http://ip:port/mcp`
+
+#### Client Configuration Examples
+
+**VSCode Extension Cline:**
 ```json
 "streamable-ob": {
-      "autoApprove": [],
-      "disabled": false,
-      "timeout": 60,
-      "type": "streamableHttp",
-      "url": "http://ip:port/mcp"
-    }
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "streamableHttp",
+  "url": "http://ip:port/mcp"
+}
 ```
-#### Cursor Sample Configuration
+
+**Cursor:**
 ```json
 "streamable-ob": {
-      "autoApprove": [],
-      "disabled": false,
-      "timeout": 60,
-      "type": "streamableHttp", // “type”: “http” is also acceptable
-      "url": "http://ip:port/mcp"
-    }
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "streamableHttp", // "type": "http" is also acceptable
+  "url": "http://ip:port/mcp"
+}
 ```
-#### Cherry Studio Sample Configuration
-MCP->General->Type, select Streamable HTTP (streamableHttp) from the dropdown menu.
 
-### Authorization
-The ALLOWED_TOKENS variable can be configured in environment variables or an env file. Then, add “Authorization”: “Bearer \<token\>” to the request header of the MCP Client. Only requests carrying a valid token can access the MCP server service. Multiple tokens can be separated by commas.  
-For Example:
-```
+**Cherry Studio:**
+- MCP → General → Type: Select "Streamable HTTP (streamableHttp)" from dropdown
+
+## 🔐 Authorization
+
+Configure the `ALLOWED_TOKENS` variable in environment variables or `.env` file. Add `"Authorization": "Bearer <token>"` to the MCP Client request header. Only requests with valid tokens can access the MCP server service.
+
+**Example:**
+```bash
 ALLOWED_TOKENS=tokenOne,tokenTwo
-``` 
-#### CherryStudio 
-Add `Authorization=Bearer <token>` to the MCP->General->Headers input field.
-#### Cursor
-In the MCP configuration file, configure it as follows:
+```
+
+### Client Configuration
+
+**Cherry Studio:**
+- Add `Authorization=Bearer <token>` to MCP → General → Headers input field
+
+**Cursor:**
 ```json
 {
   "mcpServers": {
@@ -177,11 +239,12 @@ In the MCP configuration file, configure it as follows:
   }
 }
 ```
-#### Cline
-Cline does not support setting Authorization in request headers.  
-You can refer to this [issue](https://github.com/cline/cline/issues/4391).
 
-### 🧠 AI Memory System
+**Cline:**
+- Cline does not support setting Authorization in request headers
+- Refer to this [issue](https://github.com/cline/cline/issues/4391) for updates
+
+## 🧠 AI Memory System
 
 **Experimental Feature**: Transform your AI assistant with persistent vector-based memory powered by OceanBase's advanced vector capabilities.
 
@@ -192,7 +255,7 @@ The memory system enables your AI to maintain continuous context across conversa
 - **`ob_memory_delete`** - Remove outdated or unwanted memories
 - **`ob_memory_update`** - Evolve memories with new information over time
 
-#### 🚀 Quick Setup
+### 🚀 Quick Setup
 
 Memory tools are **disabled by default** to avoid the initial embedding model download (0.5~4 GiB). Enable intelligent memory with these environment variables:
 
@@ -202,7 +265,7 @@ EMBEDDING_MODEL_NAME=BAAI/bge-small-en-v1.5 # default BAAI/bge-small-en-v1.5, Yo
 EMBEDDING_MODEL_PROVIDER=huggingface
 ```
 
-#### 📋 Prerequisites
+### 📋 Prerequisites
 
 **Vector Support**: Requires OceanBase v4.3.5.3+ (vector features enabled by default)
 
@@ -212,18 +275,20 @@ sudo docker run -p 2881:2881 --name obvector -e MODE=mini -d oceanbase/oceanbase
 
 **Legacy Versions**: For older OceanBase versions, manually configure [ob_vector_memory_limit_percentage](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003381620).
 
-#### ⬇️ Dependency Installation
-If you use source code Installation, use the following command to install dependencies
+### ⬇️ Dependency Installation
+
+**Source Code Installation:**
 ```bash
 cd path/to/mcp-oceanbase/src/oceanbase_mcp_server
 uv pip install -r pyproject.toml --extra memory
 ```
-If pip Installation
+
+**PyPI Installation:**
 ```bash
 uv pip install oceanbase-mcp[memory] --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
-#### 💡 Usage Example
+### 💡 Usage Example
 
 Experience the power of cross-session intelligent memory:
 
@@ -245,13 +310,15 @@ AI: 🔍 [Automatically calls ob_memory_query searching "work programming"]
     "You work in Shanghai and primarily use Python for development."
 ```
 
-**🎯 Memory System Benefits**:
+**🎯 Memory System Benefits:**
 - ✅ **Cross-Session Continuity** - No need to reintroduce yourself
 - ✅ **Intelligent Semantic Search** - Understands related concepts and context  
 - ✅ **Personalized Experience** - AI truly "knows" your preferences
 - ✅ **Automatic Capture** - Important information saved without manual effort
-## Examples
-Below are some examples demonstrating the capabilities of Oceanbase MCP Server.
+## 📚 Examples
+
+Below are some examples demonstrating the capabilities of OceanBase MCP Server:
+
 ### Example 1: Listing Tables
 Question:
 ```plaintext
@@ -388,16 +455,11 @@ The record in table `t2` that has a vector close to `[0.1, 0.1, 0.2]` and an age
 (2, 'john', 20, 'I have a pear and an apple', '[0.1,0.1,0.2]', 0.0)
 ```
 
-## Security Considerations
+## 🔒 Security
 
-- Never commit environment variables or credentials
-- Use a database user with minimal required permissions
-- Consider implementing query whitelisting for production use
-- Monitor and log all database operations
+This MCP server requires database access to function. Follow these security best practices:
 
-## Security Best Practices
-
-This MCP server requires database access to function. For security:
+### Essential Security Measures
 
 1. **Create a dedicated OceanBase user** with minimal permissions
 2. **Never use root credentials** or administrative accounts
@@ -405,23 +467,45 @@ This MCP server requires database access to function. For security:
 4. **Enable logging** for audit purposes
 5. **Regular security reviews** of database access
 
+### Security Checklist
+
+- ❌ Never commit environment variables or credentials to version control
+- ✅ Use a database user with minimal required permissions
+- ✅ Consider implementing query whitelisting for production use
+- ✅ Monitor and log all database operations
+- ✅ Use authorization tokens for API access
+
+### Detailed Configuration
+
 See [OceanBase Security Configuration Guide](./SECURITY.md) for detailed instructions on:
 - Creating a restricted OceanBase user
 - Setting appropriate permissions
 - Monitoring database access
 - Security best practices
 
-⚠️ IMPORTANT: Always follow the principle of least privilege when configuring database access.
+> ⚠️ **IMPORTANT**: Always follow the principle of least privilege when configuring database access.
 
-## License
+## 📄 License
 
-Apache License - see LICENSE file for details.
+Apache License - see [LICENSE](LICENSE) file for details.
 
-## Contributing
+## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions! Please follow these steps:
+
+1. **Fork the repository**
+2. **Create your feature branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. **Commit your changes**
+   ```bash
+   git commit -m 'Add some amazing feature'
+   ```
+4. **Push to the branch**
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+5. **Open a Pull Request**
+
 
