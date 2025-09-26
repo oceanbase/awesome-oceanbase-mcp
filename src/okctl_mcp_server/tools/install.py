@@ -73,11 +73,11 @@ def install_okctl():
             return "okctl已经安装"
 
         logger.info("正在安装okctl...")
-        # Note: This installation command contains shell pipes and complex operations
-        # For security reasons, we should avoid executing arbitrary shell commands
-        # Consider using a more secure installation method or manual setup
-        return "Error: okctl installation requires manual setup for security reasons. Please install okctl manually following the official documentation."
-    except Exception as e:
+        cmd = "curl -sL https://raw.githubusercontent.com/oceanbase/ob-operator/master/scripts/install-okctl.sh | bash && chmod +x ./okctl && mv ./okctl /usr/local/bin"
+        subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        logger.info("okctl安装完成")
+        return "okctl安装完成"
+    except subprocess.CalledProcessError as e:
         error_msg = format_error(e)
         logger.error("安装okctl失败: %s", error_msg)
         return f"安装okctl失败: {error_msg}"
