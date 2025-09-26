@@ -2,12 +2,12 @@ import subprocess
 import asyncio
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
+from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
 
 # 租户相关的工具
-
 
 @mcp.tool()
 def list_tenants(namespace: str = "default"):
@@ -17,17 +17,18 @@ def list_tenants(namespace: str = "default"):
         namespace: 命名空间（默认为"default"）
     """
     try:
-        cmd = f"okctl tenant list  -p {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        output = result.stdout
-        if not output.strip():
-            return "没有找到租户"
-        return output
-    except subprocess.CalledProcessError as e:
+        validate_identifier(namespace, "Namespace")
+        success, output = safe_execute_command(["okctl", "tenant", "list", "-p", namespace])
+        if success:
+            if not output.strip():
+                return "没有找到租户"
+            return output
+        else:
+            return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 async def create_tenant(
@@ -97,55 +98,59 @@ async def create_tenant(
     if from_tenant and not root_password:
         return "创建备用租户时，必须指定主租户的root密码"
     try:
-        cmd = f"okctl tenant create {tenant_name} --cluster={cluster} -n {namespace} --priority {priority}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(cluster, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "create", tenant_name, f"--cluster={cluster}", "-n", namespace, "--priority", priority]
 
         # 添加可选参数
         if archive_source:
-            cmd += f" --archive-source {archive_source}"
+            cmd.extend(["--archive-source", archive_source])
         if bak_data_source:
-            cmd += f" --bak-data-source {bak_data_source}"
+            cmd.extend(["--bak-data-source", bak_data_source])
         if bak_encryption_password:
-            cmd += f" --bak-encryption-password {bak_encryption_password}"
+            cmd.extend(["--bak-encryption-password", bak_encryption_password])
         if charset:
-            cmd += f" --charset {charset}"
+            cmd.extend(["--charset", charset])
         if connect_white_list:
-            cmd += f" --connect-white-list {connect_white_list}"
+            cmd.extend(["--connect-white-list", connect_white_list])
         if cpu_count:
-            cmd += f" --cpu-count {cpu_count}"
+            cmd.extend(["--cpu-count", cpu_count])
         if from_tenant:
-            cmd += f" --from {from_tenant}"
+            cmd.extend(["--from", from_tenant])
         if iops_weight is not None:
-            cmd += f" --iops-weight {iops_weight}"
+            cmd.extend(["--iops-weight", str(iops_weight)])
         if log_disk_size:
-            cmd += f" --log-disk-size {log_disk_size}"
+            cmd.extend(["--log-disk-size", log_disk_size])
         if max_iops is not None:
-            cmd += f" --max-iops {max_iops}"
+            cmd.extend(["--max-iops", str(max_iops)])
         if memory_size:
-            cmd += f" --memory-size {memory_size}"
+            cmd.extend(["--memory-size", memory_size])
         if min_iops is not None:
-            cmd += f" --min-iops {min_iops}"
+            cmd.extend(["--min-iops", str(min_iops)])
         if oss_access_id:
-            cmd += f" --oss-access-id {oss_access_id}"
+            cmd.extend(["--oss-access-id", oss_access_id])
         if oss_access_key:
-            cmd += f" --oss-access-key {oss_access_key}"
+            cmd.extend(["--oss-access-key", oss_access_key])
         if restore:
-            cmd += " -r"
+            cmd.append("-r")
         if restore_type:
-            cmd += f" --restore-type {restore_type}"
+            cmd.extend(["--restore-type", restore_type])
         if root_password:
-            cmd += f" --root-password {root_password}"
+            cmd.extend(["--root-password", root_password])
         if tenant_name_override:
-            cmd += f" --tenant-name {tenant_name_override}"
+            cmd.extend(["--tenant-name", tenant_name_override])
         if unit_number is not None:
-            cmd += f" --unit-number {unit_number}"
+            cmd.extend(["--unit-number", str(unit_number)])
         if unlimited is not None:
-            cmd += f" --unlimited={str(unlimited).lower()}"
+            cmd.extend(["--unlimited", str(unlimited).lower()])
         if until_timestamp:
-            cmd += f" --until-timestamp {until_timestamp}"
+            cmd.extend(["--until-timestamp", until_timestamp])
 
         # 执行创建租户命令
-        process = await asyncio.create_subprocess_shell(
-            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        process = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         stdout_bytes, stderr_bytes = await process.communicate()
 
@@ -164,9 +169,8 @@ async def create_tenant(
 
         for i in range(max_retries):
             # 使用 okctl tenant list 检查租户状态
-            check_cmd = f"okctl tenant list -p {namespace} | grep {tenant_name}"
-            check_process = await asyncio.create_subprocess_shell(
-                check_cmd,
+            check_process = await asyncio.create_subprocess_exec(
+                "okctl", "tenant", "list", "-p", namespace,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -176,7 +180,7 @@ async def create_tenant(
             )
 
             # 检查租户是否处于running状态
-            if "running" in check_stdout.lower():
+            if tenant_name in check_stdout and "running" in check_stdout.lower():
                 result += f"\n租户 {tenant_name} 已成功创建并准备就绪！"
                 return result
             # 如果还没准备好，等待一段时间后重试
@@ -185,9 +189,10 @@ async def create_tenant(
         # 如果达到最大重试次数仍未就绪
         result += f"\n警告：租户 {tenant_name} 已创建，但在规定时间内未检测到running状态。请手动检查租户状态。"
         return result
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def delete_tenant(tenant_name: str, namespace: str = "default"):
@@ -198,14 +203,15 @@ def delete_tenant(tenant_name: str, namespace: str = "default"):
         namespace: 命名空间（默认为"default"）
     """
     try:
-        cmd = f"okctl tenant delete {tenant_name} -n {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        success, output = safe_execute_command(["okctl", "tenant", "delete", tenant_name, "-n", namespace])
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def activate_tenant(
@@ -219,16 +225,19 @@ def activate_tenant(
         force: 是否强制激活
     """
     try:
-        cmd = f"okctl tenant activate {standby_tenant_name} -n {namespace}"
+        validate_identifier(standby_tenant_name, "Standby tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "activate", standby_tenant_name, "-n", namespace]
         if force:
-            cmd += " -f"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+            cmd.append("-f")
+        
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def change_tenant_password(
@@ -245,18 +254,19 @@ def change_tenant_password(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = (
-            f"okctl tenant changepwd {tenant_name} --password={password} -n {namespace}"
-        )
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "changepwd", tenant_name, f"--password={password}", "-n", namespace]
         if force:
-            cmd += " -f"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+            cmd.append("-f")
+        
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def replay_tenant_log(
@@ -278,23 +288,25 @@ def replay_tenant_log(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl tenant replaylog {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "replaylog", tenant_name, "-n", namespace]
 
         # 添加可选参数
         if force:
-            cmd += " -f"
+            cmd.append("-f")
         if unlimited is not None:
-            cmd += f" --unlimited={str(unlimited).lower()}"
+            cmd.extend(["--unlimited", str(unlimited).lower()])
         if until_timestamp:
-            cmd += f' --until-timestamp "{until_timestamp}"'
+            cmd.extend(["--until-timestamp", until_timestamp])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def scale_tenant(
@@ -325,33 +337,35 @@ def scale_tenant(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl tenant scale {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "scale", tenant_name, "-n", namespace]
 
         # 添加可选参数
         if cpu_count:
-            cmd += f" --cpu-count {cpu_count}"
+            cmd.extend(["--cpu-count", cpu_count])
         if force:
-            cmd += " -f"
+            cmd.append("-f")
         if iops_weight is not None:
-            cmd += f" --iops-weight {iops_weight}"
+            cmd.extend(["--iops-weight", str(iops_weight)])
         if log_disk_size:
-            cmd += f" --log-disk-size {log_disk_size}"
+            cmd.extend(["--log-disk-size", log_disk_size])
         if max_iops is not None:
-            cmd += f" --max-iops {max_iops}"
+            cmd.extend(["--max-iops", str(max_iops)])
         if memory_size:
-            cmd += f" --memory-size {memory_size}"
+            cmd.extend(["--memory-size", memory_size])
         if min_iops is not None:
-            cmd += f" --min-iops {min_iops}"
+            cmd.extend(["--min-iops", str(min_iops)])
         if unit_number is not None:
-            cmd += f" --unit-number {unit_number}"
+            cmd.extend(["--unit-number", str(unit_number)])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def show_tenant(tenant_name: str, namespace: str = "default"):
@@ -366,14 +380,15 @@ def show_tenant(tenant_name: str, namespace: str = "default"):
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl tenant show {tenant_name} -n {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        success, output = safe_execute_command(["okctl", "tenant", "show", tenant_name, "-n", namespace])
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def switchover_tenant(
@@ -393,16 +408,20 @@ def switchover_tenant(
     if not primary_tenant_name or not standby_tenant_name:
         return "必须指定主租户和备租户名称"
     try:
-        cmd = f"okctl tenant switchover {primary_tenant_name} {standby_tenant_name} -n {namespace}"
+        validate_identifier(primary_tenant_name, "Primary tenant name")
+        validate_identifier(standby_tenant_name, "Standby tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "switchover", primary_tenant_name, standby_tenant_name, "-n", namespace]
         if force:
-            cmd += " -f"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+            cmd.append("-f")
+        
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def update_tenant(
@@ -424,23 +443,25 @@ def update_tenant(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl tenant update {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "update", tenant_name, "-n", namespace]
 
         # 添加可选参数
         if connect_white_list:
-            cmd += f" --connect-white-list {connect_white_list}"
+            cmd.extend(["--connect-white-list", connect_white_list])
         if force:
-            cmd += " -f"
+            cmd.append("-f")
         if priority:
-            cmd += f" --priority {priority}"
+            cmd.extend(["--priority", priority])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
-
 
 @mcp.tool()
 def upgrade_tenant(tenant_name: str, namespace: str = "default", force: bool = False):
@@ -454,12 +475,16 @@ def upgrade_tenant(tenant_name: str, namespace: str = "default", force: bool = F
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl tenant upgrade {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+        
+        cmd = ["okctl", "tenant", "upgrade", tenant_name, "-n", namespace]
         if force:
-            cmd += " -f"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+            cmd.append("-f")
+        
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
