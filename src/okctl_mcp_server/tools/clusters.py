@@ -2,12 +2,17 @@ import asyncio
 import re
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
-from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
 
 # 集群相关的工具
+
 
 @mcp.tool()
 def list_all_clusters():
@@ -22,6 +27,7 @@ def list_all_clusters():
             return output
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def show_cluster(cluster_name: str, namespace: str = "default"):
@@ -39,13 +45,16 @@ def show_cluster(cluster_name: str, namespace: str = "default"):
     try:
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "cluster", "show", cluster_name, "-n", namespace])
+
+        success, output = safe_execute_command(
+            ["okctl", "cluster", "show", cluster_name, "-n", namespace]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def scale_cluster(cluster_name: str, zones: str, namespace: str = "default"):
@@ -64,15 +73,26 @@ def scale_cluster(cluster_name: str, zones: str, namespace: str = "default"):
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(namespace, "Namespace")
         # Basic validation for zones format
-        if not re.match(r'^[a-zA-Z0-9_=-]+$', zones):
+        if not re.match(r"^[a-zA-Z0-9_=-]+$", zones):
             return "Error: Invalid zones format"
-        
-        success, output = safe_execute_command(["okctl", "cluster", "scale", cluster_name, "-n", namespace, f"--zones={zones}"])
+
+        success, output = safe_execute_command(
+            [
+                "okctl",
+                "cluster",
+                "scale",
+                cluster_name,
+                "-n",
+                namespace,
+                f"--zones={zones}",
+            ]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def update_cluster(
@@ -108,7 +128,7 @@ def update_cluster(
     try:
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "cluster", "update", cluster_name, "-n", namespace]
 
         # 添加可选参数
@@ -136,6 +156,7 @@ def update_cluster(
     except Exception as e:
         return format_error(e)
 
+
 @mcp.tool()
 def upgrade_cluster(cluster_name: str, image: str, namespace: str = "default"):
     """升级OceanBase集群，请指定新的镜像
@@ -152,13 +173,25 @@ def upgrade_cluster(cluster_name: str, image: str, namespace: str = "default"):
     try:
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "cluster", "upgrade", cluster_name, "-n", namespace, "--image", image])
+
+        success, output = safe_execute_command(
+            [
+                "okctl",
+                "cluster",
+                "upgrade",
+                cluster_name,
+                "-n",
+                namespace,
+                "--image",
+                image,
+            ]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def delete_cluster(cluster_name: str, namespace: str = "default"):
@@ -173,13 +206,16 @@ def delete_cluster(cluster_name: str, namespace: str = "default"):
     try:
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "cluster", "delete", cluster_name, "-n", namespace])
+
+        success, output = safe_execute_command(
+            ["okctl", "cluster", "delete", cluster_name, "-n", namespace]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 async def create_cluster(
@@ -231,7 +267,7 @@ async def create_cluster(
     try:
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "cluster", "create", cluster_name, "-n", namespace]
 
         # 添加可选参数
@@ -290,7 +326,9 @@ async def create_cluster(
         for i in range(max_retries):
             # 使用 okctl cluster list 检查集群状态
             check_process = await asyncio.create_subprocess_exec(
-                "okctl", "cluster", "list",
+                "okctl",
+                "cluster",
+                "list",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )

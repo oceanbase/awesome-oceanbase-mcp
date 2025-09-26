@@ -57,7 +57,9 @@ def check_component_installed(component_name: str) -> bool:
         return check_command_exists("okctl")
     elif component_name == "ob-operator":
         try:
-            success, _ = safe_execute_command(["kubectl", "get", "deployment", "-n", "oceanbase", "ob-operator"])
+            success, _ = safe_execute_command(
+                ["kubectl", "get", "deployment", "-n", "oceanbase", "ob-operator"]
+            )
             return success
         except Exception:
             return False
@@ -92,7 +94,14 @@ def install_ob_operator():
             return "ob-operator已经安装"
 
         logger.info("正在安装ob-operator...")
-        success, output = safe_execute_command(["kubectl", "apply", "-f", "https://raw.githubusercontent.com/oceanbase/ob-operator/stable/deploy/operator.yaml"])
+        success, output = safe_execute_command(
+            [
+                "kubectl",
+                "apply",
+                "-f",
+                "https://raw.githubusercontent.com/oceanbase/ob-operator/stable/deploy/operator.yaml",
+            ]
+        )
         if success:
             logger.info("ob-operator安装完成")
             return "ob-operator安装完成"

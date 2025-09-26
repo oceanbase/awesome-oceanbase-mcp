@@ -2,7 +2,11 @@ import os
 import logging
 from typing import Optional, Dict, Any
 from mysql.connector import connect, Error
-from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
@@ -15,6 +19,7 @@ logger = logging.getLogger("okctl_mcp_server")
 
 # 全局配置
 global_config = None
+
 
 @mcp.tool()
 def configure_cluster_connection(
@@ -48,9 +53,11 @@ def configure_cluster_connection(
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         # 首先确认集群存在
-        success, result_stdout = safe_execute_command(["okctl", "cluster", "show", cluster_name, "-n", namespace])
+        success, result_stdout = safe_execute_command(
+            ["okctl", "cluster", "show", cluster_name, "-n", namespace]
+        )
         if not success:
             raise ValueError(f"集群 {cluster_name} 不存在")
 
@@ -87,7 +94,9 @@ def configure_cluster_connection(
             )
 
         # 使用 kubectl 命令获取所有 pod 信息
-        success, kubectl_output = safe_execute_command(["kubectl", "get", "pods", "-o", "wide"])
+        success, kubectl_output = safe_execute_command(
+            ["kubectl", "get", "pods", "-o", "wide"]
+        )
         if not success:
             raise ValueError("未找到任何 POD 信息")
 
@@ -144,6 +153,7 @@ def configure_cluster_connection(
         raise ValueError(
             f"配置数据库连接时发生错误: {str(e)}, 目前连接配置为: {global_config}"
         )
+
 
 @mcp.tool()
 def execute_cluster_sql(

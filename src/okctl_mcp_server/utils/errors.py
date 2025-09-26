@@ -1,5 +1,6 @@
 import subprocess
 
+
 def format_error(e):
     """format errors"""
     if isinstance(e, subprocess.CalledProcessError):

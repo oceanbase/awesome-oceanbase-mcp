@@ -1,9 +1,14 @@
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
-from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
+
 
 # 组件安装和更新相关的工具
 @mcp.tool()
@@ -39,6 +44,7 @@ def install_component(
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def update_component(

@@ -1,9 +1,14 @@
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
-from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
+
 
 # 备份策略相关的工具
 @mcp.tool()
@@ -19,8 +24,10 @@ def list_backup_policies(cluster_name: str, namespace: str = "default"):
     try:
         validate_identifier(cluster_name, "Cluster name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "backup-policy", "list", cluster_name, "-n", namespace])
+
+        success, output = safe_execute_command(
+            ["okctl", "backup-policy", "list", cluster_name, "-n", namespace]
+        )
         if success:
             if not output.strip():
                 return "没有找到备份策略"
@@ -31,6 +38,7 @@ def list_backup_policies(cluster_name: str, namespace: str = "default"):
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def create_backup_policy(
@@ -68,7 +76,7 @@ def create_backup_policy(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "backup-policy", "create", tenant_name, "-n", namespace]
 
         # 添加可选参数
@@ -100,6 +108,7 @@ def create_backup_policy(
     except Exception as e:
         return format_error(e)
 
+
 @mcp.tool()
 def delete_backup_policy(
     tenant_name: str, namespace: str = "default", force: bool = False
@@ -116,17 +125,18 @@ def delete_backup_policy(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "backup-policy", "delete", tenant_name, "-n", namespace]
         if force:
             cmd.append("-f")
-        
+
         success, output = safe_execute_command(cmd)
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def show_backup_policy(
@@ -148,7 +158,7 @@ def show_backup_policy(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "backup-policy", "show", tenant_name, "-n", namespace]
 
         # 添加可选参数
@@ -164,6 +174,7 @@ def show_backup_policy(
     except Exception as e:
         return format_error(e)
 
+
 @mcp.tool()
 def pause_backup_policy(tenant_name: str, namespace: str = "default"):
     """暂停指定租户的备份策略
@@ -177,13 +188,16 @@ def pause_backup_policy(tenant_name: str, namespace: str = "default"):
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "backup-policy", "pause", tenant_name, "-n", namespace])
+
+        success, output = safe_execute_command(
+            ["okctl", "backup-policy", "pause", tenant_name, "-n", namespace]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def resume_backup_policy(tenant_name: str, namespace: str = "default"):
@@ -198,13 +212,16 @@ def resume_backup_policy(tenant_name: str, namespace: str = "default"):
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "backup-policy", "resume", tenant_name, "-n", namespace])
+
+        success, output = safe_execute_command(
+            ["okctl", "backup-policy", "resume", tenant_name, "-n", namespace]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def update_backup_policy(
@@ -232,7 +249,7 @@ def update_backup_policy(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "backup-policy", "update", tenant_name, "-n", namespace]
 
         # 添加可选参数

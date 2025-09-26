@@ -1,12 +1,17 @@
 import asyncio
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
-from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
 
 # 租户相关的工具
+
 
 @mcp.tool()
 def list_tenants(namespace: str = "default"):
@@ -17,7 +22,9 @@ def list_tenants(namespace: str = "default"):
     """
     try:
         validate_identifier(namespace, "Namespace")
-        success, output = safe_execute_command(["okctl", "tenant", "list", "-p", namespace])
+        success, output = safe_execute_command(
+            ["okctl", "tenant", "list", "-p", namespace]
+        )
         if success:
             if not output.strip():
                 return "没有找到租户"
@@ -28,6 +35,7 @@ def list_tenants(namespace: str = "default"):
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 async def create_tenant(
@@ -100,8 +108,18 @@ async def create_tenant(
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(cluster, "Cluster name")
         validate_identifier(namespace, "Namespace")
-        
-        cmd = ["okctl", "tenant", "create", tenant_name, f"--cluster={cluster}", "-n", namespace, "--priority", priority]
+
+        cmd = [
+            "okctl",
+            "tenant",
+            "create",
+            tenant_name,
+            f"--cluster={cluster}",
+            "-n",
+            namespace,
+            "--priority",
+            priority,
+        ]
 
         # 添加可选参数
         if archive_source:
@@ -169,7 +187,11 @@ async def create_tenant(
         for i in range(max_retries):
             # 使用 okctl tenant list 检查租户状态
             check_process = await asyncio.create_subprocess_exec(
-                "okctl", "tenant", "list", "-p", namespace,
+                "okctl",
+                "tenant",
+                "list",
+                "-p",
+                namespace,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -193,6 +215,7 @@ async def create_tenant(
     except Exception as e:
         return format_error(e)
 
+
 @mcp.tool()
 def delete_tenant(tenant_name: str, namespace: str = "default"):
     """删除指定租户
@@ -204,13 +227,16 @@ def delete_tenant(tenant_name: str, namespace: str = "default"):
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "tenant", "delete", tenant_name, "-n", namespace])
+
+        success, output = safe_execute_command(
+            ["okctl", "tenant", "delete", tenant_name, "-n", namespace]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def activate_tenant(
@@ -226,17 +252,18 @@ def activate_tenant(
     try:
         validate_identifier(standby_tenant_name, "Standby tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "tenant", "activate", standby_tenant_name, "-n", namespace]
         if force:
             cmd.append("-f")
-        
+
         success, output = safe_execute_command(cmd)
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def change_tenant_password(
@@ -255,17 +282,26 @@ def change_tenant_password(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
-        cmd = ["okctl", "tenant", "changepwd", tenant_name, f"--password={password}", "-n", namespace]
+
+        cmd = [
+            "okctl",
+            "tenant",
+            "changepwd",
+            tenant_name,
+            f"--password={password}",
+            "-n",
+            namespace,
+        ]
         if force:
             cmd.append("-f")
-        
+
         success, output = safe_execute_command(cmd)
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def replay_tenant_log(
@@ -289,7 +325,7 @@ def replay_tenant_log(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "tenant", "replaylog", tenant_name, "-n", namespace]
 
         # 添加可选参数
@@ -306,6 +342,7 @@ def replay_tenant_log(
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def scale_tenant(
@@ -338,7 +375,7 @@ def scale_tenant(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "tenant", "scale", tenant_name, "-n", namespace]
 
         # 添加可选参数
@@ -366,6 +403,7 @@ def scale_tenant(
     except Exception as e:
         return format_error(e)
 
+
 @mcp.tool()
 def show_tenant(tenant_name: str, namespace: str = "default"):
     """显示租户信息
@@ -381,13 +419,16 @@ def show_tenant(tenant_name: str, namespace: str = "default"):
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
-        success, output = safe_execute_command(["okctl", "tenant", "show", tenant_name, "-n", namespace])
+
+        success, output = safe_execute_command(
+            ["okctl", "tenant", "show", tenant_name, "-n", namespace]
+        )
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def switchover_tenant(
@@ -410,17 +451,26 @@ def switchover_tenant(
         validate_identifier(primary_tenant_name, "Primary tenant name")
         validate_identifier(standby_tenant_name, "Standby tenant name")
         validate_identifier(namespace, "Namespace")
-        
-        cmd = ["okctl", "tenant", "switchover", primary_tenant_name, standby_tenant_name, "-n", namespace]
+
+        cmd = [
+            "okctl",
+            "tenant",
+            "switchover",
+            primary_tenant_name,
+            standby_tenant_name,
+            "-n",
+            namespace,
+        ]
         if force:
             cmd.append("-f")
-        
+
         success, output = safe_execute_command(cmd)
         return output
     except SecurityError as e:
         return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
+
 
 @mcp.tool()
 def update_tenant(
@@ -444,7 +494,7 @@ def update_tenant(
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "tenant", "update", tenant_name, "-n", namespace]
 
         # 添加可选参数
@@ -462,6 +512,7 @@ def update_tenant(
     except Exception as e:
         return format_error(e)
 
+
 @mcp.tool()
 def upgrade_tenant(tenant_name: str, namespace: str = "default", force: bool = False):
     """升级租户
@@ -476,11 +527,11 @@ def upgrade_tenant(tenant_name: str, namespace: str = "default", force: bool = F
     try:
         validate_identifier(tenant_name, "Tenant name")
         validate_identifier(namespace, "Namespace")
-        
+
         cmd = ["okctl", "tenant", "upgrade", tenant_name, "-n", namespace]
         if force:
             cmd.append("-f")
-        
+
         success, output = safe_execute_command(cmd)
         return output
     except SecurityError as e:
