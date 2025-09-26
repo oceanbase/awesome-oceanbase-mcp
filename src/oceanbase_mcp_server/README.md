@@ -7,12 +7,12 @@ A Model Context Protocol (MCP) server that enables secure interaction with Ocean
 ## 📋 Table of Contents
 
 - [Features](#-features)
-- [Available Tools](#-available-tools)
+- [Available Tools](#%EF%B8%8F-available-tools)
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
   - [From Source Code](#from-source-code)
   - [From PyPI Repository](#from-pypi-repository)
-- [Configuration](#-configuration)
+- [Configuration](#%EF%B8%8F-configuration)
 - [Usage](#-usage)
   - [Stdio Mode](#stdio-mode)
   - [SSE Mode](#sse-mode)
@@ -130,7 +130,7 @@ Add the following content to your MCP client configuration file:
       "command": "uv",
       "args": [
         "--directory", 
-        "path/to/mcp-oceanbase/src/oceanbase_mcp_server",
+        "path/to/awesome-oceanbase-mcp/src/oceanbase_mcp_server",
         "run",
         "oceanbase_mcp_server"
       ],
