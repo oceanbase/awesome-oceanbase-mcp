@@ -4,7 +4,7 @@
 [English](README.md) | 简体中文
 
 
-OceanBase 包含数据库本身和它的周边组件。包括 OCP (OceanBase Cloud Platform), OBCloud, OKCTL, obdiag, obshell 等。通过 MCP，大模型可以直接和这些组件交互，显著地降低了使用难度，用用户更为友好。
+OceanBase 包含数据库本身和它的周边组件。包括 OCP (OceanBase Cloud Platform)、 OBCloud、OKCTL、obdiag、obshell 等。通过 MCP，大模型可以直接和这些组件交互，显著地降低了使用难度，对用户更为友好。
 这个仓库包含了 OceanBase 数据库和它周边组件的 MCP Server。
 
 ## 🔗 什么是模型上下文协议
