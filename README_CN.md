@@ -1,42 +1,126 @@
-![Awesome OceanBase MCP Logo](assets/logo.png)
-# awesome-mcp-oceanbase
+<div align="center">
+
+# 🌊 Awesome MCP OceanBase
+
+**为 OceanBase 生态系统打造的 Model Context Protocol (MCP) 服务集合**
 
 [English](README.md) | 简体中文
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.8+-green.svg)](https://python.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 
-OceanBase 包含数据库本身和它的周边组件。包括 OCP (OceanBase Cloud Platform)、 OBCloud、OKCTL、obdiag、obshell 等。通过 MCP，大模型可以直接和这些组件交互，显著地降低了使用难度，对用户更加友好。
-这个仓库包含了 OceanBase 数据库和它周边组件的 MCP Server。
+</div>
 
-## 🔗 什么是模型上下文协议
-模型上下文协议（MCP）是一种开放协议，旨在实现大型语言模型（LLM）应用与外部数据源及工具的无缝集成。它作为连接 LLM 与其所需上下文的标准化方式。
+## 📖 项目简介
 
-## 🖥️ 什么是 MCP Server
-MCP 服务器是一个为 AI 客户端提供上下文、工具和提示的系统。它能够暴露文件、文档、数据库和 API 集成等数据源，使 AI 助手能够以安全的方式访问实时信息。
+**awesome-mcp-oceanbase** 是一个专为 OceanBase 生态系统设计的 Model Context Protocol (MCP) 服务资源库。
 
-## 💡 为什么我们需要 MCP Server
-MCP 解决了人工智能系统与数据源之间集成碎片化的问题。它突破了人工智能模型与数据隔离、困于信息孤岛的困境，通过单一通用协议取代了多种定制化实现方案。
+🎯 **项目目标**：通过标准化的 MCP 协议，让 AI 助手能够直接与 OceanBase 数据库及其生态组件进行智能交互。
 
-## 🗂️ MCP Servers
+✨ **核心价值**：
+- 🤖 **AI 友好**：在 Claude、ChatGPT 等 AI 助手中直接操作数据库
+- 🔒 **安全可靠**：提供安全的数据库访问和操作机制
+- 🛠️ **生态完整**：覆盖 OceanBase 完整的产品和工具链
+- 🚀 **开箱即用**：简单配置即可开始使用
 
-本仓库提供了如下 MCP Server：
+## 🔍 什么是 MCP？
 
-| MCP Server           | 描述                                      | 使用文档                                    |
-|----------------------|-----------------------------------------|-----------------------------------------|
-| OceanBase MCP Server | 一个可以和 OceanBase 数据库安全交互的MCP Server。     | [Doc](src/oceanbase_mcp_server/README_CN.md)      |
-| OCP MCP Server       | 一个可以和 OCP 交互的 MCP Server。               | [Doc](doc/ocp_mcp_server_CN.md)         |
-| OBCloud MCP Server   | 一个可以和 OBCloud 交互的 MCP Server。           | [Doc](src/obcloud_mcp_server/README.md) |
-| OKCTL MCP Server     | 一个可以和 OceanBase 资源在 k8s 交互的 MCP Server。 | [Doc](doc/okctl_mcp_server_CN.md)       |
-| OBDIAG MCP Server    | 一个可以和 obdiag MCP Server。                | [Doc](doc/obdiag_mcp_server_CN.md)      |
-| obshell MCP Server   | 一个可以通过 obshell 创建和运维 OceanBase 集群的 MCP Server。         | [Doc](doc/obshell_mcp_server_CN.md)     |
+Model Context Protocol (MCP) 是一个开放协议，旨在实现 AI 应用程序与外部数据源和工具之间的无缝集成。它为 AI 模型提供了一种标准化的方式来访问所需的上下文信息和工具能力。
 
-如果你对某个组件的 MCP Server 感兴趣，可以点击每个组件的 Doc 链接，查看详细信息。
+## 🚀 快速开始
 
-## 社区
+### 前置条件
 
-当你需要帮助时，你可以在 [https://ask.oceanbase.com](https://ask.oceanbase.com) 上找到开发者和其他的社区伙伴。
+如果您还没有 OceanBase 数据库实例，请先：
+- 访问 [OceanBase 官方仓库](https://github.com/oceanbase/oceanbase) 获取最新版本
+- 或使用 [OceanBase 在线体验](https://www.oceanbase.com/free-trial) 快速启动
 
-当你发现项目缺陷时，请在 [issues](https://github.com/oceanbase/mcp-oceanbase/issues) 页面创建一个新的 issue。
+## 🗂️ MCP 服务列表
 
-## 许可证
+本仓库提供了完整的 OceanBase 生态 MCP 服务：
 
-更多信息见 [LICENSE](LICENSE)。
+<table>
+<thead>
+<tr>
+<th width="25%">🔧 MCP 服务</th>
+<th width="60%">📝 功能描述</th>
+<th width="15%">📚 文档</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OceanBase MCP Server</strong></td>
+<td>提供与 OceanBase 数据库的安全交互能力，支持 SQL 查询、数据管理等操作</td>
+<td><a href="src/oceanbase_mcp_server/README_CN.md">📖 查看</a></td>
+</tr>
+<tr>
+<td><strong>OCP MCP Server</strong></td>
+<td>与 OceanBase Cloud Platform 集成，提供集群管理和监控能力</td>
+<td><a href="doc/ocp_mcp_server_CN.md">📖 查看</a></td>
+</tr>
+<tr>
+<td><strong>OBCloud MCP Server</strong></td>
+<td>连接 OBCloud 云服务，提供云端数据库管理功能</td>
+<td><a href="src/obcloud_mcp_server/README.md">📖 查看</a></td>
+</tr>
+<tr>
+<td><strong>OKCTL MCP Server</strong></td>
+<td>管理 Kubernetes 环境中的 OceanBase 资源和部署</td>
+<td><a href="doc/okctl_mcp_server_CN.md">📖 查看</a></td>
+</tr>
+<tr>
+<td><strong>OBDIAG MCP Server</strong></td>
+<td>提供 OceanBase 诊断工具集成，支持性能分析和故障排查</td>
+<td><a href="doc/obdiag_mcp_server_CN.md">📖 查看</a></td>
+</tr>
+<tr>
+<td><strong>obshell MCP Server</strong></td>
+<td>通过 obshell 实现 OceanBase 集群的创建、部署和运维管理</td>
+<td><a href="doc/obshell_mcp_server_CN.md">📖 查看</a></td>
+</tr>
+</tbody>
+</table>
+
+💡 **使用提示**：点击对应的文档链接查看详细的安装和配置指南。
+
+## 💬 社区与支持
+
+我们非常重视社区的反馈和贡献！
+
+### 🙋‍♀️ 获取帮助
+
+- 💬 **技术讨论**：访问 [OceanBase 社区论坛](https://ask.oceanbase.com) 与开发者和社区伙伴交流
+- 📧 **技术支持**：通过社区论坛获得官方技术支持
+- 📖 **文档中心**：查看 [OceanBase 官方文档](https://www.oceanbase.com/docs)
+
+### 🐛 问题反馈
+
+如果您在使用过程中遇到任何问题：
+
+1. 首先查看对应 MCP 服务的文档
+2. 搜索 [现有 Issues](https://github.com/oceanbase/mcp-oceanbase/issues) 确认问题是否已知
+3. 如果是新问题，请 [创建新 Issue](https://github.com/oceanbase/mcp-oceanbase/issues/new) 
+
+### 🤝 贡献指南
+
+欢迎所有形式的贡献：
+
+- 🔧 **代码贡献**：提交 Pull Request
+- 📝 **文档改进**：完善文档和示例
+- 🐛 **问题报告**：报告 Bug 和建议改进
+- 💡 **功能建议**：提出新功能需求
+
+## 📄 许可协议
+
+本项目基于 [Apache License 2.0](LICENSE) 开源协议发布。
+
+---
+
+<div align="center">
+
+**⭐ 如果这个项目对您有帮助，请给我们一个 Star！**
+
+Made with ❤️ by OceanBase Team
+
+</div>
