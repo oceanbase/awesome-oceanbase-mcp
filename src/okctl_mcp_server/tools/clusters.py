@@ -1,7 +1,12 @@
-import subprocess
 import asyncio
+import re
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
@@ -13,17 +18,14 @@ from okctl_mcp_server import mcp
 def list_all_clusters():
     """列出所有的OceanBase集群"""
     try:
-        result = subprocess.run(
-            ["sh", "-c", "okctl cluster list"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        output = result.stdout
-        if not output.strip():
-            return "没有找到集群"
-        return output
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(["okctl", "cluster", "list"])
+        if success:
+            if not output.strip():
+                return "没有找到集群"
+            return output
+        else:
+            return output
+    except Exception as e:
         return format_error(e)
 
 
@@ -41,12 +43,16 @@ def show_cluster(cluster_name: str, namespace: str = "default"):
     if not cluster_name:
         return "必须指定集群名称"
     try:
-        cmd = f"okctl cluster show {cluster_name} -n {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        validate_identifier(cluster_name, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+
+        success, output = safe_execute_command(
+            ["okctl", "cluster", "show", cluster_name, "-n", namespace]
         )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -64,12 +70,27 @@ def scale_cluster(cluster_name: str, zones: str, namespace: str = "default"):
     if not cluster_name or not zones:
         return "必须指定集群名称和可用区"
     try:
-        cmd = f"okctl cluster scale {cluster_name} -n {namespace} --zones={zones}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        validate_identifier(cluster_name, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+        # Basic validation for zones format
+        if not re.match(r"^[a-zA-Z0-9_=-]+$", zones):
+            return "Error: Invalid zones format"
+
+        success, output = safe_execute_command(
+            [
+                "okctl",
+                "cluster",
+                "scale",
+                cluster_name,
+                "-n",
+                namespace,
+                f"--zones={zones}",
+            ]
         )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -105,31 +126,34 @@ def update_cluster(
     if not cluster_name:
         return "必须指定集群名称"
     try:
-        cmd = f"okctl cluster update {cluster_name} -n {namespace}"
+        validate_identifier(cluster_name, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+
+        cmd = ["okctl", "cluster", "update", cluster_name, "-n", namespace]
 
         # 添加可选参数
         if cpu:
-            cmd += f" --cpu {cpu}"
+            cmd.extend(["--cpu", cpu])
         if memory:
-            cmd += f" --memory {memory}"
+            cmd.extend(["--memory", memory])
         if data_storage_class:
-            cmd += f" --data-storage-class {data_storage_class}"
+            cmd.extend(["--data-storage-class", data_storage_class])
         if data_storage_size:
-            cmd += f" --data-storage-size {data_storage_size}"
+            cmd.extend(["--data-storage-size", data_storage_size])
         if log_storage_class:
-            cmd += f" --log-storage-class {log_storage_class}"
+            cmd.extend(["--log-storage-class", log_storage_class])
         if log_storage_size:
-            cmd += f" --log-storage-size {log_storage_size}"
+            cmd.extend(["--log-storage-size", log_storage_size])
         if redo_log_storage_class:
-            cmd += f" --redo-log-storage-class {redo_log_storage_class}"
+            cmd.extend(["--redo-log-storage-class", redo_log_storage_class])
         if redo_log_storage_size:
-            cmd += f" --redo-log-storage-size {redo_log_storage_size}"
+            cmd.extend(["--redo-log-storage-size", redo_log_storage_size])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -147,12 +171,25 @@ def upgrade_cluster(cluster_name: str, image: str, namespace: str = "default"):
     if not cluster_name or not image:
         return "必须指定集群名称和镜像"
     try:
-        cmd = f"okctl cluster upgrade {cluster_name} -n {namespace} --image {image}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        validate_identifier(cluster_name, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+
+        success, output = safe_execute_command(
+            [
+                "okctl",
+                "cluster",
+                "upgrade",
+                cluster_name,
+                "-n",
+                namespace,
+                "--image",
+                image,
+            ]
         )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -167,12 +204,16 @@ def delete_cluster(cluster_name: str, namespace: str = "default"):
     if not cluster_name:
         return "必须指定集群名称"
     try:
-        cmd = f"okctl cluster delete {cluster_name} -n {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        validate_identifier(cluster_name, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+
+        success, output = safe_execute_command(
+            ["okctl", "cluster", "delete", cluster_name, "-n", namespace]
         )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -224,45 +265,48 @@ async def create_cluster(
     if not cluster_name:
         return "必须指定集群名称"
     try:
-        cmd = f"okctl cluster create {cluster_name} -n {namespace}"
+        validate_identifier(cluster_name, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+
+        cmd = ["okctl", "cluster", "create", cluster_name, "-n", namespace]
 
         # 添加可选参数
         if backup_storage_address:
-            cmd += f" --backup-storage-address {backup_storage_address}"
+            cmd.extend(["--backup-storage-address", backup_storage_address])
         if backup_storage_path:
-            cmd += f" --backup-storage-path {backup_storage_path}"
+            cmd.extend(["--backup-storage-path", backup_storage_path])
         if cpu:
-            cmd += f" --cpu {cpu}"
+            cmd.extend(["--cpu", cpu])
         if data_storage_class:
-            cmd += f" --data-storage-class {data_storage_class}"
+            cmd.extend(["--data-storage-class", data_storage_class])
         if data_storage_size:
-            cmd += f" --data-storage-size {data_storage_size}"
+            cmd.extend(["--data-storage-size", data_storage_size])
         if id:
-            cmd += f" --id {id}"
+            cmd.extend(["--id", id])
         if image:
-            cmd += f" --image {image}"
+            cmd.extend(["--image", image])
         if log_storage_class:
-            cmd += f" --log-storage-class {log_storage_class}"
+            cmd.extend(["--log-storage-class", log_storage_class])
         if log_storage_size:
-            cmd += f" --log-storage-size {log_storage_size}"
+            cmd.extend(["--log-storage-size", log_storage_size])
         if memory:
-            cmd += f" --memory {memory}"
+            cmd.extend(["--memory", memory])
         if mode:
-            cmd += f" --mode {mode}"
+            cmd.extend(["--mode", mode])
         if parameters:
-            cmd += f" --parameters {parameters}"
+            cmd.extend(["--parameters", parameters])
         if redo_log_storage_class:
-            cmd += f" --redo-log-storage-class {redo_log_storage_class}"
+            cmd.extend(["--redo-log-storage-class", redo_log_storage_class])
         if redo_log_storage_size:
-            cmd += f" --redo-log-storage-size {redo_log_storage_size}"
+            cmd.extend(["--redo-log-storage-size", redo_log_storage_size])
         if root_password:
-            cmd += f" --root-password {root_password}"
+            cmd.extend(["--root-password", root_password])
         if zones:
-            cmd += f" --zones {zones}"
+            cmd.extend(["--zones", zones])
 
         # 执行创建集群命令
-        process = await asyncio.create_subprocess_shell(
-            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        process = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         stdout_bytes, stderr_bytes = await process.communicate()
 
@@ -281,9 +325,10 @@ async def create_cluster(
 
         for i in range(max_retries):
             # 使用 okctl cluster list 检查集群状态
-            check_cmd = f"okctl cluster list | grep {cluster_name}"
-            check_process = await asyncio.create_subprocess_shell(
-                check_cmd,
+            check_process = await asyncio.create_subprocess_exec(
+                "okctl",
+                "cluster",
+                "list",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -292,7 +337,7 @@ async def create_cluster(
                 check_stdout_bytes.decode("utf-8") if check_stdout_bytes else ""
             )
 
-            if "running" in check_stdout.lower():
+            if cluster_name in check_stdout and "running" in check_stdout.lower():
                 result += f"\n集群 {cluster_name} 已成功创建并准备就绪！"
                 return result
             if i < max_retries - 1:
@@ -300,5 +345,7 @@ async def create_cluster(
         # 如果达到最大重试次数仍未就绪
         result += f"\n警告：集群 {cluster_name} 已创建，但在规定时间内未检测到running状态。请手动检查集群状态。"
         return result
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
     except Exception as e:
         return format_error(e)
