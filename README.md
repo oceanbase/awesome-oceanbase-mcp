@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌊 Awesome MCP OceanBase
+# 🌊 Awesome OceanBase MCP 
 
 **Model Context Protocol (MCP) Server Collection for OceanBase Ecosystem**
 
@@ -14,7 +14,7 @@ English | [简体中文](README_CN.md)
 
 ## 📖 Project Overview
 
-**awesome-mcp-oceanbase** is a Model Context Protocol (MCP) server repository specifically designed for the OceanBase ecosystem.
+**awesome-oceanbase-mcp** is a Model Context Protocol (MCP) server repository specifically designed for the OceanBase ecosystem.
 
 🎯 **Mission**: Enable AI assistants to interact directly with OceanBase databases and ecosystem components through standardized MCP protocols.
 

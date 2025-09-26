@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌊 Awesome MCP OceanBase
+# 🌊 Awesome OceanBase MCP
 
 **为 OceanBase 生态系统打造的 Model Context Protocol (MCP) 服务集合**
 
@@ -14,7 +14,7 @@
 
 ## 📖 项目简介
 
-**awesome-mcp-oceanbase** 是一个专为 OceanBase 生态系统设计的 Model Context Protocol (MCP) 服务资源库。
+**awesome-oceanbase-mcp** 是一个专为 OceanBase 生态系统设计的 Model Context Protocol (MCP) 服务资源库。
 
 🎯 **项目目标**：通过标准化的 MCP 协议，让 AI 助手能够直接与 OceanBase 数据库及其生态组件进行智能交互。
 
