@@ -1,4 +1,3 @@
-import subprocess
 import asyncio
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error

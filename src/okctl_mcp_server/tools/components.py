@@ -1,4 +1,3 @@
-import subprocess
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
 from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError

@@ -1,9 +1,7 @@
-import subprocess
 import os
 import logging
 from typing import Optional, Dict, Any
 from mysql.connector import connect, Error
-from okctl_mcp_server.utils.errors import format_error
 from okctl_mcp_server.utils.security import validate_identifier, safe_execute_command, SecurityError
 
 # 导入mcp实例

@@ -1,4 +1,3 @@
-import subprocess
 import asyncio
 import re
 from typing import Optional
