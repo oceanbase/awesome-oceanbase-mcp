@@ -1,6 +1,10 @@
-import subprocess
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
@@ -27,17 +31,18 @@ def install_component(
     ]:
         return f"不支持安装{component_name}组件"
     try:
-        cmd = f"okctl install {component_name}"
-
-        # 添加可选参数
+        cmd = ["okctl", "install"]
+        if component_name:
+            validate_identifier(component_name, "Component name")
+            cmd.append(component_name)
         if version:
-            cmd += f" --version {version}"
+            cmd.extend(["--version", version])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -59,11 +64,14 @@ def update_component(
     ]:
         return f"不支持更新{component_name}组件"
     try:
-        cmd = f"okctl update {component_name}"
+        cmd = ["okctl", "update"]
+        if component_name:
+            validate_identifier(component_name, "Component name")
+            cmd.append(component_name)
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)

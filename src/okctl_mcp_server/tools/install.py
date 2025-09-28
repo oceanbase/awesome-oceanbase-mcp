@@ -1,6 +1,7 @@
 import subprocess
 import logging
 from okctl_mcp_server.utils.errors import format_error
+from okctl_mcp_server.utils.security import safe_execute_command
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
@@ -35,10 +36,8 @@ def check_kubernetes_available() -> bool:
         bool: Kubernetes是否可用
     """
     try:
-        result = subprocess.run(
-            ["kubectl", "version", "--client"], capture_output=True, text=True
-        )
-        return result.returncode == 0
+        success, _ = safe_execute_command(["kubectl", "version", "--client"])
+        return success
     except Exception:
         return False
 
@@ -58,12 +57,10 @@ def check_component_installed(component_name: str) -> bool:
         return check_command_exists("okctl")
     elif component_name == "ob-operator":
         try:
-            result = subprocess.run(
-                ["kubectl", "get", "deployment", "-n", "oceanbase", "ob-operator"],
-                capture_output=True,
-                text=True,
+            success, _ = safe_execute_command(
+                ["kubectl", "get", "deployment", "-n", "oceanbase", "ob-operator"]
             )
-            return result.returncode == 0
+            return success
         except Exception:
             return False
     return False
@@ -97,11 +94,20 @@ def install_ob_operator():
             return "ob-operator已经安装"
 
         logger.info("正在安装ob-operator...")
-        cmd = "kubectl apply -f https://raw.githubusercontent.com/oceanbase/ob-operator/stable/deploy/operator.yaml"
-        subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
-        logger.info("ob-operator安装完成")
-        return "ob-operator安装完成"
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(
+            [
+                "kubectl",
+                "apply",
+                "-f",
+                "https://raw.githubusercontent.com/oceanbase/ob-operator/stable/deploy/operator.yaml",
+            ]
+        )
+        if success:
+            logger.info("ob-operator安装完成")
+            return "ob-operator安装完成"
+        else:
+            return f"安装ob-operator失败: {output}"
+    except Exception as e:
         error_msg = format_error(e)
         logger.error("安装ob-operator失败: %s", error_msg)
         return f"安装ob-operator失败: {error_msg}"

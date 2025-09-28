@@ -1,6 +1,10 @@
-import subprocess
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
+from okctl_mcp_server.utils.security import (
+    validate_identifier,
+    safe_execute_command,
+    SecurityError,
+)
 
 # 导入mcp实例
 from okctl_mcp_server import mcp
@@ -18,15 +22,21 @@ def list_backup_policies(cluster_name: str, namespace: str = "default"):
     if not cluster_name:
         return "必须指定集群名称"
     try:
-        cmd = f"okctl backup-policy list {cluster_name} -n {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        validate_identifier(cluster_name, "Cluster name")
+        validate_identifier(namespace, "Namespace")
+
+        success, output = safe_execute_command(
+            ["okctl", "backup-policy", "list", cluster_name, "-n", namespace]
         )
-        output = result.stdout
-        if not output.strip():
-            return "没有找到备份策略"
-        return output
-    except subprocess.CalledProcessError as e:
+        if success:
+            if not output.strip():
+                return "没有找到备份策略"
+            return output
+        else:
+            return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -64,35 +74,38 @@ def create_backup_policy(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl backup-policy create {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+
+        cmd = ["okctl", "backup-policy", "create", tenant_name, "-n", namespace]
 
         # 添加可选参数
         if archive_path:
-            cmd += f" --archive-path {archive_path}"
+            cmd.extend(["--archive-path", archive_path])
         if bak_data_path:
-            cmd += f" --bak-data-path {bak_data_path}"
+            cmd.extend(["--bak-data-path", bak_data_path])
         if bak_encryption_password:
-            cmd += f" --bak-encryption-password {bak_encryption_password}"
+            cmd.extend(["--bak-encryption-password", bak_encryption_password])
         if dest_type:
-            cmd += f" --dest-type {dest_type}"
+            cmd.extend(["--dest-type", dest_type])
         if full:
-            cmd += f" --full {full}"
+            cmd.extend(["--full", full])
         if inc:
-            cmd += f" --inc {inc}"
+            cmd.extend(["--inc", inc])
         if job_keep_days is not None:
-            cmd += f" --job-keep-days {job_keep_days}"
+            cmd.extend(["--job-keep-days", str(job_keep_days)])
         if oss_access_id:
-            cmd += f" --oss-access-id {oss_access_id}"
+            cmd.extend(["--oss-access-id", oss_access_id])
         if oss_access_key:
-            cmd += f" --oss-access-key {oss_access_key}"
+            cmd.extend(["--oss-access-key", oss_access_key])
         if recovery_days is not None:
-            cmd += f" --recovery-days {recovery_days}"
+            cmd.extend(["--recovery-days", str(recovery_days)])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -110,14 +123,18 @@ def delete_backup_policy(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl backup-policy delete {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+
+        cmd = ["okctl", "backup-policy", "delete", tenant_name, "-n", namespace]
         if force:
-            cmd += " -f"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+            cmd.append("-f")
+
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -139,19 +156,22 @@ def show_backup_policy(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl backup-policy show {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+
+        cmd = ["okctl", "backup-policy", "show", tenant_name, "-n", namespace]
 
         # 添加可选参数
         if job_type and job_type != "ALL":
-            cmd += f" -t {job_type}"
+            cmd.extend(["-t", job_type])
         if limit is not None:
-            cmd += f" --limit {limit}"
+            cmd.extend(["--limit", str(limit)])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -166,12 +186,16 @@ def pause_backup_policy(tenant_name: str, namespace: str = "default"):
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl backup-policy pause {tenant_name} -n {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+
+        success, output = safe_execute_command(
+            ["okctl", "backup-policy", "pause", tenant_name, "-n", namespace]
         )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -186,12 +210,16 @@ def resume_backup_policy(tenant_name: str, namespace: str = "default"):
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl backup-policy resume {tenant_name} -n {namespace}"
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+
+        success, output = safe_execute_command(
+            ["okctl", "backup-policy", "resume", tenant_name, "-n", namespace]
         )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
 
 
@@ -219,23 +247,26 @@ def update_backup_policy(
     if not tenant_name:
         return "必须指定租户名称"
     try:
-        cmd = f"okctl backup-policy update {tenant_name} -n {namespace}"
+        validate_identifier(tenant_name, "Tenant name")
+        validate_identifier(namespace, "Namespace")
+
+        cmd = ["okctl", "backup-policy", "update", tenant_name, "-n", namespace]
 
         # 添加可选参数
         if full:
-            cmd += f" --full {full}"
+            cmd.extend(["--full", full])
         if inc:
-            cmd += f" --inc {inc}"
+            cmd.extend(["--inc", inc])
         if job_keep_days is not None:
-            cmd += f" --job-keep-days {job_keep_days}"
+            cmd.extend(["--job-keep-days", str(job_keep_days)])
         if piece_interval_days is not None:
-            cmd += f" --piece-interval-days {piece_interval_days}"
+            cmd.extend(["--piece-interval-days", str(piece_interval_days)])
         if recovery_days is not None:
-            cmd += f" --recovery-days {recovery_days}"
+            cmd.extend(["--recovery-days", str(recovery_days)])
 
-        result = subprocess.run(
-            ["sh", "-c", cmd], capture_output=True, text=True, check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
+        success, output = safe_execute_command(cmd)
+        return output
+    except SecurityError as e:
+        return f"Security error: {str(e)}"
+    except Exception as e:
         return format_error(e)
