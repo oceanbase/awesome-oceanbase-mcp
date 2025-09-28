@@ -288,28 +288,6 @@ uv pip install -r pyproject.toml --extra memory
 uv pip install oceanbase-mcp[memory] --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
-### 💡 Usage Example
-
-Experience the power of cross-session intelligent memory:
-
-```
-📅 Monday Conversation
-User: "I love football and basketball, but I don't like swimming. I work in Shanghai using Python."
-AI: "Got it! I've saved your preferences and work information!" 
-    💾 [Automatically calls ob_memory_insert to save preference data]
-
-📅 Wednesday Conversation  
-User: "Recommend some sports I might be interested in"
-AI: 🔍 [Automatically calls ob_memory_query searching "sports preferences"]
-    "Based on your previous preferences, I recommend football and basketball activities! 
-     Since you mentioned not liking swimming, here are some great land-based sports..."
-
-📅 One Week Later
-User: "Where do I work and what programming language do I use?"  
-AI: 🔍 [Automatically calls ob_memory_query searching "work programming"]
-    "You work in Shanghai and primarily use Python for development."
-```
-
 **🎯 Memory System Benefits:**
 - ✅ **Cross-Session Continuity** - No need to reintroduce yourself
 - ✅ **Intelligent Semantic Search** - Understands related concepts and context  
@@ -453,6 +431,29 @@ Answer:
 ```
 The record in table `t2` that has a vector close to `[0.1, 0.1, 0.2]` and an age of 20 is:
 (2, 'john', 20, 'I have a pear and an apple', '[0.1,0.1,0.2]', 0.0)
+```
+
+
+### Example 9: cross-session intelligent memory
+
+Experience the power of cross-session intelligent memory:
+
+```
+📅 Monday Conversation
+User: "I love football and basketball, but I don't like swimming. I work in Shanghai using Python."
+AI: "Got it! I've saved your preferences and work information!" 
+    💾 [Automatically calls ob_memory_insert to save preference data]
+
+📅 Wednesday Conversation  
+User: "Recommend some sports I might be interested in"
+AI: 🔍 [Automatically calls ob_memory_query searching "sports preferences"]
+    "Based on your previous preferences, I recommend football and basketball activities! 
+     Since you mentioned not liking swimming, here are some great land-based sports..."
+
+📅 One Week Later
+User: "Where do I work and what programming language do I use?"  
+AI: 🔍 [Automatically calls ob_memory_query searching "work programming"]
+    "You work in Shanghai and primarily use Python for development."
 ```
 
 ## 🔒 Security

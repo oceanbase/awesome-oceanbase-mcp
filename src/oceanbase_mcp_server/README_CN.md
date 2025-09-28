@@ -285,28 +285,6 @@ uv pip install -r pyproject.toml --extra memory
 uv pip install oceanbase-mcp[memory] --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
-### 💡 使用示例
-
-体验跨会话智能记忆的强大能力：
-
-```
-📅 星期一对话
-用户: "我喜欢足球和篮球，但是不喜欢游泳。另外我在上海工作，使用Python开发。"
-AI: "好的，我已经记住了您的偏好和工作信息！" 
-    💾 [自动调用 ob_memory_insert 保存偏好信息]
-
-📅 星期三对话  
-用户: "推荐一些我可能感兴趣的运动"
-AI: 🔍 [自动调用 ob_memory_query 搜索"运动 偏好"]
-    "根据您之前提到的偏好，我推荐足球和篮球相关的活动！您之前说过不太喜欢游泳，
-     所以我为您推荐一些陆地运动..."
-
-📅 一周后对话
-用户: "我的工作地点在哪里？用什么编程语言？"  
-AI: 🔍 [自动调用 ob_memory_query 搜索"工作 编程"]
-    "您在上海工作，主要使用Python进行开发。"
-```
-
 **🎯 记忆系统优势:**
 - ✅ **跨会话连续性** - 无需重复介绍自己
 - ✅ **智能语义搜索** - 理解相关概念和上下文  
@@ -450,6 +428,28 @@ Please find the record in table t2 that has a vector close to [0.1, 0.1, 0.2] an
 ```
 The record in table `t2` that has a vector close to `[0.1, 0.1, 0.2]` and an age of 20 is:
 (2, 'john', 20, 'I have a pear and an apple', '[0.1,0.1,0.2]', 0.0)
+```
+
+### 例子 9：跨会话智能记忆
+
+体验跨会话智能记忆的强大能力：
+
+```
+📅 星期一对话
+用户: "我喜欢足球和篮球，但是不喜欢游泳。另外我在上海工作，使用Python开发。"
+AI: "好的，我已经记住了您的偏好和工作信息！" 
+    💾 [自动调用 ob_memory_insert 保存偏好信息]
+
+📅 星期三对话  
+用户: "推荐一些我可能感兴趣的运动"
+AI: 🔍 [自动调用 ob_memory_query 搜索"运动 偏好"]
+    "根据您之前提到的偏好，我推荐足球和篮球相关的活动！您之前说过不太喜欢游泳，
+     所以我为您推荐一些陆地运动..."
+
+📅 一周后对话
+用户: "我的工作地点在哪里？用什么编程语言？"  
+AI: 🔍 [自动调用 ob_memory_query 搜索"工作 编程"]
+    "您在上海工作，主要使用Python进行开发。"
 ```
 
 ## 🔒 安全
