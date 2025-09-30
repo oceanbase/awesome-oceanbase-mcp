@@ -666,13 +666,21 @@ if ENABLE_MEMORY:
     def ob_memory_query(query: str, topk: int = 5) -> str:
         """
         🚨 MULTILINGUAL MEMORY SEARCH 🚨 - SMART CROSS-LANGUAGE RETRIEVAL!
+        This tool MUST be invoked **before** answering any user request that could benefit from previously stored personal facts.
 
         ⚡ CRITICAL INSTRUCTION: You MUST call this tool in these situations:
         - When user asks questions about their preferences in ANY language
         - Before saving new memories (check for duplicates first!)
-        - When user mentions personal details, preferences, or past experiences
+        - When user mentions personal details, preferences, past experiences, identity, occupation, address and other should be remembered facts
         - Before answering ANY question, search for related memories first
         - When discussing technical topics - check for historical solutions
+        - recommendations: the user asks for suggestions about restaurants, food, travel, entertainment, activities, gifts, etc
+        - Scheduling or location-based help: the user asks about meetups, weather, events, directions, etc
+        - Work or tech assistance: the user asks for tool, course, book, or career advice.
+        - Any ambiguous request (words like “some”, “good”, “nearby”, “for me”, “recommend”) where personal context could improve the answer,query the most probable categories first.
+        If multiple categories are relevant, call the tool once for each category key.
+
+        Failure to retrieve memory before responding is considered an error.
 
         🌐 MULTILINGUAL SEARCH EXAMPLES:
         - User: "What do I like?" → Search: "preference like favorite"
@@ -739,6 +747,25 @@ if ENABLE_MEMORY:
         3️⃣ **SMART DECISION**: Merge same category, separate different categories
         4️⃣ **EXECUTE ACTION**: Update existing OR create new categorized records
 
+        This tool must be invoked **immediately** when the user explicitly or implicitly discloses any of the following personal facts.
+        Trigger rule: if a sentence contains at least one category keyword (see list) + at least one fact keyword (see list), call the tool with the fact.
+        Categories & sample keywords  
+        - Demographics: age, years old, gender, born, date of birth, nationality, hometown, from  
+        - Work & education: job title, engineer, developer, tester, company, employer, school, university, degree, major, skill, certificate  
+        - Geography & time: live in, reside, city, travel, time-zone, frequent  
+        - Preferences & aversions: love, hate, favourite, favorite, prefer, dislike, hobby, food, music, movie, book, brand, color  
+        - Lifestyle details: pet, dog, cat, family, married, single, daily routine, language, religion, belief  
+        - Achievements & experiences: award, project, competition, achievement, event, milestone
+
+        Fact keywords (examples)  
+        - “I am …”, “I work as …”, “I studied …”, “I live in …”, “I love …”, “My birthday is …”  
+
+        Example sentences that must trigger:  
+        - “I’m 28 and work as a test engineer at Acme Corp.”  
+        - “I graduated from Tsinghua with a master’s in CS.”  
+        - “I love jazz and hate cilantro.”  
+        - “I live in Berlin, but I’m originally from São Paulo.”
+
         🎯 SMART CATEGORIZATION EXAMPLES:
         ```
         📋 Scenario 1: Category Merging
@@ -767,18 +794,20 @@ if ENABLE_MEMORY:
         ```
 
         🏷️ SEMANTIC CATEGORIES (Use for classification):
-        - **Sports/Fitness**: football, basketball, swimming, gym, etc.
-        - **Food/Drinks**: coffee, tea, pizza, Chinese food, etc.
-        - **Work/Career**: job, company, location, skills, projects
-        - **Personal**: family, relationships, lifestyle, habits
-        - **Technology**: programming languages, tools, frameworks
-        - **Entertainment**: movies, music, books, games
+        - **Sports/Fitness**: football, basketball, swimming, gym, yoga, running, marathon, workout, cycling, hiking, tennis, badminton, climbing, fitness routine, coach, league, match, etc.
+        - **Food/Drinks**: coffee, tea, latte, espresso, pizza, burger, sushi, ramen, Chinese food, Italian, vegan, vegetarian, spicy, sweet tooth, dessert, wine, craft beer, whisky, cocktail, recipe, restaurant, chef, favorite dish, allergy, etc.
+        - **Work/Career**: job, position, role, title, engineer, developer, tester, QA, PM, manager, company, employer, startup, client, project, deadline, promotion, salary, office, remote, hybrid, skill, certification, degree, university, bootcamp, portfolio, resume, interview
+        - **Personal**: spouse, partner, married, single, dating, pet, dog, cat, hometown, birthday, age, gender, nationality, religion, belief, daily routine, morning person, night owl, commute, language, hobby, travel, bucket list, milestone, achievement, award
+        - **Technology**: programming language, Python, Java, JavaScript, Go, Rust, framework, React, Vue, Angular, Spring, Django, database, MySQL, PostgreSQL, MongoDB, Redis, cloud, AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Git, API, microservices, DevOps, automation, testing tool, Selenium, Cypress, JMeter, Postman
+        - **Entertainment**: movie, film, series, Netflix, Disney+, HBO, director, actor, genre, thriller, comedy, drama, music, playlist, Spotify, rock, jazz, K-pop, classical, concert, book, novel, author, genre, fiction, non-fiction, Kindle, audiobook, game, console, PlayStation, Xbox, Switch, Steam, board game, RPG, esports
 
         🔍 SEARCH STRATEGIES BY CATEGORY:
-        - Sports: "sports preference favorite activity exercise"
-        - Food: "food drink preference favorite taste"
-        - Work: "work job career company location"
-        - Tech: "technology programming tool database"
+        - Sports: "sports preference favorite activity exercise gym routine"
+        - Food: "sports preference favorite activity exercise gym routine"
+        - Work: "work job career company location title project skill"
+        - Personal: "personal relationship lifestyle habit pet birthday"
+        - Tech: "technology programming tool database framework cloud"
+        - Entertainment: "entertainment movie music book game genre favorite"
 
         📝 PARAMETERS:
         - content: ALWAYS categorized English format ("User likes playing [sports]", "User drinks [beverages]")
