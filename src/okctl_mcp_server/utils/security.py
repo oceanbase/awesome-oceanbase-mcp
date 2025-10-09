@@ -32,7 +32,7 @@ def safe_execute_command(cmd: List[str], timeout: int = 30) -> Tuple[bool, str]:
             return False, "Invalid command format"
 
         # Check if command is in allowed list
-        allowed_commands = ["okctl", "kubectl"]
+        allowed_commands = ["okctl", "kubectl", "curl", "bash", "chmod", "mv"]
         if cmd[0] not in allowed_commands:
             return False, f"Command not allowed: {cmd[0]}"
 
