@@ -803,7 +803,7 @@ if ENABLE_MEMORY:
 
         🔍 SEARCH STRATEGIES BY CATEGORY:
         - Sports: "sports preference favorite activity exercise gym routine"
-        - Food: "sports preference favorite activity exercise gym routine"
+        - Food: "food drink preference favorite taste cuisine beverage"
         - Work: "work job career company location title project skill"
         - Personal: "personal relationship lifestyle habit pet birthday"
         - Tech: "technology programming tool database framework cloud"
