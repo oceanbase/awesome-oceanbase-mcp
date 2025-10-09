@@ -41,10 +41,10 @@ def run_obdiag_command(command: str, silent=True) -> str:
             command += " --inner_config obdiag.logger.silent=True"
         else:
             pass
+        command_list = command.strip().split()
         # 使用 subprocess 执行命令
         result = subprocess.run(
-            command,
-            shell=True,
+            command_list,
             text=True,
             capture_output=True,
         )
