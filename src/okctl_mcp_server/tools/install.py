@@ -75,35 +75,32 @@ def install_okctl():
             return "okctl已经安装"
 
         logger.info("正在安装okctl...")
-        
+
         # 安全地下载安装脚本
-        success, download_output = safe_execute_command([
-            "curl", "-sL", 
-            "https://raw.githubusercontent.com/oceanbase/ob-operator/master/scripts/install-okctl.sh"
-        ])
+        success, download_output = safe_execute_command(
+            [
+                "curl",
+                "-sL",
+                "https://raw.githubusercontent.com/oceanbase/ob-operator/master/scripts/install-okctl.sh",
+            ]
+        )
         if not success:
             return f"下载安装脚本失败: {download_output}"
-        
+
         # 安全地执行安装脚本
-        success, install_output = safe_execute_command([
-            "bash", "-c", download_output
-        ])
+        success, install_output = safe_execute_command(["bash", "-c", download_output])
         if not success:
             return f"执行安装脚本失败: {install_output}"
-        
+
         # 安全地设置权限和移动文件
-        success, chmod_output = safe_execute_command([
-            "chmod", "+x", "./okctl"
-        ])
+        success, chmod_output = safe_execute_command(["chmod", "+x", "./okctl"])
         if not success:
             return f"设置权限失败: {chmod_output}"
-        
-        success, move_output = safe_execute_command([
-            "mv", "./okctl", "/usr/local/bin"
-        ])
+
+        success, move_output = safe_execute_command(["mv", "./okctl", "/usr/local/bin"])
         if not success:
             return f"移动文件失败: {move_output}"
-        
+
         logger.info("okctl安装完成")
         return "okctl安装完成"
     except subprocess.CalledProcessError as e:
