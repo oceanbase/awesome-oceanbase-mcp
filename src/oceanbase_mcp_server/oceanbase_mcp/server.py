@@ -749,21 +749,21 @@ if ENABLE_MEMORY:
 
         This tool must be invoked **immediately** when the user explicitly or implicitly discloses any of the following personal facts.
         Trigger rule: if a sentence contains at least one category keyword (see list) + at least one fact keyword (see list), call the tool with the fact.
-        Categories & sample keywords  
-        - Demographics: age, years old, gender, born, date of birth, nationality, hometown, from  
-        - Work & education: job title, engineer, developer, tester, company, employer, school, university, degree, major, skill, certificate  
-        - Geography & time: live in, reside, city, travel, time-zone, frequent  
-        - Preferences & aversions: love, hate, favourite, favorite, prefer, dislike, hobby, food, music, movie, book, brand, color  
-        - Lifestyle details: pet, dog, cat, family, married, single, daily routine, language, religion, belief  
+        Categories & sample keywords
+        - Demographics: age, years old, gender, born, date of birth, nationality, hometown, from
+        - Work & education: job title, engineer, developer, tester, company, employer, school, university, degree, major, skill, certificate
+        - Geography & time: live in, reside, city, travel, time-zone, frequent
+        - Preferences & aversions: love, hate, favourite, favorite, prefer, dislike, hobby, food, music, movie, book, brand, color
+        - Lifestyle details: pet, dog, cat, family, married, single, daily routine, language, religion, belief
         - Achievements & experiences: award, project, competition, achievement, event, milestone
 
-        Fact keywords (examples)  
-        - “I am …”, “I work as …”, “I studied …”, “I live in …”, “I love …”, “My birthday is …”  
+        Fact keywords (examples)
+        - “I am …”, “I work as …”, “I studied …”, “I live in …”, “I love …”, “My birthday is …”
 
-        Example sentences that must trigger:  
-        - “I’m 28 and work as a test engineer at Acme Corp.”  
-        - “I graduated from Tsinghua with a master’s in CS.”  
-        - “I love jazz and hate cilantro.”  
+        Example sentences that must trigger:
+        - “I’m 28 and work as a test engineer at Acme Corp.”
+        - “I graduated from Tsinghua with a master’s in CS.”
+        - “I love jazz and hate cilantro.”
         - “I live in Berlin, but I’m originally from São Paulo.”
 
         🎯 SMART CATEGORIZATION EXAMPLES:
