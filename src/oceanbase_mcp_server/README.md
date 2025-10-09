@@ -13,12 +13,13 @@ A Model Context Protocol (MCP) server that enables secure interaction with Ocean
   - [From Source Code](#from-source-code)
   - [From PyPI Repository](#from-pypi-repository)
 - [Configuration](#%EF%B8%8F-configuration)
-- [Usage](#-usage)
+- [Quickstart](#-quickstart)
   - [Stdio Mode](#stdio-mode)
   - [SSE Mode](#sse-mode)
   - [Streamable HTTP](#streamable-http)
-- [Authorization](#-authorization)
-- [AI Memory System](#-ai-memory-system)
+- [Advanced Features](#-advanced-features)
+  - [Authorization](#-authorization)
+  - [AI Memory System](#-ai-memory-system)
 - [Examples](#-examples)
 - [Security](#-security)
 - [License](#-license)
@@ -115,7 +116,7 @@ OB_DATABASE=your_database
 
 ### Method 2: .env File
 Configure in the `.env` file (copy from `.env.template` and modify as needed).
-## 🚀 Usage
+## 🚀 Quickstart
 
 The OceanBase MCP Server supports three transport modes:
 
@@ -208,7 +209,9 @@ cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
 **Cherry Studio:**
 - MCP → General → Type: Select "Streamable HTTP (streamableHttp)" from dropdown
 
-## 🔐 Authorization
+## 🔧 Advanced Features
+
+### 🔐 Authorization
 
 Configure the `ALLOWED_TOKENS` variable in environment variables or `.env` file. Add `"Authorization": "Bearer <token>"` to the MCP Client request header. Only requests with valid tokens can access the MCP server service.
 
@@ -244,7 +247,7 @@ ALLOWED_TOKENS=tokenOne,tokenTwo
 - Cline does not support setting Authorization in request headers
 - Refer to this [issue](https://github.com/cline/cline/issues/4391) for updates
 
-## 🧠 AI Memory System
+### 🧠 AI Memory System
 
 **Experimental Feature**: Transform your AI assistant with persistent vector-based memory powered by OceanBase's advanced vector capabilities.
 
