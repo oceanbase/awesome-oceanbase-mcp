@@ -260,10 +260,20 @@ def get_ob_ash_report(
 
 @app.tool(name="get_current_time", description="Get current time")
 def get_current_time() -> str:
-    local_time = time.localtime()
-    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-    logger.info(f"Current time: {formatted_time}")
-    return formatted_time
+    """Get current time from OceanBase database."""
+    logger.info("Calling tool: get_current_time")
+    sql_query = "SELECT NOW()"
+    try:
+        result = execute_sql(sql_query)
+        logger.info(f"Database current time: {result}")
+        return result
+    except Error as e:
+        logger.error(f"Error getting database time: {e}")
+        # Fallback to system time if database query fails
+        local_time = time.localtime()
+        formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+        logger.info(f"Fallback to system time: {formatted_time}")
+        return formatted_time
 
 
 @app.tool()
