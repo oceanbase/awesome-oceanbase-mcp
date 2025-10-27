@@ -17,7 +17,6 @@ import ssl
 from pydantic import BaseModel
 from pyobvector import ObVecClient, MatchAgainst, l2_distance, inner_product, cosine_distance
 from sqlalchemy import text
-import ast
 
 # Configure logging
 logging.basicConfig(
