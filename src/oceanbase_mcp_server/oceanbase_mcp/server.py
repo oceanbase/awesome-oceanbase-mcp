@@ -281,7 +281,7 @@ def get_resource_capacity():
     Get resource capacity from oceanbase.
     You need to be sys tenant to get resource capacity.
     """
-    tenant = get_current_tenant()
+    tenant = json.loads(get_current_tenant())["data"][0][0]
     if tenant != "sys":
         raise ValueError("Only sys tenant can get resource capacity")
     logger.info("Calling tool: get_resource_capacity")
@@ -302,6 +302,7 @@ def search_oceanbase_document(keyword: str) -> str:
     1.Information Retrieval: The MCP Tool searches through OceanBase-related documentation using the extracted keywords, locating and extracting the most relevant information.
     2.Context Provision: The retrieved information from OceanBase documentation is then fed back to the LLM as contextual reference material. This context is not directly shown to the user but is used to refine and inform the LLM’s responses.
     This tool ensures that when the LLM’s internal documentation is insufficient to generate high-quality responses, it dynamically retrieves necessary OceanBase information, thereby maintaining a high level of response accuracy and expertise.
+    Important: keyword must be Chinese
     """
     logger.info(f"Calling tool: search_oceanbase_document,keyword:{keyword}")
     search_api_url = (
