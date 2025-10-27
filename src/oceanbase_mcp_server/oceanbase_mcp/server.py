@@ -17,7 +17,6 @@ import ssl
 from pydantic import BaseModel
 from pyobvector import ObVecClient, MatchAgainst, l2_distance, inner_product, cosine_distance
 from sqlalchemy import text
-import ast
 
 # Configure logging
 logging.basicConfig(
@@ -164,66 +163,33 @@ def list_tables() -> str:
 def execute_sql(sql: str) -> str:
     """Execute an SQL on the OceanBase server."""
     logger.info(f"Calling tool: execute_sql  with arguments: {sql}")
-
+    result = {"sql": sql, "success": False, "rows": 0, "columns": None, "data": None, "error": None}
     try:
         with connect(**db_conn_info.model_dump()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(sql)
-
-                # Special handling for SHOW TABLES
-                if sql.strip().upper().startswith("SHOW TABLES"):
-                    tables = cursor.fetchall()
-                    result = [f"Tables in {db_conn_info.database}: "]  # Header
-                    result.extend([table[0] for table in tables])
-                    return "\n".join(result)
-
-                elif sql.strip().upper().startswith("SHOW COLUMNS"):
-                    resp_header = "Columns info of this table: \n"
-                    columns = [desc[0] for desc in cursor.description]
-                    rows = cursor.fetchall()
-                    result = [",".join(map(str, row)) for row in rows]
-                    return resp_header + ("\n".join([",".join(columns)] + result))
-
-                elif sql.strip().upper().startswith("DESCRIBE"):
-                    resp_header = "Description of this table: \n"
-                    columns = [desc[0] for desc in cursor.description]
-                    rows = cursor.fetchall()
-                    result = [",".join(map(str, row)) for row in rows]
-                    return resp_header + ("\n".join([",".join(columns)] + result))
-
-                # Regular SELECT queries
-                elif sql.strip().upper().startswith("SELECT"):
-                    columns = [desc[0] for desc in cursor.description]
-                    rows = cursor.fetchall()
-                    result = [",".join(map(str, row)) for row in rows]
-                    return "\n".join([",".join(columns)] + result)
-
-                # Regular SHOW queries
-                elif sql.strip().upper().startswith("SHOW"):
-                    rows = cursor.fetchall()
-                    return rows
-                # process procedural invoke
-                elif sql.strip().upper().startswith("CALL"):
-                    rows = cursor.fetchall()
-                    if not rows:
-                        return "No result return."
-                    # the first column contains the report text
-                    return rows[0]
-                # Non-SELECT queries
+                if cursor.description:
+                    result["columns"] = [column[0] for column in cursor.description]
+                    result["data"] = [[str(cell) for cell in row] for row in cursor.fetchall()]
                 else:
                     conn.commit()
-                    return f"Sql executed successfully. Rows affected: {cursor.rowcount}"
-
+                result["rows"] = cursor.rowcount
+                result["success"] = True
     except Error as e:
-        logger.error(f"Error executing SQL '{sql}': {e}")
-        return f"Error executing sql: {str(e)}"
+        result["error"] = f"[Error]: {e}"
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+    json_result = json.dumps(result)
+    if result["error"]:
+        logger.error(f"SQL executed failed, result: {json_result}")
+    return json_result
 
 
 @app.tool()
 def get_ob_ash_report(
     start_time: str,
     end_time: str,
-    tenant_id: Optional[str] = None,
+    tenant_id: Optional[int] = None,
 ) -> str:
     """
     Get OceanBase Active Session History report.
@@ -243,16 +209,12 @@ def get_ob_ash_report(
     logger.info(
         f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
     )
-    if tenant_id is None:
-        tenant_id = "NULL"
     # Construct the SQL query
     sql_query = f"""
-        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id});
+        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id if tenant_id is not None else "NULL"});
     """
     try:
-        result = execute_sql(sql_query)
-        logger.info(f"ASH report result: {result}")
-        return result
+        return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error get ASH report,executing SQL '{sql_query}': {e}")
         return f"Error get ASH report,{str(e)}"
@@ -264,9 +226,7 @@ def get_current_time() -> str:
     logger.info("Calling tool: get_current_time")
     sql_query = "SELECT NOW()"
     try:
-        result = execute_sql(sql_query)
-        logger.info(f"Database current time: {result}")
-        return result
+        return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error getting database time: {e}")
         # Fallback to system time if database query fails
@@ -282,11 +242,9 @@ def get_current_tenant() -> str:
     Get the current tenant name from oceanbase.
     """
     logger.info("Calling tool: get_current_tenant")
-    sql_query = "show tenant"
+    sql_query = "SELECT TENANT_NAME,TENANT_ID FROM oceanbase.DBA_OB_TENANTS"
     try:
-        result = ast.literal_eval(execute_sql(sql_query))
-        logger.info(f"Current tenant: {result}")
-        return result[0][0]
+        return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
@@ -298,7 +256,7 @@ def get_all_server_nodes():
     Get all server nodes from oceanbase.
     You need to be sys tenant to get all server nodes.
     """
-    tenant = get_current_tenant()
+    tenant = json.loads(get_current_tenant())["data"][0][0]
     if tenant != "sys":
         raise ValueError("Only sys tenant can get all server nodes")
 
@@ -317,7 +275,7 @@ def get_resource_capacity():
     Get resource capacity from oceanbase.
     You need to be sys tenant to get resource capacity.
     """
-    tenant = get_current_tenant()
+    tenant = json.loads(get_current_tenant())["data"][0][0]
     if tenant != "sys":
         raise ValueError("Only sys tenant can get resource capacity")
     logger.info("Calling tool: get_resource_capacity")
@@ -338,6 +296,7 @@ def search_oceanbase_document(keyword: str) -> str:
     1.Information Retrieval: The MCP Tool searches through OceanBase-related documentation using the extracted keywords, locating and extracting the most relevant information.
     2.Context Provision: The retrieved information from OceanBase documentation is then fed back to the LLM as contextual reference material. This context is not directly shown to the user but is used to refine and inform the LLM’s responses.
     This tool ensures that when the LLM’s internal documentation is insufficient to generate high-quality responses, it dynamically retrieves necessary OceanBase information, thereby maintaining a high level of response accuracy and expertise.
+    Important: keyword must be Chinese
     """
     logger.info(f"Calling tool: search_oceanbase_document,keyword:{keyword}")
     search_api_url = (
