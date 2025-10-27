@@ -227,10 +227,7 @@ def get_current_time() -> str:
     logger.info("Calling tool: get_current_time")
     sql_query = "SELECT NOW()"
     try:
-        result = json.loads(execute_sql(sql_query))
-        current_time = result["data"][0][0]
-        logger.info(f"Database current time: {current_time}")
-        return current_time
+        return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error getting database time: {e}")
         # Fallback to system time if database query fails
