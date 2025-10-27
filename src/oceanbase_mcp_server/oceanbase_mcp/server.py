@@ -267,9 +267,7 @@ def get_all_server_nodes():
     logger.info("Calling tool: get_all_server_nodes")
     sql_query = "select * from oceanbase.DBA_OB_SERVERS"
     try:
-        result = json.loads(execute_sql(sql_query))
-        logger.info(f"All server nodes: {result['data']}")
-        return result["data"]
+        return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
