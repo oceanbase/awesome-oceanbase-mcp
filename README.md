@@ -4,6 +4,10 @@ MCP Server for OceanBase database and its tools
 
 English | [简体中文](README_CN.md)
 
+<a href="https://glama.ai/mcp/servers/@oceanbase/mcp-oceanbase">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@oceanbase/mcp-oceanbase/badge" alt="mcp-oceanbase MCP server" />
+</a>
+
 ## Features
 
 This repository contains MCP Servers as following:
@@ -19,7 +23,7 @@ This repository contains MCP Servers as following:
 
 ## Community
 
-Don’t hesitate to ask!
+Don't hesitate to ask!
 
 Contact the developers and community at [https://ask.oceanbase.com](https://ask.oceanbase.com) if you need any help.
 
