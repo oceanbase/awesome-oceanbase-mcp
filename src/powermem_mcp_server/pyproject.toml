@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "powermem-mcp"
+version = "0.1.0"
+description = "PowerMem MCP Server - Model Context Protocol server for PowerMem memory management"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "powermem Team", email = "team@powermem.ai" }
+]
+maintainers = [
+    { name = "powermem Team", email = "team@powermem.ai" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+keywords = [
+    "powermem",
+    "mcp",
+    "memory",
+    "ai",
+    "llm",
+    "vector-database",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "powermem>=0.1.0",
+    "fastmcp>=1.0",
+    "uvicorn>=0.27.1",
+    "tomli>=1.2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.991",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+powermem-mcp = "powermem_mcp.server:main"
+
+[project.urls]
+"Bug Reports" = "https://github.com/oceanbase/powermem/issues"
+"Source" = "https://github.com/oceanbase/powermem"
+"Documentation" = "https://powermem.ai/docs"
+
+[tool.setuptools]
+packages = {find = {}}
+include-package-data = true
+zip-safe = false
+
