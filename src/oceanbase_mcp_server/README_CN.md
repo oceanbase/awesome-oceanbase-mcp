@@ -12,12 +12,13 @@ OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进�
   - [从源码安装](#从源码安装)
   - [从 PyPI 仓库安装](#从-pypi-仓库安装)
 - [配置](#%EF%B8%8F-配置)
-- [使用方法](#-使用方法)
+- [快速开始](#-快速开始)
   - [Stdio 模式](#stdio-模式)
   - [SSE 模式](#sse-模式)
   - [Streamable HTTP 模式](#streamable-http-模式)
-- [鉴权](#-鉴权)
-- [AI 记忆系统](#-ai-记忆系统)
+- [高级功能](#-高级功能)
+  - [鉴权](#-鉴权)
+  - [AI 记忆系统](#-ai-记忆系统)
 - [示例](#-示例)
 - [安全](#-安全)
 - [许可证](#-许可证)
@@ -114,7 +115,7 @@ OB_DATABASE=your_database
 
 ### 方法 2: .env 文件
 在 `.env` 文件中进行配置（从 `.env.template` 复制并修改）。
-## 🚀 使用方法
+## 🚀 快速开始
 
 OceanBase MCP Server 支持三种传输模式：
 
@@ -206,7 +207,9 @@ cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
 
 **Cherry Studio:**
 - MCP → General → Type: 从下拉菜单中选择 "Streamable HTTP (streamableHttp)"
-## 🔐 鉴权
+## 🔧 高级功能
+
+### 🔐 鉴权
 
 在环境变量或 `.env` 文件中配置 `ALLOWED_TOKENS` 变量。在 MCP 客户端请求头中添加 `"Authorization": "Bearer <token>"`。只有携带有效 token 的请求才能访问 MCP 服务器服务。
 
@@ -241,7 +244,7 @@ ALLOWED_TOKENS=tokenOne,tokenTwo
 **Cline:**
 - Cline 目前不支持在请求头中设置 Authorization
 - 可以参考这个 [issue](https://github.com/cline/cline/issues/4391) 了解更新
-## 🧠 AI 记忆系统
+### 🧠 AI 记忆系统
 
 **实验特性**: 基于 OceanBase 先进向量能力的持久化记忆系统，让您的 AI 助手拥有超强记忆力。
 

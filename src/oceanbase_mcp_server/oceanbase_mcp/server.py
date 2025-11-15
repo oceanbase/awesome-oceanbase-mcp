@@ -17,7 +17,6 @@ import ssl
 from pydantic import BaseModel
 from pyobvector import ObVecClient, MatchAgainst, l2_distance, inner_product, cosine_distance
 from sqlalchemy import text
-import ast
 
 # Configure logging
 logging.basicConfig(
@@ -164,66 +163,33 @@ def list_tables() -> str:
 def execute_sql(sql: str) -> str:
     """Execute an SQL on the OceanBase server."""
     logger.info(f"Calling tool: execute_sql  with arguments: {sql}")
-
+    result = {"sql": sql, "success": False, "rows": 0, "columns": None, "data": None, "error": None}
     try:
         with connect(**db_conn_info.model_dump()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(sql)
-
-                # Special handling for SHOW TABLES
-                if sql.strip().upper().startswith("SHOW TABLES"):
-                    tables = cursor.fetchall()
-                    result = [f"Tables in {db_conn_info.database}: "]  # Header
-                    result.extend([table[0] for table in tables])
-                    return "\n".join(result)
-
-                elif sql.strip().upper().startswith("SHOW COLUMNS"):
-                    resp_header = "Columns info of this table: \n"
-                    columns = [desc[0] for desc in cursor.description]
-                    rows = cursor.fetchall()
-                    result = [",".join(map(str, row)) for row in rows]
-                    return resp_header + ("\n".join([",".join(columns)] + result))
-
-                elif sql.strip().upper().startswith("DESCRIBE"):
-                    resp_header = "Description of this table: \n"
-                    columns = [desc[0] for desc in cursor.description]
-                    rows = cursor.fetchall()
-                    result = [",".join(map(str, row)) for row in rows]
-                    return resp_header + ("\n".join([",".join(columns)] + result))
-
-                # Regular SELECT queries
-                elif sql.strip().upper().startswith("SELECT"):
-                    columns = [desc[0] for desc in cursor.description]
-                    rows = cursor.fetchall()
-                    result = [",".join(map(str, row)) for row in rows]
-                    return "\n".join([",".join(columns)] + result)
-
-                # Regular SHOW queries
-                elif sql.strip().upper().startswith("SHOW"):
-                    rows = cursor.fetchall()
-                    return rows
-                # process procedural invoke
-                elif sql.strip().upper().startswith("CALL"):
-                    rows = cursor.fetchall()
-                    if not rows:
-                        return "No result return."
-                    # the first column contains the report text
-                    return rows[0]
-                # Non-SELECT queries
+                if cursor.description:
+                    result["columns"] = [column[0] for column in cursor.description]
+                    result["data"] = [[str(cell) for cell in row] for row in cursor.fetchall()]
                 else:
                     conn.commit()
-                    return f"Sql executed successfully. Rows affected: {cursor.rowcount}"
-
+                result["rows"] = cursor.rowcount
+                result["success"] = True
     except Error as e:
-        logger.error(f"Error executing SQL '{sql}': {e}")
-        return f"Error executing sql: {str(e)}"
+        result["error"] = f"[Error]: {e}"
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+    json_result = json.dumps(result)
+    if result["error"]:
+        logger.error(f"SQL executed failed, result: {json_result}")
+    return json_result
 
 
 @app.tool()
 def get_ob_ash_report(
     start_time: str,
     end_time: str,
-    tenant_id: Optional[str] = None,
+    tenant_id: Optional[int] = None,
 ) -> str:
     """
     Get OceanBase Active Session History report.
@@ -243,16 +209,12 @@ def get_ob_ash_report(
     logger.info(
         f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
     )
-    if tenant_id is None:
-        tenant_id = "NULL"
     # Construct the SQL query
     sql_query = f"""
-        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id});
+        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id if tenant_id is not None else "NULL"});
     """
     try:
-        result = execute_sql(sql_query)
-        logger.info(f"ASH report result: {result}")
-        return result
+        return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error get ASH report,executing SQL '{sql_query}': {e}")
         return f"Error get ASH report,{str(e)}"
@@ -260,10 +222,18 @@ def get_ob_ash_report(
 
 @app.tool(name="get_current_time", description="Get current time")
 def get_current_time() -> str:
-    local_time = time.localtime()
-    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-    logger.info(f"Current time: {formatted_time}")
-    return formatted_time
+    """Get current time from OceanBase database."""
+    logger.info("Calling tool: get_current_time")
+    sql_query = "SELECT NOW()"
+    try:
+        return execute_sql(sql_query)
+    except Error as e:
+        logger.error(f"Error getting database time: {e}")
+        # Fallback to system time if database query fails
+        local_time = time.localtime()
+        formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+        logger.info(f"Fallback to system time: {formatted_time}")
+        return formatted_time
 
 
 @app.tool()
@@ -272,11 +242,9 @@ def get_current_tenant() -> str:
     Get the current tenant name from oceanbase.
     """
     logger.info("Calling tool: get_current_tenant")
-    sql_query = "show tenant"
+    sql_query = "SELECT TENANT_NAME,TENANT_ID FROM oceanbase.DBA_OB_TENANTS"
     try:
-        result = ast.literal_eval(execute_sql(sql_query))
-        logger.info(f"Current tenant: {result}")
-        return result[0][0]
+        return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
@@ -288,7 +256,7 @@ def get_all_server_nodes():
     Get all server nodes from oceanbase.
     You need to be sys tenant to get all server nodes.
     """
-    tenant = get_current_tenant()
+    tenant = json.loads(get_current_tenant())["data"][0][0]
     if tenant != "sys":
         raise ValueError("Only sys tenant can get all server nodes")
 
@@ -307,7 +275,7 @@ def get_resource_capacity():
     Get resource capacity from oceanbase.
     You need to be sys tenant to get resource capacity.
     """
-    tenant = get_current_tenant()
+    tenant = json.loads(get_current_tenant())["data"][0][0]
     if tenant != "sys":
         raise ValueError("Only sys tenant can get resource capacity")
     logger.info("Calling tool: get_resource_capacity")
@@ -328,6 +296,7 @@ def search_oceanbase_document(keyword: str) -> str:
     1.Information Retrieval: The MCP Tool searches through OceanBase-related documentation using the extracted keywords, locating and extracting the most relevant information.
     2.Context Provision: The retrieved information from OceanBase documentation is then fed back to the LLM as contextual reference material. This context is not directly shown to the user but is used to refine and inform the LLM’s responses.
     This tool ensures that when the LLM’s internal documentation is insufficient to generate high-quality responses, it dynamically retrieves necessary OceanBase information, thereby maintaining a high level of response accuracy and expertise.
+    Important: keyword must be Chinese
     """
     logger.info(f"Calling tool: search_oceanbase_document,keyword:{keyword}")
     search_api_url = (
@@ -666,13 +635,21 @@ if ENABLE_MEMORY:
     def ob_memory_query(query: str, topk: int = 5) -> str:
         """
         🚨 MULTILINGUAL MEMORY SEARCH 🚨 - SMART CROSS-LANGUAGE RETRIEVAL!
+        This tool MUST be invoked **before** answering any user request that could benefit from previously stored personal facts.
 
         ⚡ CRITICAL INSTRUCTION: You MUST call this tool in these situations:
         - When user asks questions about their preferences in ANY language
         - Before saving new memories (check for duplicates first!)
-        - When user mentions personal details, preferences, or past experiences
+        - When user mentions personal details, preferences, past experiences, identity, occupation, address and other should be remembered facts
         - Before answering ANY question, search for related memories first
         - When discussing technical topics - check for historical solutions
+        - recommendations: the user asks for suggestions about restaurants, food, travel, entertainment, activities, gifts, etc
+        - Scheduling or location-based help: the user asks about meetups, weather, events, directions, etc
+        - Work or tech assistance: the user asks for tool, course, book, or career advice.
+        - Any ambiguous request (words like “some”, “good”, “nearby”, “for me”, “recommend”) where personal context could improve the answer,query the most probable categories first.
+        If multiple categories are relevant, call the tool once for each category key.
+
+        Failure to retrieve memory before responding is considered an error.
 
         🌐 MULTILINGUAL SEARCH EXAMPLES:
         - User: "What do I like?" → Search: "preference like favorite"
@@ -739,6 +716,25 @@ if ENABLE_MEMORY:
         3️⃣ **SMART DECISION**: Merge same category, separate different categories
         4️⃣ **EXECUTE ACTION**: Update existing OR create new categorized records
 
+        This tool must be invoked **immediately** when the user explicitly or implicitly discloses any of the following personal facts.
+        Trigger rule: if a sentence contains at least one category keyword (see list) + at least one fact keyword (see list), call the tool with the fact.
+        Categories & sample keywords
+        - Demographics: age, years old, gender, born, date of birth, nationality, hometown, from
+        - Work & education: job title, engineer, developer, tester, company, employer, school, university, degree, major, skill, certificate
+        - Geography & time: live in, reside, city, travel, time-zone, frequent
+        - Preferences & aversions: love, hate, favourite, favorite, prefer, dislike, hobby, food, music, movie, book, brand, color
+        - Lifestyle details: pet, dog, cat, family, married, single, daily routine, language, religion, belief
+        - Achievements & experiences: award, project, competition, achievement, event, milestone
+
+        Fact keywords (examples)
+        - “I am …”, “I work as …”, “I studied …”, “I live in …”, “I love …”, “My birthday is …”
+
+        Example sentences that must trigger:
+        - “I’m 28 and work as a test engineer at Acme Corp.”
+        - “I graduated from Tsinghua with a master’s in CS.”
+        - “I love jazz and hate cilantro.”
+        - “I live in Berlin, but I’m originally from São Paulo.”
+
         🎯 SMART CATEGORIZATION EXAMPLES:
         ```
         📋 Scenario 1: Category Merging
@@ -767,18 +763,20 @@ if ENABLE_MEMORY:
         ```
 
         🏷️ SEMANTIC CATEGORIES (Use for classification):
-        - **Sports/Fitness**: football, basketball, swimming, gym, etc.
-        - **Food/Drinks**: coffee, tea, pizza, Chinese food, etc.
-        - **Work/Career**: job, company, location, skills, projects
-        - **Personal**: family, relationships, lifestyle, habits
-        - **Technology**: programming languages, tools, frameworks
-        - **Entertainment**: movies, music, books, games
+        - **Sports/Fitness**: football, basketball, swimming, gym, yoga, running, marathon, workout, cycling, hiking, tennis, badminton, climbing, fitness routine, coach, league, match, etc.
+        - **Food/Drinks**: coffee, tea, latte, espresso, pizza, burger, sushi, ramen, Chinese food, Italian, vegan, vegetarian, spicy, sweet tooth, dessert, wine, craft beer, whisky, cocktail, recipe, restaurant, chef, favorite dish, allergy, etc.
+        - **Work/Career**: job, position, role, title, engineer, developer, tester, QA, PM, manager, company, employer, startup, client, project, deadline, promotion, salary, office, remote, hybrid, skill, certification, degree, university, bootcamp, portfolio, resume, interview
+        - **Personal**: spouse, partner, married, single, dating, pet, dog, cat, hometown, birthday, age, gender, nationality, religion, belief, daily routine, morning person, night owl, commute, language, hobby, travel, bucket list, milestone, achievement, award
+        - **Technology**: programming language, Python, Java, JavaScript, Go, Rust, framework, React, Vue, Angular, Spring, Django, database, MySQL, PostgreSQL, MongoDB, Redis, cloud, AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Git, API, microservices, DevOps, automation, testing tool, Selenium, Cypress, JMeter, Postman
+        - **Entertainment**: movie, film, series, Netflix, Disney+, HBO, director, actor, genre, thriller, comedy, drama, music, playlist, Spotify, rock, jazz, K-pop, classical, concert, book, novel, author, genre, fiction, non-fiction, Kindle, audiobook, game, console, PlayStation, Xbox, Switch, Steam, board game, RPG, esports
 
         🔍 SEARCH STRATEGIES BY CATEGORY:
-        - Sports: "sports preference favorite activity exercise"
-        - Food: "food drink preference favorite taste"
-        - Work: "work job career company location"
-        - Tech: "technology programming tool database"
+        - Sports: "sports preference favorite activity exercise gym routine"
+        - Food: "food drink preference favorite taste cuisine beverage"
+        - Work: "work job career company location title project skill"
+        - Personal: "personal relationship lifestyle habit pet birthday"
+        - Tech: "technology programming tool database framework cloud"
+        - Entertainment: "entertainment movie music book game genre favorite"
 
         📝 PARAMETERS:
         - content: ALWAYS categorized English format ("User likes playing [sports]", "User drinks [beverages]")
