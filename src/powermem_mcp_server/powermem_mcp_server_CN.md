@@ -18,6 +18,25 @@ PowerMem MCP Server - 用于 PowerMem 内存管理的模型上下文协议服务
    - 项目根目录的 `.env`
    - `examples/configs/.env`
 
+   您可以复制 `.env.example` 文件作为模板：
+   ```shell
+   cp powermem_mcp/.env.example .env
+   ```
+   
+   然后编辑 `.env` 文件并配置以下关键设置：
+   
+   - **数据库提供商**：从 `sqlite`、`oceanbase` 或 `postgres` 中选择
+   - **LLM 提供商**：从 `qwen`、`openai` 或 `mock` 中选择
+   - **嵌入模型提供商**：从 `qwen`、`openai` 或 `mock` 中选择
+   - **API 密钥**：设置您的 LLM 和嵌入模型 API 密钥
+   - **代理配置**：配置内存管理设置
+   - **智能内存**：启用/配置艾宾浩斯遗忘曲线设置
+   - **性能**：调整批次大小、缓存设置和搜索参数
+   - **安全**：配置加密和访问控制
+   - **日志**：设置日志级别和文件路径
+   
+   `.env.example` 文件包含详细的注释和不同用例的示例配置。
+
 PowerMem 安装和配置请参考：
 
 [PowerMem 文档](https://powermem.ai/docs)

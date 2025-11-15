@@ -18,6 +18,25 @@ Before using the PowerMem MCP Server, please ensure:
    - Project root directory's `.env`
    - `examples/configs/.env`
 
+   You can copy the `.env.example` file as a template:
+   ```shell
+   cp powermem_mcp/.env.example .env
+   ```
+   
+   Then edit the `.env` file and configure the following key settings:
+   
+   - **Database Provider**: Choose from `sqlite`, `oceanbase`, or `postgres`
+   - **LLM Provider**: Choose from `qwen`, `openai`, or `mock`
+   - **Embedding Provider**: Choose from `qwen`, `openai`, or `mock`
+   - **API Keys**: Set your LLM and Embedding API keys
+   - **Agent Configuration**: Configure memory management settings
+   - **Intelligent Memory**: Enable/configure Ebbinghaus forgetting curve settings
+   - **Performance**: Adjust batch sizes, cache settings, and search parameters
+   - **Security**: Configure encryption and access control
+   - **Logging**: Set logging levels and file paths
+   
+   The `.env.example` file contains detailed comments and example configurations for different use cases.
+
 For PowerMem installation and configuration, please refer to:
 
 [PowerMem Documentation](https://powermem.ai/docs)
