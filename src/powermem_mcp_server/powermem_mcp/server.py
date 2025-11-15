@@ -89,7 +89,9 @@ def format_memories_for_llm(memories: Dict[str, Any]) -> str:
     """
     # First convert all datetime objects recursively, then serialize
     converted_memories = convert_datetime_to_str(memories)
-    return json.dumps(converted_memories, ensure_ascii=False, indent=2, cls=DateTimeEncoder)
+    return json.dumps(
+        converted_memories, ensure_ascii=False, indent=2, cls=DateTimeEncoder
+    )
 
 
 # ============================================================================
@@ -99,12 +101,12 @@ def format_memories_for_llm(memories: Dict[str, Any]) -> str:
 
 @mcp.tool()
 def add_memory(
-        messages: Union[str, Dict, List[Dict]],
-        user_id: Optional[str] = None,
-        agent_id: Optional[str] = None,
-        run_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        infer: bool = True,
+    messages: Union[str, Dict, List[Dict]],
+    user_id: Optional[str] = None,
+    agent_id: Optional[str] = None,
+    run_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    infer: bool = True,
 ) -> str:
     """
     Add new memory to storage
@@ -134,13 +136,13 @@ def add_memory(
 
 @mcp.tool()
 def search_memories(
-        query: str,
-        user_id: Optional[str] = None,
-        agent_id: Optional[str] = None,
-        run_id: Optional[str] = None,
-        limit: int = 10,
-        threshold: Optional[float] = None,
-        filters: Optional[Dict[str, Any]] = None,
+    query: str,
+    user_id: Optional[str] = None,
+    agent_id: Optional[str] = None,
+    run_id: Optional[str] = None,
+    limit: int = 10,
+    threshold: Optional[float] = None,
+    filters: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Search memories
@@ -173,7 +175,7 @@ def search_memories(
 
 @mcp.tool()
 def get_memory_by_id(
-        memory_id: int, user_id: Optional[str] = None, agent_id: Optional[str] = None
+    memory_id: int, user_id: Optional[str] = None, agent_id: Optional[str] = None
 ) -> str:
     """
     Get specific memory
@@ -195,11 +197,11 @@ def get_memory_by_id(
 
 @mcp.tool()
 def update_memory(
-        memory_id: int,
-        content: str,
-        user_id: Optional[str] = None,
-        agent_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+    memory_id: int,
+    content: str,
+    user_id: Optional[str] = None,
+    agent_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Update memory
@@ -227,7 +229,7 @@ def update_memory(
 
 @mcp.tool()
 def delete_memory(
-        memory_id: int, user_id: Optional[str] = None, agent_id: Optional[str] = None
+    memory_id: int, user_id: Optional[str] = None, agent_id: Optional[str] = None
 ) -> str:
     """
     Delete memory
@@ -247,9 +249,9 @@ def delete_memory(
 
 @mcp.tool()
 def delete_all_memories(
-        user_id: Optional[str] = None,
-        agent_id: Optional[str] = None,
-        run_id: Optional[str] = None,
+    user_id: Optional[str] = None,
+    agent_id: Optional[str] = None,
+    run_id: Optional[str] = None,
 ) -> str:
     """
     Batch delete memories
@@ -269,12 +271,12 @@ def delete_all_memories(
 
 @mcp.tool()
 def list_memories(
-        user_id: Optional[str] = None,
-        agent_id: Optional[str] = None,
-        run_id: Optional[str] = None,
-        limit: int = 100,
-        offset: int = 0,
-        filters: Optional[Dict[str, Any]] = None,
+    user_id: Optional[str] = None,
+    agent_id: Optional[str] = None,
+    run_id: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    filters: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     List all memories
