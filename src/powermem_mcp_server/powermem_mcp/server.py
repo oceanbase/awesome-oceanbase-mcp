@@ -14,7 +14,6 @@ from fastmcp import FastMCP
 from powermem import create_memory
 import json
 
-
 # ============================================================================
 # Part 1: MCP Server
 # ============================================================================
@@ -71,6 +70,7 @@ class DateTimeEncoder(json.JSONEncoder):
     """
     Custom JSON encoder that handles datetime and date objects
     """
+
     def default(self, obj):
         if isinstance(obj, (datetime, date)):
             return obj.isoformat()
