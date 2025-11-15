@@ -9,10 +9,10 @@ Provides 7 core tools for memory management
 
 import sys
 from typing import Optional, Dict, Any, List, Union
+from datetime import datetime, date
 from fastmcp import FastMCP
 from powermem import create_memory
 import json
-
 
 # ============================================================================
 # Part 1: MCP Server
@@ -44,6 +44,39 @@ def get_memory():
     return _memory_instance
 
 
+def convert_datetime_to_str(obj: Any) -> Any:
+    """
+    Recursively convert datetime and date objects to ISO format strings
+
+    Args:
+        obj: Object that may contain datetime/date objects
+
+    Returns:
+        Object with all datetime/date objects converted to strings
+    """
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {key: convert_datetime_to_str(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_datetime_to_str(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_datetime_to_str(item) for item in obj)
+    else:
+        return obj
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder that handles datetime and date objects
+    """
+
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super().default(obj)
+
+
 def format_memories_for_llm(memories: Dict[str, Any]) -> str:
     """
     Format memory results as JSON string for LLM processing
@@ -54,7 +87,11 @@ def format_memories_for_llm(memories: Dict[str, Any]) -> str:
     Returns:
         JSON formatted string
     """
-    return json.dumps(memories, ensure_ascii=False, indent=2)
+    # First convert all datetime objects recursively, then serialize
+    converted_memories = convert_datetime_to_str(memories)
+    return json.dumps(
+        converted_memories, ensure_ascii=False, indent=2, cls=DateTimeEncoder
+    )
 
 
 # ============================================================================
@@ -132,6 +169,7 @@ def search_memories(
         threshold=threshold,
         filters=filters,
     )
+    print(f"result of search_memories: {result}")
     return format_memories_for_llm(result)
 
 
