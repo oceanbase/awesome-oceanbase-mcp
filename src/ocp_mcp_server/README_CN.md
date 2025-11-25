@@ -137,7 +137,7 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 
 ## 可用工具
 
-### 集群管理工具
+### 集群管理
 
 1. **`list_oceanbase_clusters`** - 查询 OceanBase 集群列表
 2. **`get_oceanbase_cluster_zones`** - 获取集群 Zone 列表
@@ -149,7 +149,7 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 8. **`get_oceanbase_cluster_parameters`** - 获取集群参数列表
 9. **`set_oceanbase_cluster_parameters`** - 更新集群参数
 
-### 租户管理工具
+### 租户管理
 
 1. **`get_oceanbase_cluster_tenants`** - 查询集群租户列表
 2. **`get_all_oceanbase_tenants`** - 查询所有租户列表
@@ -158,13 +158,13 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 5. **`get_oceanbase_tenant_parameters`** - 获取租户参数列表
 6. **`set_oceanbase_tenant_parameters`** - 更新租户参数
 
-### OBProxy 管理工具
+### OBProxy 管理
 
 1. **`list_obproxy_clusters`** - 查询 OBProxy 集群列表
 2. **`get_oceanbase_obproxy_cluster_detail`** - 查询 OBProxy 集群详情
 3. **`get_oceanbase_obproxy_cluster_parameters`** - 查询 OBProxy 集群参数
 
-### 数据库对象管理工具
+### 数据库对象管理
 
 1. **`get_oceanbase_tenant_databases`** - 获取租户数据库列表
 2. **`get_oceanbase_tenant_users`** - 获取租户用户列表
@@ -173,17 +173,14 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 5. **`get_oceanbase_tenant_role_detail`** - 获取角色详情
 6. **`get_oceanbase_tenant_objects`** - 获取租户数据库对象列表
 
-### 监控工具
+### 监控告警
 
 1. **`get_oceanbase_metric_groups`** - 查询监控指标组信息
 2. **`get_oceanbase_metric_data_with_label`** - 查询带标签的监控数据
+3. **`get_oceanbase_alarms`** - 查询告警事件列表
+4. **`get_oceanbase_alarm_detail`** - 查询告警事件详情
 
-### 告警工具
-
-1. **`get_oceanbase_alarms`** - 查询告警事件列表
-2. **`get_oceanbase_alarm_detail`** - 查询告警事件详情
-
-### 巡检工具
+### 巡检
 
 1. **`get_oceanbase_inspection_tasks`** - 查询巡检任务列表
 2. **`get_oceanbase_inspection_overview`** - 查询巡检对象列表
@@ -192,13 +189,13 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 5. **`get_oceanbase_inspection_item_last_result`** - 查询指定巡检项的最后结
 6. **`get_oceanbase_inspection_report_info`** - 获取指定对象的最后巡检结果
 
-### SQL 性能分析工具
+### SQL 性能分析
 
 1. **`get_oceanbase_tenant_top_sql`** - 查询 SQL 性能统计
 2. **`get_oceanbase_sql_text`** - 查询 SQL 完整文本
 3. **`get_oceanbase_tenant_slow_sql`** - 查询慢 SQL 列表
  
-### 性能报告工具
+### 性能报告
 
 1. **`create_oceanbase_performance_report`** - 生成性能报告
 2. **`get_oceanbase_cluster_snapshots`** - 查询集群快照信息
