@@ -142,7 +142,7 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 
 ## Available Tools
 
-### Cluster Management Tools
+### Cluster Management 
 
 1. **`list_oceanbase_clusters`** - Query OceanBase cluster list
 2. **`get_oceanbase_cluster_zones`** - Get cluster Zone list
@@ -154,7 +154,7 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 8. **`get_oceanbase_cluster_parameters`** - Get cluster parameter list
 9. **`set_oceanbase_cluster_parameters`** - Update cluster parameters
 
-### Tenant Management Tools
+### Tenant Management 
 
 1. **`get_oceanbase_cluster_tenants`** - Query cluster tenant list
 2. **`get_all_oceanbase_tenants`** - Query all tenant list
@@ -163,13 +163,13 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 5. **`get_oceanbase_tenant_parameters`** - Get tenant parameter list
 6. **`set_oceanbase_tenant_parameters`** - Update tenant parameters
 
-### OBProxy Management Tools
+### OBProxy Management 
 
 1. **`list_obproxy_clusters`** - Query OBProxy cluster list
 2. **`get_oceanbase_obproxy_cluster_detail`** - Query OBProxy cluster details
 3. **`get_oceanbase_obproxy_cluster_parameters`** - Query OBProxy cluster parameters
 
-### Database Object Management Tools
+### Database Object Management 
 
 1. **`get_oceanbase_tenant_databases`** - Get tenant database list
 2. **`get_oceanbase_tenant_users`** - Get tenant user list
@@ -178,17 +178,14 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 5. **`get_oceanbase_tenant_role_detail`** - Get role details
 6. **`get_oceanbase_tenant_objects`** - Get tenant database object list
 
-### Monitoring Tools
+### Monitoring And Alarm
 
 1. **`get_oceanbase_metric_groups`** - Query monitoring metric group information
 2. **`get_oceanbase_metric_data_with_label`** - Query monitoring data with labels
+3. **`get_oceanbase_alarms`** - Query alarm event list
+4. **`get_oceanbase_alarm_detail`** - Query alarm event details
 
-### Alarm Tools
-
-1. **`get_oceanbase_alarms`** - Query alarm event list
-2. **`get_oceanbase_alarm_detail`** - Query alarm event details
-
-### Inspection Tools
+### Inspection 
 
 1. **`get_oceanbase_inspection_tasks`** - Query inspection task list
 2. **`get_oceanbase_inspection_overview`** - Query inspection object list
@@ -197,13 +194,13 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 5. **`get_oceanbase_inspection_item_last_result`** - Query last result of specified inspection item
 6. **`get_oceanbase_inspection_report_info`** - Get last inspection result of specified object
 
-### SQL Performance Analysis Tools
+### SQL Performance Analysis 
 
 1. **`get_oceanbase_tenant_top_sql`** - Query SQL performance statistics
 2. **`get_oceanbase_sql_text`** - Query SQL full text
 3. **`get_oceanbase_tenant_slow_sql`** - Query slow SQL list
 
-### Performance Report Tools
+### Performance Report 
 
 1. **`create_oceanbase_performance_report`** - Generate performance report
 2. **`get_oceanbase_cluster_snapshots`** - Query cluster snapshot information
