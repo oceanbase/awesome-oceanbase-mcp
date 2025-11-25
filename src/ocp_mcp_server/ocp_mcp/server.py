@@ -1,7 +1,8 @@
 """OCP MCP Server implementation."""
 
+import base64
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from fastmcp import FastMCP
 from pydantic import BaseModel
@@ -33,16 +34,41 @@ def list_oceanbase_clusters(
     size: int = 10,
     sort: Optional[str] = None,
     name: Optional[str] = None,
-    status: Optional[List[str]] = None
+    status: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     List OceanBase clusters
     
-    This interface is used to query OceanBase cluster information managed by OCP.
-    You can limit the query scope by cluster name keywords, cluster status, and other conditions.
-    In primary-standby deployment mode, the returned results include both primary and standby clusters.
+    Query OceanBase cluster information managed by OCP. You can filter clusters by name keywords 
+    and status. 
+    
+    Args:
+        page: Pagination page number, starting from 1. Default: 1
+        size: Pagination size, default: 10, maximum: 2000
+        sort: Sorting rule, e.g., "name,asc" (optional)
+        name: Cluster name keyword for filtering, case-insensitive (optional)
+        status: Cluster status filter as comma-separated string (optional). 
+               Multiple statuses can be specified, e.g., "RUNNING,STOPPED" or "RUNNING".
+               Valid status values:
+               - RUNNING: Cluster is running normally
+               - CREATING: Cluster is being created
+               - DELETING: Cluster is being deleted
+               - STARTING: Cluster is starting up
+               - RESTARTING: Cluster is restarting
+               - STOPPING: Cluster is stopping
+               - STOPPED: Cluster is stopped
+               - TAKINGOVER: Cluster is taking over
+               - MOVINGOUT: Cluster is moving out
+               - SWITCHOVER: Primary-standby cluster switching
+               - FAILOVER: Standby cluster failover
+               - OPERATING: Cluster is in operation
+    
+    Returns:
+        Dictionary containing cluster list ,Each cluster object includes cluster ID, name, status, version, and other details.
     """
-    return get_clusters(page, size, sort, name, status)
+    
+    result = get_clusters(page, size, sort, name, status)
+    return result
 
 
 @app.tool()
@@ -165,9 +191,7 @@ def get_oceanbase_cluster_tenants(
     sort: Optional[str] = None,
     name: Optional[str] = None,
     mode: Optional[str] = None,
-    locked: Optional[bool] = None,
-    readonly: Optional[bool] = None,
-    status: Optional[List[str]] = None,
+    status: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Query cluster tenant list
@@ -182,15 +206,17 @@ def get_oceanbase_cluster_tenants(
         sort: Sorting rule, e.g., "asc,name" (optional)
         name: Tenant name keyword, case-insensitive (optional)
         mode: Tenant mode: MYSQL or ORACLE (optional)
-        locked: Whether locked (optional)
-        readonly: Whether read-only (optional)
-        status: Tenant status list (optional)
+        status: Tenant status list or comma-separated string (optional) ,e.g., "NORMAL,CREATING" or "CREATING".
+            Valid tenant status values:
+            - NORMAL: Normal
+            - CREATING: Creating
+            - MODIFYING: Modifying
     
     Returns:
         Dictionary containing tenant information list and pagination information
     """
     return get_cluster_tenants(
-        cluster_id, page, size, sort, name, mode, locked, readonly, status
+        cluster_id, page, size, sort, name, mode, status
     )
 
 
@@ -200,10 +226,8 @@ def get_all_oceanbase_tenants(
     size: int = 10,
     sort: Optional[str] = None,
     name: Optional[str] = None,
-    mode: Optional[List[str]] = None,
-    locked: Optional[bool] = None,
-    readonly: Optional[bool] = None,
-    status: Optional[List[str]] = None,
+    mode: Optional[str] = None,
+    status: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Query all tenant list
@@ -217,15 +241,13 @@ def get_all_oceanbase_tenants(
         size: Pagination size, default: 10, maximum: 2000
         sort: Sorting rule, e.g., "name,asc" (optional)
         name: Query tenants whose name contains the keyword, case-insensitive (optional)
-        mode: Query tenants with specified modes: ORACLE or MYSQL (optional)
-        locked: Query by locked status (optional)
-        readonly: Query by read-only status (optional)
-        status: Query tenants with specified status (optional)
+        mode: Query tenants with specified modes: ORACLE or MYSQL (optional),e.g., "ORACLE,MYSQL" or "ORACLE".
+        status: Query tenants with specified status (optional) ,e.g., "NORMAL,CREATING" or "CREATING".
     
     Returns:
         Dictionary containing tenant information list and pagination information
     """
-    return get_all_tenants(page, size, sort, name, mode, locked, readonly, status)
+    return get_all_tenants(page, size, sort, name, mode, status)
 
 
 @app.tool()
@@ -553,11 +575,11 @@ def get_oceanbase_tenant_objects(
 def get_oceanbase_metric_groups(
     type: str,
     scope: str,
+    target_id: int = None,
     page: int = 1,
     size: int = 10,
     sort: Optional[str] = None,
     target: Optional[str] = None,
-    target_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Query monitor metric description information
@@ -582,14 +604,14 @@ def get_oceanbase_metric_groups(
 
 @app.tool()
 def get_oceanbase_metric_data_with_label(
+    min_step: int ,
+    max_points: int ,
     start_time: str,
     end_time: str,
-    metrics: List[str],
-    group_by: List[str],
+    metrics: str,
+    group_by: str,
     interval: int,
-    labels: List[str],
-    min_step: Optional[int] = None,
-    max_points: Optional[int] = None,
+    labels: str,
 ) -> Dict[str, Any]:
     """
     Query monitor metric data with labels
@@ -617,15 +639,15 @@ def get_oceanbase_metric_data_with_label(
 
 @app.tool()
 def get_oceanbase_alarms(
+    level: int,
     page: int = 1,
     size: int = 10,
     app_type: Optional[str] = None,
     scope: Optional[str] = None,
-    level: Optional[int] = None,
     status: Optional[str] = None,
-    active_at_start: Optional[str] = None,
-    active_at_end: Optional[str] = None,
-    is_subscribed_by_me: Optional[bool] = None,
+    active_at_start: str = None,
+    active_at_end: str = None,
+    is_subscribed_by_me: bool = None,
     keyword: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -655,7 +677,7 @@ def get_oceanbase_alarms(
             - OBProxyLog
             - *
             - HostLog
-        level: Alarm level [1~5] (optional):
+        level: Alarm level [1~5]:
             - 1: Down
             - 2: Critical
             - 3: Alert
@@ -668,15 +690,14 @@ def get_oceanbase_alarms(
             - Inhibited
         active_at_start: Alarm trigger start time (Datetime format, e.g., "2020-11-11T11:12:13.127+08:00") (optional)
         active_at_end: Alarm trigger end time (Datetime format, e.g., "2020-11-11T17:11:13.127+08:00") (optional)
-        is_subscribed_by_me: Whether subscribed by me (optional)
+        is_subscribed_by_me: Whether subscribed by me 
         keyword: Keyword matching (optional)
     
     Returns:
         Dictionary containing alarm event list and pagination information
     """
     return get_alarms(
-        page, size, app_type, scope, level, status,
-        active_at_start, active_at_end, is_subscribed_by_me, keyword
+        page, size, app_type, scope, level, status,active_at_start, active_at_end,is_subscribed_by_me, keyword
     )
 
 
@@ -702,8 +723,8 @@ def get_oceanbase_alarm_detail(alarm_id: int) -> Dict[str, Any]:
 
 @app.tool()
 def get_oceanbase_inspection_tasks(
-    inspectionObjectTypes: Optional[List[str]] = None,
-    tags: Optional[List[int]] = None,
+    inspectionObjectTypes: Optional[str] = None,
+    tags: Optional[str] = None,
     taskStates: Optional[str] = None,
     name: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -714,17 +735,17 @@ def get_oceanbase_inspection_tasks(
     The caller must be authenticated through OCP application service.
     
     Args:
-        inspectionObjectTypes: Inspection object types (optional):
+        inspectionObjectTypes: Inspection object types (optional) e.g., "OB_CLUSTER,OB_TENANT,HOST,OB_PROXY" or "OB_CLUSTER":
             - OB_CLUSTER: Cluster
             - OB_TENANT: Tenant
             - HOST: Host
             - OB_PROXY: OBProxy
-        tags: Inspection scenario tag IDs (optional):
+        tags: Inspection scenario tag IDs (optional) e.g. "1,2,3,4" or "1":
             - 1: Basic inspection
             - 2: Performance inspection
             - 3: Deep inspection
             - 4: Installation inspection
-        taskStates: Inspection task state (optional):
+        taskStates: Inspection task state (optional) 
             - RUNNING: Running
             - FAILED: Failed
             - SUCCESSFUL: Successful
@@ -746,15 +767,14 @@ def get_oceanbase_inspection_tasks(
         - lowRiskCount: Number of low-risk inspection items
         - taskState: Inspection task state
     """
-    from ocp_mcp.ocp_tool import get_inspection_tasks
     return get_inspection_tasks(inspectionObjectTypes, tags, taskStates, name)
 
 
 @app.tool()
 def get_oceanbase_inspection_overview(
-    object_ids: Optional[List[int]] = None,
-    inspection_object_type: Optional[List[str]] = None,
-    schedule_states: Optional[List[str]] = None,
+    object_ids: str = None,
+    inspection_object_type: Optional[str] = None,
+    schedule_states: Optional[str] = None,
     name: Optional[str] = None,
     parent_name: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -765,14 +785,14 @@ def get_oceanbase_inspection_overview(
     The caller must be authenticated through OCP application service.
     
     Args:
-        object_ids: Inspection object IDs in OCP (e.g., cluster ID, tenant ID).
+        object_ids: Inspection object IDs in OCP (e.g., cluster ID, tenant ID). e.g. "1,2,3,4" or "1":
                    Multiple IDs should be separated by commas (optional)
-        inspection_object_type: Object types (optional):
+        inspection_object_type: Object types  e.g., "OB_CLUSTER":
             - OB_CLUSTER: Cluster
             - OB_TENANT: Tenant
             - HOST: Host
             - OB_PROXY: OBProxy
-        schedule_states: Schedule states (optional):
+        schedule_states: Schedule states e.g., "ACTIVE,INACTIVE,EXPIRED" or "ACTIVE":
             - ACTIVE: Enabled
             - INACTIVE: Disabled
             - EXPIRED: Expired
@@ -805,8 +825,8 @@ def get_oceanbase_inspection_report(report_id: int) -> Dict[str, Any]:
 @app.tool()
 def run_oceanbase_inspection(
     inspection_object_type: str,
-    object_ids: List[int],
-    tags: int,
+    object_ids: str ,
+    tag: int ,
 ) -> Dict[str, Any]:
     """
     Run inspection
@@ -822,7 +842,7 @@ def run_oceanbase_inspection(
             - OB_PROXY: OBProxy
         object_ids: Inspection object IDs in OCP (e.g., cluster ID, tenant ID).
                    Multiple IDs should be provided as a list (required)
-        tags: Scenario tag ID (required):
+        tag: Scenario tag ID (required):
             - 1: Basic inspection
             - 2: Performance inspection
             - 3: Deep inspection
@@ -831,7 +851,7 @@ def run_oceanbase_inspection(
     Returns:
         Dictionary containing async task information
     """
-    return run_inspection(inspection_object_type, object_ids, tags)
+    return run_inspection(inspection_object_type, object_ids, tag)
 
 
 @app.tool()
@@ -839,7 +859,7 @@ def get_oceanbase_inspection_item_last_result(
     item_id: int,
     tag_id: int,
     object_type: str,
-    object_id: Optional[int] = None,
+    object_id: int ,
 ) -> Dict[str, Any]:
     """
     Query the last inspection result of a specified inspection item
@@ -860,7 +880,7 @@ def get_oceanbase_inspection_item_last_result(
             - OB_TENANT: Tenant
             - HOST: Host
             - OB_PROXY: OBProxy
-        object_id: Object ID (optional)
+        object_id: Object ID 
     
     Returns:
         Dictionary containing inspection result aggregation information
@@ -872,7 +892,7 @@ def get_oceanbase_inspection_item_last_result(
 def get_oceanbase_inspection_report_info(
     tag_id: int,
     object_type: str,
-    object_id: Optional[int] = None,
+    object_id: int,
 ) -> Dict[str, Any]:
     """
     Get the last inspection result of a specific object
@@ -892,7 +912,7 @@ def get_oceanbase_inspection_report_info(
             - OB_TENANT: Tenant
             - HOST: Host
             - OB_PROXY: OBProxy
-        object_id: Object ID (optional)
+        object_id: Object ID 
     
     Returns:
         Dictionary containing inspection result aggregation information.
@@ -909,7 +929,7 @@ def get_oceanbase_inspection_report_info(
         - endTime: Inspection end time
         - resultList: Array of inspection item results
     """
-    from ocp_mcp.ocp_tool import get_inspection_report_info
+    
     return get_inspection_report_info(tag_id, object_type, object_id)
 
 
@@ -919,8 +939,8 @@ def get_oceanbase_tenant_top_sql(
     tenant_id: int,
     start_time: str,
     end_time: str,
-    server_id: Optional[int] = None,
-    inner: Optional[bool] = None,
+    inner: bool = False,
+    server_id: int = None,
     sql_text: Optional[str] = None,
     search_attr: Optional[str] = None,
     search_op: Optional[str] = None,
@@ -938,8 +958,8 @@ def get_oceanbase_tenant_top_sql(
         cluster_id: Cluster ID (required)
         tenant_id: Tenant ID (required)
         start_time: Start time (Datetime format, e.g., "2020-02-16T05:32:16+08:00") (required)
-        end_time: End time (Datetime format, e.g., "2020-02-16T07:32:16+08:00") (required)
-        server_id: Query SQL executed on specified OceanBase server (optional)
+        end_time: End time (Datetime format, e.g., "2020-02-16T07:32:16+08:00") (required) need: end_time - start_time <= 1 day
+        server_id: Query SQL executed on specified OceanBase server (optional) 
         inner: Whether to include internal SQL (optional, default: false)
         sql_text: SQL text keyword (case-insensitive) (optional)
         search_attr: Advanced search metric name (optional)
@@ -949,45 +969,11 @@ def get_oceanbase_tenant_top_sql(
     Returns:
         Dictionary containing SQL performance statistics list
     """
-    from ocp_mcp.ocp_tool import get_tenant_top_sql
+
     return get_tenant_top_sql(
         cluster_id, tenant_id, start_time, end_time,
-        server_id, inner, sql_text, search_attr, search_op, search_val
+        inner, server_id, sql_text, search_attr, search_op, search_val
     )
-
-
-@app.tool()
-def get_oceanbase_sql_trends(
-    cluster_id: int,
-    tenant_id: int,
-    sql_id: str,
-    start_time: str,
-    end_time: str,
-    server_id: Optional[int] = None,
-    db_name: Optional[str] = None,
-) -> Dict[str, Any]:
-    """
-    Query SQL performance statistics trends
-    
-    Query the performance statistics trend of a specific SQL within a specified time range.
-    Performance trend consists of multiple sampling points, each containing performance
-    statistics at a specified timestamp.
-    The caller must have read permissions for the specified tenant.
-    
-    Args:
-        cluster_id: Cluster ID (required)
-        tenant_id: Tenant ID (required)
-        sql_id: SQL ID (required)
-        start_time: Start time (Datetime format, e.g., "2020-02-16T05:32:16+08:00") (required)
-        end_time: End time (Datetime format, e.g., "2020-02-16T07:32:16+08:00") (required)
-        server_id: Query SQL performance on specified OceanBase server (optional)
-        db_name: Query SQL performance in specified database (optional)
-    
-    Returns:
-        Dictionary containing SQL performance sampling data array
-    """
-    from ocp_mcp.ocp_tool import get_sql_trends
-    return get_sql_trends(cluster_id, tenant_id, sql_id, start_time, end_time, server_id, db_name)
 
 
 @app.tool()
@@ -997,6 +983,7 @@ def get_oceanbase_sql_text(
     sql_id: str,
     start_time: str,
     end_time: str,
+    db_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Query SQL full text
@@ -1010,12 +997,12 @@ def get_oceanbase_sql_text(
         sql_id: SQL ID (required)
         start_time: Start time (Datetime format, e.g., "2020-02-16T05:32:16+08:00") (required)
         end_time: End time (Datetime format, e.g., "2020-02-16T07:32:16+08:00") (required)
-    
+        db_name: Query SQL performance in specified database (optional)
     Returns:
         Dictionary containing SQL full text
     """
-    from ocp_mcp.ocp_tool import get_sql_text
-    return get_sql_text(cluster_id, tenant_id, sql_id, start_time, end_time)
+    
+    return get_sql_text(cluster_id, tenant_id, sql_id, start_time, end_time, db_name)
 
 
 @app.tool()
@@ -1024,12 +1011,13 @@ def get_oceanbase_tenant_slow_sql(
     tenant_id: int,
     start_time: str,
     end_time: str,
-    server_id: Optional[int] = None,
-    inner: Optional[bool] = None,
+    server_id: int = None,
+    inner: bool = None,
+    limit: int = None,
+    sql_text_length: int = None,
     sql_text: Optional[str] = None,
     filter_expression: Optional[str] = None,
-    limit: Optional[int] = None,
-    sql_text_length: Optional[int] = None,
+
 ) -> Dict[str, Any]:
     """
     Query slow SQL list
@@ -1047,16 +1035,17 @@ def get_oceanbase_tenant_slow_sql(
         sql_text: SQL text keyword (case-insensitive) (optional)
         filter_expression: Filter expression, all fields referenced by @ (optional)
         limit: Number of TOP results to return (optional)
-        sql_text_length: Maximum length of returned SQL text (optional)
+        sql_text_length: Maximum length of returned SQL text (optional) 
     
     Returns:
         Dictionary containing slow SQL list
     """
-    from ocp_mcp.ocp_tool import get_tenant_slow_sql
     return get_tenant_slow_sql(
         cluster_id, tenant_id, start_time, end_time,
         server_id, inner, sql_text, filter_expression, limit, sql_text_length
     )
+
+
 
 
 @app.tool()
@@ -1074,8 +1063,8 @@ def create_oceanbase_performance_report(
     
     Args:
         cluster_id: Target OceanBase cluster ID (required)
-        start_snapshot_id: Start snapshot ID for the report (required)
-        end_snapshot_id: End snapshot ID for the report (required)
+        start_snapshot_id: Start snapshot ID for the report (required) 
+        end_snapshot_id: End snapshot ID for the report (required) 
         name: Report name (required)
     
     Returns:
@@ -1085,14 +1074,36 @@ def create_oceanbase_performance_report(
         - status: Report status (CREATING/SUCCESSFUL/FAILED)
         - taskInstanceId: Associated task instance ID
     """
-    from ocp_mcp.ocp_tool import create_performance_report
+    
     return create_performance_report(cluster_id, start_snapshot_id, end_snapshot_id, name)
+
+
+@app.tool()
+def get_oceanbase_cluster_snapshots(
+    cluster_id: int
+) -> Dict[str, Any]:
+    """
+    Query cluster snapshot information
+    
+    Query snapshot information of a specified cluster.
+    The caller must have read and write permissions for the specified cluster.
+    
+    Args:
+        cluster_id: The ID of the target OceanBase cluster (required)
+    
+    Returns:
+        Dictionary containing snapshot list. Each snapshot includes:
+        - snapshotId: Snapshot ID
+        - snapshotTime: Snapshot creation time
+    """
+    return get_cluster_snapshots(cluster_id)
 
 
 @app.tool()
 def get_oceanbase_performance_report(
     cluster_id: int,
     report_id: int,
+    directory: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Query performance report
@@ -1105,10 +1116,13 @@ def get_oceanbase_performance_report(
     Args:
         cluster_id: Target OceanBase cluster ID (required)
         report_id: Performance report ID (required)
-    
+        directory: The directory where the HTML report is saved (required), and the absolute path is not empty
+
     Returns:
-        Dictionary containing report data with HTML content
+        Binary HTML content
     """
-    from ocp_mcp.ocp_tool import get_performance_report
-    return get_performance_report(cluster_id, report_id)
+    
+    # Optionally save the HTML content to a file
+    return get_performance_report(cluster_id, report_id,directory)
+
 

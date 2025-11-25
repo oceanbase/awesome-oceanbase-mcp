@@ -5,7 +5,7 @@ import hashlib
 import hmac
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 from urllib.parse import quote, urlencode
 
 import httpx
@@ -164,7 +164,8 @@ class OCPClient:
         params: Optional[Dict[str, str]] = None,
         json: Optional[Any] = None,
         headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        return_binary: bool = False,
+    ) -> Union[Dict[str, Any], bytes]:
         """
         Make authenticated request to OCP API.
         
@@ -174,9 +175,10 @@ class OCPClient:
             params: Query parameters
             json: JSON body
             headers: Additional headers
+            return_binary: If True, return binary content instead of JSON
         
         Returns:
-            Response JSON data
+            Response JSON data or binary content
         """
         if headers is None:
             headers = {}
@@ -214,7 +216,7 @@ class OCPClient:
         # Make request
         url = f"{self.base_url}{path}"
         
-        logger.debug(f"Making {method} request to {url}")
+        logger.debug(f"Making {method} request to {url}" + (" (binary)" if return_binary else ""))
         logger.debug(f"Headers: {headers}")
         logger.debug(f"Params: {params}")
         
@@ -231,7 +233,10 @@ class OCPClient:
         
         response.raise_for_status()
         
-        return response.json()
+        if return_binary:
+            return response.content
+        else:
+            return response.json()
     
     def get(
         self,
@@ -270,6 +275,32 @@ class OCPClient:
     ) -> Dict[str, Any]:
         """Make DELETE request."""
         return self._make_request("DELETE", path, params=params, headers=headers)
+    
+    def get_binary(
+        self,
+        path: str,
+        params: Optional[Dict[str, str]] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> bytes:
+        """
+        Make GET request and return binary content.
+        
+        Args:
+            path: Request path
+            params: Query parameters
+            headers: Additional headers
+        
+        Returns:
+            Response binary content
+        """
+        result = self._make_request(
+            method="GET",
+            path=path,
+            params=params,
+            headers=headers,
+            return_binary=True,
+        )
+        return result  # type: ignore
     
     def close(self) -> None:
         """Close the HTTP client."""
