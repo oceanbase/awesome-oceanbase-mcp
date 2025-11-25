@@ -2,82 +2,63 @@
 
 OceanBase Cloud Platform Model Context Protocol Server
 
-## 功能特性
+## Installation
 
-- 支持 OCP API 签名认证
-- 提供多种传输方式：stdio、sse、streamable-http
-- 实现 MCP 协议规范
-- 支持 OCP 监控数据查询
-- **OceanBase 集群管理**：查询集群列表、状态筛选、名称搜索等
+### Install from Source
 
-## 可用工具
-
-### 集群管理工具
-
-1. **`list_oceanbase_clusters`** - 查询 OceanBase 集群列表
-   - 支持分页查询（page, size）
-   - 支持排序（sort）
-   - 支持按集群名称搜索（name）
-   - 支持按状态筛选（status）
-
-2. **`get_cluster_info`** - 获取所有集群信息（简化版本）
-
-3. **`get_running_clusters`** - 获取所有运行中的集群
-
-4. **`search_clusters_by_name`** - 根据集群名称搜索集群
-
-### 集群状态说明
-
-- `RUNNING`: 运行中
-- `CREATING`: 创建中  
-- `DELETING`: 删除中
-- `STARTING`: 启动中
-- `RESTARTING`: 重启中
-- `STOPPING`: 停止中
-- `STOPPED`: 已停止
-- `TAKINGOVER`: 接管中
-- `MOVINGOUT`: 迁出中
-- `SWITCHOVER`: 主备集群切换中
-- `FAILOVER`: 备集群故障恢复中
-- `OPERATING`: 运维中
-
-## 安装
+#### 1. Clone the Repository
 
 ```bash
-pip install -e .
+git clone https://github.com/oceanbase/awesome-oceanbase-mcp.git
+cd awesome-oceanbase-mcp/src/ocp_mcp_server
 ```
 
-## 使用方法
-
-### 命令行启动
+#### 2. Install Python Package Manager and Create Virtual Environment
 
 ```bash
-# stdio 模式（默认）
-uv run ocp_mcp_server
-
-# SSE 模式
-uv run ocp_mcp_server --transport sse --host 127.0.0.1 --port 8000
-
-# Streamable HTTP 模式
-uv run ocp_mcp_server --transport streamable-http --host 127.0.0.1 --port 8000
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv
+source .venv/bin/activate  # On Windows: `.venv\Scripts\activate`
 ```
 
-### 配置
+#### 3. Configure Environment (Optional)
 
-在使用前需要配置 OCP 连接信息：
+If you want to use a `.env` file for configuration:
 
-- `OCP_URL`: OCP 服务器地址
-- `OCP_ACCESS_KEY_ID`: 访问密钥 ID
-- `OCP_ACCESS_KEY_SECRET`: 访问密钥
+```bash
+cp .env.template .env
+# Edit the .env file and fill in your OCP connection information
+```
 
+#### 4. Handle Network Issues (Optional)
 
-## 🚀 快速开始
+If you encounter network issues, you can use Alibaba Cloud mirror:
 
-OCP MCP Server 支持三种传输模式：
+```bash
+export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
+```
 
-### Stdio 模式
+#### 5. Install Dependencies
 
-在你的 MCP 客户端配置文件中添加以下内容：
+```bash
+uv pip install .
+```
+
+### Configuration
+
+Configure OCP connection information in `.env`:
+
+- `OCP_URL`: OCP server address
+- `OCP_ACCESS_KEY_ID`: Access key ID
+- `OCP_ACCESS_KEY_SECRET`: Access key secret
+
+## 🚀 Quick Start
+
+OCP MCP Server supports three transport modes:
+
+### Stdio Mode
+
+Add the following to your MCP client configuration file:
 
 ```json
 {
@@ -100,44 +81,44 @@ OCP MCP Server 支持三种传输模式：
 }
 ```
 
-### SSE 模式
+### SSE Mode
 
-启动 SSE 模式服务器：
+Start the SSE mode server:
 
 ```bash
 uv run ocp_mcp_server --transport sse --port 8000
 ```
 
-**参数说明:**
-- `--transport`: MCP 服务器传输类型（默认: stdio）
-- `--host`: 绑定的主机（默认: 127.0.0.1，使用 0.0.0.0 允许远程访问）
-- `--port`: 监听端口（默认: 8000）
+**Parameters:**
+- `--transport`: MCP server transport type (default: stdio)
+- `--host`: Bind host (default: 127.0.0.1, use 0.0.0.0 to allow remote access)
+- `--port`: Listen port (default: 8000)
 
-**替代启动方式（不使用 uv）:**
+**Alternative startup method (without uv):**
 ```bash
 cd ocp_mcp/ && python3 -m server --transport sse --port 8000
 ```
 
-**配置 URL:** `http://ip:port/sse`
+**Configuration URL:** `http://ip:port/sse`
 
-### Streamable HTTP 模式
+### Streamable HTTP Mode
 
-启动 Streamable HTTP 模式服务器：
+Start the Streamable HTTP mode server:
 
 ```bash
 uv run ocp_mcp_server --transport streamable-http --port 8000
 ```
 
-**替代启动方式（不使用 uv）:**
+**Alternative startup method (without uv):**
 ```bash
 cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 ```
 
-**配置 URL:** `http://ip:port/mcp`
+**Configuration URL:** `http://ip:port/mcp`
 
-#### 客户端配置示例
+#### Client Configuration Examples
 
-**VSCode 插件 Cline:**
+**VSCode Plugin Cline:**
 ```json
 "streamable-ob": {
   "autoApprove": [],
@@ -154,73 +135,88 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
   "autoApprove": [],
   "disabled": false,
   "timeout": 60,
-  "type": "streamableHttp", // "type": "http" 也是可以的
+  "type": "streamableHttp", // "type": "http" is also acceptable
   "url": "http://ip:port/mcp"
 }
 ```
 
-## 使用示例
+## Available Tools
 
-### 查询集群列表
+### Cluster Management Tools
 
-```python
-# 获取第一页的 10 个集群，按名称升序排列
-result = list_oceanbase_clusters(
-    page=1, 
-    size=10, 
-    sort="name,asc"
-)
+1. **`list_oceanbase_clusters`** - Query OceanBase cluster list
+2. **`get_oceanbase_cluster_zones`** - Get cluster Zone list
+3. **`get_oceanbase_cluster_servers`** - Get cluster OBServer list
+4. **`get_oceanbase_zone_servers`** - Get OBServer list for specified Zone
+5. **`get_oceanbase_cluster_stats`** - Get cluster resource statistics
+6. **`get_oceanbase_cluster_server_stats`** - Get resource statistics for all OBServers in cluster
+7. **`get_oceanbase_cluster_units`** - Query cluster Unit list
+8. **`get_oceanbase_cluster_parameters`** - Get cluster parameter list
+9. **`set_oceanbase_cluster_parameters`** - Update cluster parameters
 
-# 搜索名称包含 "test" 的集群
-result = list_oceanbase_clusters(name="test")
+### Tenant Management Tools
 
-# 查询运行中和创建中的集群
-result = list_oceanbase_clusters(
-    status=["RUNNING", "CREATING"],
-    size=50
-)
-```
+1. **`get_oceanbase_cluster_tenants`** - Query cluster tenant list
+2. **`get_all_oceanbase_tenants`** - Query all tenant list
+3. **`get_oceanbase_tenant_detail`** - Query tenant details
+4. **`get_oceanbase_tenant_units`** - Query tenant Unit list
+5. **`get_oceanbase_tenant_parameters`** - Get tenant parameter list
+6. **`set_oceanbase_tenant_parameters`** - Update tenant parameters
 
-### 集群信息结构
+### OBProxy Management Tools
 
-返回的集群信息包含以下主要字段：
+1. **`list_obproxy_clusters`** - Query OBProxy cluster list
+2. **`get_oceanbase_obproxy_cluster_detail`** - Query OBProxy cluster details
+3. **`get_oceanbase_obproxy_cluster_parameters`** - Query OBProxy cluster parameters
 
-```json
-{
-  "data": {
-    "contents": [
-      {
-        "id": 1000002,
-        "name": "test-cluster",
-        "obClusterId": 4,
-        "obVersion": "2.2.73",
-        "status": "RUNNING",
-        "type": "PRIMARY",
-        "regionCount": 1,
-        "tenantCount": 5,
-        "serverCount": 3,
-        "rootServers": [...],
-        "zones": [...],
-        "createTime": "2020-11-29T22:23:12+08:00",
-        "loadType": "EXPRESS_OLTP"
-      }
-    ],
-    "page": {
-      "number": 1,
-      "size": 10,
-      "totalElements": 25,
-      "totalPages": 3
-    }
-  },
-  "successful": true,
-  "status": 200
-}
-```
+### Database Object Management Tools
 
-## 测试
+1. **`get_oceanbase_tenant_databases`** - Get tenant database list
+2. **`get_oceanbase_tenant_users`** - Get tenant user list
+3. **`get_oceanbase_tenant_user_detail`** - Get user details
+4. **`get_oceanbase_tenant_roles`** - Get tenant role list
+5. **`get_oceanbase_tenant_role_detail`** - Get role details
+6. **`get_oceanbase_tenant_objects`** - Get tenant database object list
 
-运行测试脚本验证工具功能：
+### Monitoring Tools
 
-```bash
-python test_cluster_tools.py
-```
+1. **`get_oceanbase_metric_groups`** - Query monitoring metric group information
+2. **`get_oceanbase_metric_data_with_label`** - Query monitoring data with labels
+
+### Alarm Tools
+
+1. **`get_oceanbase_alarms`** - Query alarm event list
+2. **`get_oceanbase_alarm_detail`** - Query alarm event details
+
+### Inspection Tools
+
+1. **`get_oceanbase_inspection_tasks`** - Query inspection task list
+2. **`get_oceanbase_inspection_overview`** - Query inspection object list
+3. **`get_oceanbase_inspection_report`** - Get inspection report details
+4. **`run_oceanbase_inspection`** - Run inspection
+5. **`get_oceanbase_inspection_item_last_result`** - Query last result of specified inspection item
+6. **`get_oceanbase_inspection_report_info`** - Get last inspection result of specified object
+
+### SQL Performance Analysis Tools
+
+1. **`get_oceanbase_tenant_top_sql`** - Query SQL performance statistics
+2. **`get_oceanbase_sql_text`** - Query SQL full text
+3. **`get_oceanbase_tenant_slow_sql`** - Query slow SQL list
+
+### Performance Report Tools
+
+1. **`create_oceanbase_performance_report`** - Generate performance report
+2. **`get_oceanbase_cluster_snapshots`** - Query cluster snapshot information
+3. **`get_oceanbase_performance_report`** - Query performance report (returns HTML file)
+
+
+## Community
+
+When you need help, you can find developers and other community members at [https://github.com/oceanbase/awesome-oceanbase-mcp/](https://github.com/oceanbase/awesome-oceanbase-mcp/).
+
+When you discover project issues, please create a new issue on the [issues](https://github.com/oceanbase/awesome-oceanbase-mcp) page.
+
+## License
+
+For more information, see [LICENSE](LICENSE).
+

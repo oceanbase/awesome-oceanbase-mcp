@@ -1,8 +1,7 @@
 """OCP MCP Server implementation."""
 
-import base64
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 from pydantic import BaseModel
@@ -559,7 +558,7 @@ def get_oceanbase_tenant_objects(
     
     This interface is used to get the database object list of a tenant.
     The caller must be authenticated through OCP application service.
-    The caller must have read permissions on the specified tenant.
+    The caller must have read permissions on the oracle tenant.
     
     Args:
         cluster_id: The ID of the cluster
