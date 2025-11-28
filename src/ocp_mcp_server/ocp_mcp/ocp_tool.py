@@ -23,28 +23,25 @@ def get_ocp_client() -> OCPClient:
         )
     return _ocp_client
 
+
 def get_clusters(
     page: int = 1,
     size: int = 10,
     sort: Optional[str] = None,
     name: Optional[str] = None,
-    status: Optional[str] = None
+    status: Optional[str] = None,
 ) -> Dict[str, Any]:
-
     try:
         # Build query parameters
-        params = {
-            "page": str(page),
-            "size": str(size)
-        }
-        
+        params = {"page": str(page), "size": str(size)}
+
         if sort:
             params["sort"] = sort
         if name:
             params["name"] = name
         if status and len(status) > 0:
             params["status"] = status
-        
+
         logger.debug(f"Query parameters: {params}")
         result = get_ocp_client().get("/api/v2/ob/clusters", params=params)
         return result
@@ -53,10 +50,7 @@ def get_clusters(
         raise
 
 
-def get_cluster_zones(
-    cluster_id: int
-) -> Dict[str, Any]:
-
+def get_cluster_zones(cluster_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(f"/api/v2/ob/clusters/{cluster_id}/zones")
         return result
@@ -70,17 +64,16 @@ def get_cluster_servers(
     region_name: Optional[str] = None,
     idc_name: Optional[str] = None,
 ) -> Dict[str, Any]:
-
     try:
         params = {}
         if region_name:
             params["regionName"] = region_name
         if idc_name:
             params["idcName"] = idc_name
-        
+
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/servers",
-            params=params if params else None
+            params=params if params else None,
         )
         return result
     except Exception as e:
@@ -92,21 +85,19 @@ def get_zone_servers(
     cluster_id: int,
     zone_name: str,
 ) -> Dict[str, Any]:
- 
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/zones/{zone_name}/servers"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get servers for cluster {cluster_id} zone {zone_name}: {e}")
+        logger.error(
+            f"Failed to get servers for cluster {cluster_id} zone {zone_name}: {e}"
+        )
         raise
 
 
-def get_cluster_stats(
-    cluster_id: int
-) -> Dict[str, Any]:
-
+def get_cluster_stats(cluster_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(f"/api/v2/ob/clusters/{cluster_id}/stats")
         return result
@@ -115,10 +106,7 @@ def get_cluster_stats(
         raise
 
 
-def get_cluster_server_stats(
-    cluster_id: int
-) -> Dict[str, Any]:
-
+def get_cluster_server_stats(cluster_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(f"/api/v2/ob/clusters/{cluster_id}/serverStats")
         return result
@@ -127,10 +115,7 @@ def get_cluster_server_stats(
         raise
 
 
-def get_cluster_units(
-    cluster_id: int
-) -> Dict[str, Any]:
- 
+def get_cluster_units(cluster_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(f"/api/v2/ob/clusters/{cluster_id}/units")
         return result
@@ -148,13 +133,9 @@ def get_cluster_tenants(
     mode: Optional[str] = None,
     status: Optional[str] = None,
 ) -> Dict[str, Any]:
-
     try:
-        params = {
-            "page": str(page),
-            "size": str(size)
-        }
-        
+        params = {"page": str(page), "size": str(size)}
+
         if sort:
             params["sort"] = sort
         if name:
@@ -163,10 +144,9 @@ def get_cluster_tenants(
             params["mode"] = mode
         if status:
             params["status"] = status
-        
+
         result = get_ocp_client().get(
-            f"/api/v2/ob/clusters/{cluster_id}/tenants",
-            params=params
+            f"/api/v2/ob/clusters/{cluster_id}/tenants", params=params
         )
         return result
     except Exception as e:
@@ -182,13 +162,9 @@ def get_all_tenants(
     mode: Optional[str] = None,
     status: Optional[str] = None,
 ) -> Dict[str, Any]:
- 
     try:
-        params = {
-            "page": str(page),
-            "size": str(size)
-        }
-        
+        params = {"page": str(page), "size": str(size)}
+
         if sort:
             params["sort"] = sort
         if name:
@@ -197,7 +173,7 @@ def get_all_tenants(
             params["mode"] = mode
         if status:
             params["status"] = status
-        
+
         result = get_ocp_client().get("/api/v2/ob/tenants", params=params)
         return result
     except Exception as e:
@@ -205,18 +181,16 @@ def get_all_tenants(
         raise
 
 
-def get_tenant_detail(
-    cluster_id: int,
-    tenant_id: int
-) -> Dict[str, Any]:
- 
+def get_tenant_detail(cluster_id: int, tenant_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get tenant detail for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to get tenant detail for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
@@ -225,41 +199,37 @@ def get_tenant_units(
     tenant_id: int,
     zone_name: Optional[str] = None,
 ) -> Dict[str, Any]:
- 
     try:
         params = {}
         if zone_name:
             params["zoneName"] = zone_name
-        
+
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/units",
-            params=params if params else None
+            params=params if params else None,
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get units for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to get units for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
-def get_tenant_parameters(
-    cluster_id: int,
-    tenant_id: int
-) -> Dict[str, Any]:
-
+def get_tenant_parameters(cluster_id: int, tenant_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/parameters"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get parameters for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to get parameters for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
-def get_cluster_parameters(
-    cluster_id: int
-) -> Dict[str, Any]:
- 
+def get_cluster_parameters(cluster_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(f"/api/v2/ob/clusters/{cluster_id}/parameters")
         return result
@@ -273,10 +243,9 @@ def set_tenant_parameters(
     tenant_id: int,
     parameters: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
-  
     if not parameters:
         raise ValueError("parameters list cannot be empty")
-    
+
     payload: List[Dict[str, Any]] = []
     for index, param in enumerate(parameters):
         if "name" not in param or not param["name"]:
@@ -284,14 +253,18 @@ def set_tenant_parameters(
         if "value" not in param:
             raise ValueError(f"parameters[{index}] is missing required field 'value'")
         if "parameterType" not in param or not param["parameterType"]:
-            raise ValueError(f"parameters[{index}] is missing required field 'parameterType'")
-        
-        payload.append({
-            "name": str(param["name"]),
-            "value": param["value"],
-            "parameterType": str(param["parameterType"]),
-        })
-    
+            raise ValueError(
+                f"parameters[{index}] is missing required field 'parameterType'"
+            )
+
+        payload.append(
+            {
+                "name": str(param["name"]),
+                "value": param["value"],
+                "parameterType": str(param["parameterType"]),
+            }
+        )
+
     try:
         result = get_ocp_client().put(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/parameters",
@@ -299,7 +272,9 @@ def set_tenant_parameters(
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to set parameters for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to set parameters for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
@@ -307,22 +282,23 @@ def set_cluster_parameters(
     cluster_id: int,
     parameters: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
- 
     if not parameters:
         raise ValueError("parameters list cannot be empty")
-    
+
     payload: List[Dict[str, Any]] = []
     for index, param in enumerate(parameters):
         if "name" not in param or not param["name"]:
             raise ValueError(f"parameters[{index}] is missing required field 'name'")
         if "value" not in param:
             raise ValueError(f"parameters[{index}] is missing required field 'value'")
-        
-        payload.append({
-            "name": str(param["name"]),
-            "value": param["value"],
-        })
-    
+
+        payload.append(
+            {
+                "name": str(param["name"]),
+                "value": param["value"],
+            }
+        )
+
     try:
         result = get_ocp_client().put(
             f"/api/v2/ob/clusters/{cluster_id}/parameters",
@@ -338,13 +314,9 @@ def get_obproxy_clusters(
     page: int = 1,
     size: int = 10,
 ) -> Dict[str, Any]:
- 
     try:
-        params = {
-            "page": str(page),
-            "size": str(size)
-        }
-        
+        params = {"page": str(page), "size": str(size)}
+
         result = get_ocp_client().get("/api/v2/obproxy/clusters", params=params)
         return result
     except Exception as e:
@@ -352,57 +324,51 @@ def get_obproxy_clusters(
         raise
 
 
-def get_obproxy_cluster_detail(
-    cluster_id: int
-) -> Dict[str, Any]:
- 
+def get_obproxy_cluster_detail(cluster_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(f"/api/v2/obproxy/clusters/{cluster_id}")
         return result
     except Exception as e:
-        logger.error(f"Failed to get OBProxy cluster detail for cluster {cluster_id}: {e}")
+        logger.error(
+            f"Failed to get OBProxy cluster detail for cluster {cluster_id}: {e}"
+        )
         raise
 
 
-def get_obproxy_cluster_parameters(
-    cluster_id: int
-) -> Dict[str, Any]:
-  
+def get_obproxy_cluster_parameters(cluster_id: int) -> Dict[str, Any]:
     try:
-        result = get_ocp_client().get(f"/api/v2/obproxy/clusters/{cluster_id}/parameters")
+        result = get_ocp_client().get(
+            f"/api/v2/obproxy/clusters/{cluster_id}/parameters"
+        )
         return result
     except Exception as e:
         logger.error(f"Failed to get parameters for OBProxy cluster {cluster_id}: {e}")
         raise
 
 
-def get_tenant_databases(
-    cluster_id: int,
-    tenant_id: int
-) -> Dict[str, Any]:
-  
+def get_tenant_databases(cluster_id: int, tenant_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/databases"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get databases for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to get databases for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
-def get_tenant_users(
-    cluster_id: int,
-    tenant_id: int
-) -> Dict[str, Any]:
- 
+def get_tenant_users(cluster_id: int, tenant_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/users"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get users for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to get users for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
@@ -412,65 +378,61 @@ def get_tenant_user_detail(
     username: str,
     host_name: Optional[str] = None,
 ) -> Dict[str, Any]:
-   
     try:
         params = {}
         if host_name:
             params["hostName"] = host_name
-        
+
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/users/{username}",
-            params=params if params else None
+            params=params if params else None,
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get user detail for cluster {cluster_id} tenant {tenant_id} user {username}: {e}")
+        logger.error(
+            f"Failed to get user detail for cluster {cluster_id} tenant {tenant_id} user {username}: {e}"
+        )
         raise
 
 
-def get_tenant_roles(
-    cluster_id: int,
-    tenant_id: int
-) -> Dict[str, Any]:
-  
+def get_tenant_roles(cluster_id: int, tenant_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/roles"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get roles for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to get roles for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
 def get_tenant_role_detail(
-    cluster_id: int,
-    tenant_id: int,
-    role_name: str
+    cluster_id: int, tenant_id: int, role_name: str
 ) -> Dict[str, Any]:
-  
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/roles/{role_name}"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get role detail for cluster {cluster_id} tenant {tenant_id} role {role_name}: {e}")
+        logger.error(
+            f"Failed to get role detail for cluster {cluster_id} tenant {tenant_id} role {role_name}: {e}"
+        )
         raise
 
 
-def get_tenant_objects(
-    cluster_id: int,
-    tenant_id: int
-) -> Dict[str, Any]:
-  
+def get_tenant_objects(cluster_id: int, tenant_id: int) -> Dict[str, Any]:
     try:
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/objects"
         )
         return result
     except Exception as e:
-        logger.error(f"Failed to get objects for cluster {cluster_id} tenant {tenant_id}: {e}")
+        logger.error(
+            f"Failed to get objects for cluster {cluster_id} tenant {tenant_id}: {e}"
+        )
         raise
 
 
@@ -483,27 +445,22 @@ def get_metric_groups(
     target: Optional[str] = None,
     target_id: int = None,
 ) -> Dict[str, Any]:
-  
     try:
-        params = {
-            "type": type,
-            "scope": scope,
-            "page": str(page),
-            "size": str(size)
-        }
-        
+        params = {"type": type, "scope": scope, "page": str(page), "size": str(size)}
+
         if sort:
             params["sort"] = sort
         if target:
             params["target"] = target
         if target_id is not None:
             params["targetId"] = target_id
-        
+
         result = get_ocp_client().get("/api/v2/monitor/metricGroups", params=params)
         return result
     except Exception as e:
         logger.error(f"Failed to get metric groups: {e}")
         raise
+
 
 def get_metric_data_with_label(
     start_time: str,
@@ -515,7 +472,6 @@ def get_metric_data_with_label(
     min_step: int = None,
     max_points: int = None,
 ) -> Dict[str, Any]:
-  
     try:
         params = {
             "startTime": start_time,
@@ -523,14 +479,14 @@ def get_metric_data_with_label(
             "metrics": metrics,
             "groupBy": group_by,
             "interval": str(interval),
-            "labels": labels
+            "labels": labels,
         }
-        
+
         if min_step is not None:
             params["minStep"] = min_step
         if max_points is not None:
             params["maxPoints"] = max_points
-        
+
         result = get_ocp_client().get("/api/v2/monitor/metricsWithLabel", params=params)
         return result
     except Exception as e:
@@ -550,13 +506,9 @@ def get_alarms(
     is_subscribed_by_me: bool = None,
     keyword: Optional[str] = None,
 ) -> Dict[str, Any]:
-  
     try:
-        params = {
-            "page": str(page),
-            "size": str(size)
-        }
-        
+        params = {"page": str(page), "size": str(size)}
+
         if app_type:
             params["appType"] = app_type
         if scope:
@@ -573,7 +525,7 @@ def get_alarms(
             params["isSubscribedByMe"] = str(is_subscribed_by_me).lower()
         if keyword:
             params["keyword"] = keyword
-        
+
         result = get_ocp_client().get("/api/v2/alarm/alarms", params=params)
         return result
     except Exception as e:
@@ -582,7 +534,6 @@ def get_alarms(
 
 
 def get_alarm_detail(alarm_id: int) -> Dict[str, Any]:
-  
     try:
         result = get_ocp_client().get(f"/api/v2/alarm/alarms/{alarm_id}")
         return result
@@ -591,18 +542,15 @@ def get_alarm_detail(alarm_id: int) -> Dict[str, Any]:
         raise
 
 
-
-
 def get_inspection_tasks(
     inspectionObjectTypes: Optional[str] = None,
     tags: Optional[str] = None,
     taskStates: Optional[str] = None,
     name: Optional[str] = None,
 ) -> Dict[str, Any]:
-   
     try:
         params = {}
-        
+
         if inspectionObjectTypes:
             params["inspectionObjectTypes"] = inspectionObjectTypes
         if tags:
@@ -611,8 +559,10 @@ def get_inspection_tasks(
             params["taskStates"] = taskStates
         if name:
             params["name"] = name
-        
-        result = get_ocp_client().get("/api/v2/inspection/task", params=params if params else None)
+
+        result = get_ocp_client().get(
+            "/api/v2/inspection/task", params=params if params else None
+        )
         return result
     except Exception as e:
         logger.error(f"Failed to get inspection tasks: {e}")
@@ -620,16 +570,15 @@ def get_inspection_tasks(
 
 
 def get_inspection_overview(
-    object_ids: str = None, 
+    object_ids: str = None,
     inspection_object_type: Optional[str] = None,
     schedule_states: Optional[str] = None,
     name: Optional[str] = None,
     parent_name: Optional[str] = None,
 ) -> Dict[str, Any]:
-   
     try:
         params = {}
-        
+
         if object_ids:
             params["objectIds"] = object_ids
         if inspection_object_type:
@@ -640,8 +589,10 @@ def get_inspection_overview(
             params["name"] = name
         if parent_name:
             params["parentName"] = parent_name
-        
-        result = get_ocp_client().get("/api/v2/inspection/overview", params=params if params else None)
+
+        result = get_ocp_client().get(
+            "/api/v2/inspection/overview", params=params if params else None
+        )
         return result
     except Exception as e:
         logger.error(f"Failed to get inspection overview: {e}")
@@ -649,7 +600,6 @@ def get_inspection_overview(
 
 
 def get_inspection_report(report_id: int) -> Dict[str, Any]:
-   
     try:
         result = get_ocp_client().get(f"/api/v2/inspection/report/{report_id}")
         return result
@@ -663,35 +613,35 @@ def run_inspection(
     object_ids: str,
     tag: int,
 ) -> Dict[str, Any]:
-  
     if not inspection_object_type:
         raise ValueError("inspection_object_type is required")
     if not object_ids:
         raise ValueError("object_ids list cannot be empty")
     if not tag:
         raise ValueError("tags is required")
-    
+
     # Validate inspection_object_type
     valid_types = ["OB_CLUSTER", "OB_TENANT", "HOST", "OB_PROXY"]
     if inspection_object_type not in valid_types:
         raise ValueError(f"inspection_object_type must be one of {valid_types}")
-    
+
     # Validate tags
     valid_tags = [1, 2, 3, 4]
     if tag not in valid_tags:
         raise ValueError(f"tag must be one of {valid_tags}")
 
-    
     try:
         params = {}
 
         if inspection_object_type is not None:
-            params["inspectionObjectType"] = inspection_object_type    
+            params["inspectionObjectType"] = inspection_object_type
         if object_ids is not None:
             params["objectIds"] = object_ids
         if tag is not None:
             params["tag"] = tag
-        result = get_ocp_client().post("/api/v2/inspection/run", params=params if params else None)
+        result = get_ocp_client().post(
+            "/api/v2/inspection/run", params=params if params else None
+        )
         return result
     except Exception as e:
         logger.error(f"Failed to run inspection: {e}")
@@ -704,37 +654,40 @@ def get_inspection_item_last_result(
     object_type: str,
     object_id: Optional[int] = None,
 ) -> Dict[str, Any]:
-   
     if not item_id:
         raise ValueError("item_id is required")
     if not tag_id:
         raise ValueError("tag_id is required")
     if not object_type:
         raise ValueError("object_type is required")
-    
+
     # Validate tag_id
     valid_tags = [1, 2, 3, 4]
     if tag_id not in valid_tags:
         raise ValueError(f"tag_id must be one of {valid_tags}")
-    
+
     # Validate object_type
     valid_types = ["OB_CLUSTER", "OB_TENANT", "HOST", "OB_PROXY"]
     if object_type not in valid_types:
         raise ValueError(f"object_type must be one of {valid_types}")
-    
+
     params = {
         "tagId": str(tag_id),
         "objectType": object_type,
     }
-    
+
     if object_id is not None:
         params["objectId"] = str(object_id)
-    
+
     try:
-        result = get_ocp_client().get(f"/api/v2/inspection/report/info/item/{item_id}", params=params)
+        result = get_ocp_client().get(
+            f"/api/v2/inspection/report/info/item/{item_id}", params=params
+        )
         return result
     except Exception as e:
-        logger.error(f"Failed to get inspection item last result for item {item_id}: {e}")
+        logger.error(
+            f"Failed to get inspection item last result for item {item_id}: {e}"
+        )
         raise
 
 
@@ -743,30 +696,29 @@ def get_inspection_report_info(
     object_type: str,
     object_id: Optional[int] = None,
 ) -> Dict[str, Any]:
-   
     if not tag_id:
         raise ValueError("tag_id is required")
     if not object_type:
         raise ValueError("object_type is required")
-    
+
     # Validate tag_id
     valid_tags = [1, 2, 3, 4]
     if tag_id not in valid_tags:
         raise ValueError(f"tag_id must be one of {valid_tags}")
-    
+
     # Validate object_type
     valid_types = ["OB_CLUSTER", "OB_TENANT", "HOST", "OB_PROXY"]
     if object_type not in valid_types:
         raise ValueError(f"object_type must be one of {valid_types}")
-    
+
     params = {
         "tagId": str(tag_id),
         "objectType": object_type,
     }
-    
+
     if object_id is not None:
         params["objectId"] = str(object_id)
-    
+
     try:
         result = get_ocp_client().get("/api/v2/inspection/report/info", params=params)
         return result
@@ -787,13 +739,12 @@ def get_tenant_top_sql(
     search_op: Optional[str] = None,
     search_val: Optional[str] = None,
 ) -> Dict[str, Any]:
-  
     try:
         params = {
             "startTime": start_time,
             "endTime": end_time,
         }
-        
+
         if server_id is not None:
             params["serverId"] = str(server_id)
         if inner is not None:
@@ -806,10 +757,10 @@ def get_tenant_top_sql(
             params["searchOp"] = search_op
         if search_val:
             params["searchVal"] = search_val
-        
+
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/topSql",
-            params=params
+            params=params,
         )
         return result
     except Exception as e:
@@ -822,22 +773,21 @@ def get_sql_text(
     tenant_id: int,
     sql_id: str,
     start_time: str,
-    end_time: str, 
+    end_time: str,
     db_name: Optional[str] = None,
 ) -> Dict[str, Any]:
-  
     try:
         params = {
             "startTime": start_time,
             "endTime": end_time,
         }
-        
+
         if db_name is not None:
             params["dbName"] = db_name
-        
+
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/sqls/{sql_id}/text",
-            params=params
+            params=params,
         )
         return result
     except Exception as e:
@@ -857,13 +807,12 @@ def get_tenant_slow_sql(
     limit: Optional[int] = None,
     sql_text_length: Optional[int] = None,
 ) -> Dict[str, Any]:
-   
     try:
         params = {
             "startTime": start_time,
             "endTime": end_time,
         }
-        
+
         if server_id is not None:
             params["serverId"] = str(server_id)
         if inner is not None:
@@ -876,10 +825,10 @@ def get_tenant_slow_sql(
             params["limit"] = str(limit)
         if sql_text_length is not None:
             params["sqlTextLength"] = str(sql_text_length)
-        
+
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/tenants/{tenant_id}/slowSql",
-            params=params
+            params=params,
         )
         return result
     except Exception as e:
@@ -893,7 +842,6 @@ def create_performance_report(
     end_snapshot_id: int,
     name: str,
 ) -> Dict[str, Any]:
-  
     try:
         params = {}
         if name:
@@ -902,36 +850,32 @@ def create_performance_report(
             params["startSnapshotId"] = str(start_snapshot_id)
         if end_snapshot_id is not None:
             params["endSnapshotId"] = str(end_snapshot_id)
-        
+
         result = get_ocp_client().post(
             f"/api/v2/ob/clusters/{cluster_id}/performance/workload/reports",
-            params=params if params else None
+            params=params if params else None,
         )
-        
+
         return result
     except Exception as e:
         logger.error(f"Failed to create performance report: {e}")
         raise
 
 
-
-def get_cluster_snapshots(
-    cluster_id: int
-) -> Dict[str, Any]:
+def get_cluster_snapshots(cluster_id: int) -> Dict[str, Any]:
     """
     Query cluster snapshot information
-    
+
     This interface is used to query snapshot information of a specified cluster.
     The caller must have read and write permissions for the specified cluster.
-    
+
     Args:
         cluster_id: The ID of the target OceanBase cluster
-    
+
     Returns:
         Dictionary containing snapshot list with snapshotId and snapshotTime
     """
     try:
-        
         result = get_ocp_client().get(
             f"/api/v2/ob/clusters/{cluster_id}/performance/workload/snapshots"
         )
@@ -948,12 +892,12 @@ def get_performance_report(
 ) -> Dict[str, Any]:
     """
     Query performance report
-    
+
     This interface is used to query cluster performance report.
     The caller must have read and write permissions for the specified cluster.
-    
+
     Note: This endpoint returns binary HTML content that can be saved as an HTML file.
-    
+
     Args:
         cluster_id: The ID of the target OceanBase cluster
         report_id: Performance report ID
@@ -963,49 +907,54 @@ def get_performance_report(
     """
     try:
         import base64
+
         # Add query parameters as required by the API (even though they're in the path)
         params = {
             "id": str(cluster_id),
             "reportId": str(report_id),
         }
-        
+
         # Set Accept header to accept any content type (like browser does)
         headers = {
             "Accept": "*/*",
         }
-        
+
         binary_content = get_ocp_client().get_binary(
             f"/api/v2/ob/clusters/{cluster_id}/performance/workload/reports/{report_id}",
             params=params,
-            headers=headers
+            headers=headers,
         )
-        
+
         # Encode binary content as base64 for JSON serialization
         content_base64 = base64.b64encode(binary_content).decode("utf-8")
-        
+
         if content_base64:
             html_content = base64.b64decode(content_base64)
-            output_file = f"{directory}/performance_report_{cluster_id}_{report_id}.html"
-            with open(output_file, 'wb') as f:
+            output_file = (
+                f"{directory}/performance_report_{cluster_id}_{report_id}.html"
+            )
+            with open(output_file, "wb") as f:
                 f.write(html_content)
             print(f"✓ HTML report saved to: {output_file}")
-        
+
         if output_file:
             return {
                 "success": True,
                 "cluster_id": cluster_id,
                 "report_id": report_id,
                 "output_file": output_file,
-                "message": f"HTML report saved successfully to {output_file}"
+                "message": f"HTML report saved successfully to {output_file}",
             }
         else:
             return {
                 "success": False,
                 "cluster_id": cluster_id,
                 "report_id": report_id,
-                "message": f"Failed to get performance report {report_id} for cluster {cluster_id}"
+                "message": f"Failed to get performance report {report_id} for cluster {cluster_id}",
             }
 
     except Exception as e:
-        logger.error(f"Failed to get performance report {report_id} for cluster {cluster_id}: {e}")
+        logger.error(
+            f"Failed to get performance report {report_id} for cluster {cluster_id}: {e}"
+        )
         raise

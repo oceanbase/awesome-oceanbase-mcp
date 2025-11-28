@@ -25,23 +25,24 @@ def main() -> None:
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         help="Set the logging level",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Configure logging
     logging.basicConfig(
         level=getattr(logging, args.log_level),
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    
+
     transport = args.transport
     logger.info(f"Starting OCP MCP server with {transport} mode...")
-    
+
     if transport in {"sse", "streamable-http"}:
         app.settings.host = args.host
         app.settings.port = args.port
 
     app.run(transport=transport)
+
 
 if __name__ == "__main__":
     main()
