@@ -4,7 +4,7 @@ English | [简体中文](README_CN.md)
 
 A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. This server allows AI assistants to list tables, read data, and execute SQL queries through a controlled interface, making database exploration and analysis safer and more structured.
 
-[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=OceanBase-MCP&config=eyJjb21tYW5kIjogInV2eCIsICJhcmdzIjogWyItLWZyb20iLCAiZGF2aWR6aGFuZy1vY2VhbmJhc2UtbWNwIiwgIm9jZWFuYmFzZV9tY3Bfc2VydmVyIl0sICJlbnYiOiB7Ik9CX0hPU1QiOiAiIiwgIk9CX1BPUlQiOiAiIiwgIk9CX1VTRVIiOiAiIiwgIk9CX1BBU1NXT1JEIjogIiIsICJPQl9EQVRBQkFTRSI6ICIifX0=)
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=OceanBase-MCP&config=eyJjb21tYW5kIjogInV2eCIsICJhcmdzIjogWyItLWZyb20iLCAib2NlYW5iYXNlLW1jcCIsICJvY2VhbmJhc2VfbWNwX3NlcnZlciJdLCAiZW52IjogeyJPQl9IT1NUIjogIiIsICJPQl9QT1JUIjogIiIsICJPQl9VU0VSIjogIiIsICJPQl9QQVNTV09SRCI6ICIiLCAiT0JfREFUQUJBU0UiOiAiIn19)
 
 ## 📋 Table of Contents
 
@@ -191,7 +191,8 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
   "url": "http://ip:port/sse"
 }
 ```
-
+**Cherry Studio:**
+- MCP → General → Type: Select "Server-Sent Events (sse)" from dropdown
 ### Streamable HTTP
 
 Start the server in Streamable HTTP mode:
