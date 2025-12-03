@@ -165,6 +165,29 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 
 **配置 URL:** `http://ip:port/sse`
+#### 客户端配置示例
+
+**VSCode 插件 Cline:**
+```json
+"sse-ob": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+
+**Cursor:**
+```json
+"sse-ob": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
 
 ### Streamable HTTP 模式
 
@@ -200,7 +223,7 @@ cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
   "autoApprove": [],
   "disabled": false,
   "timeout": 60,
-  "type": "streamableHttp", // "type": "http" 也是可以的
+  "type": "streamableHttp",
   "url": "http://ip:port/mcp"
 }
 ```
