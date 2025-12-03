@@ -57,7 +57,7 @@ This repository provides complete MCP servers for the OceanBase ecosystem:
 <tr>
 <td><strong>OCP MCP Server</strong></td>
 <td>Integrates with OceanBase Cloud Platform, providing cluster management and monitoring capabilities</td>
-<td><a href="doc/ocp_mcp_server.md">📖 View</a></td>
+<td><a href="src/ocp_mcp_server/README.md">📖 View</a></td>
 </tr>
 <tr>
 <td><strong>OBCloud MCP Server</strong></td>
