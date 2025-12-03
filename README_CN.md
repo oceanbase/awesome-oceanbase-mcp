@@ -57,7 +57,7 @@ Model Context Protocol (MCP) 是一个开放协议，旨在实现 AI 应用程�
 <tr>
 <td><strong>OCP MCP Server</strong></td>
 <td>与 OceanBase Cloud Platform 集成，提供集群管理和监控能力</td>
-<td><a href="doc/ocp_mcp_server_CN.md">📖 查看</a></td>
+<td><a href="src/ocp_mcp_server/README_CN.md">📖 查看</a></td>
 </tr>
 <tr>
 <td><strong>OBCloud MCP Server</strong></td>
