@@ -757,7 +757,7 @@ def get_oceanbase_inspection_tasks(
         - lowRiskCount: Number of low-risk inspection items
         - taskState: Inspection task state
     """
-    return get_inspection_tasks(inspectionObjectTypes, tags, taskStates, name)
+    return ocp_tool.get_inspection_tasks(inspectionObjectTypes, tags, taskStates, name)
 
 
 @app.tool()

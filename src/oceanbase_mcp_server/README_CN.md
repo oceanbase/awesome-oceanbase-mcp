@@ -3,6 +3,8 @@
 
 OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进行交互。使用支持 MCP 的客户端，连接上 OB 数据库，可以列出所有的表、读取数据以及执行 SQL，然后可以使用大模型对数据库中的数据进一步分析。
 
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=OceanBase-MCP&config=eyJjb21tYW5kIjogInV2eCIsICJhcmdzIjogWyItLWZyb20iLCAib2NlYW5iYXNlLW1jcCIsICJvY2VhbmJhc2VfbWNwX3NlcnZlciJdLCAiZW52IjogeyJPQl9IT1NUIjogIiIsICJPQl9QT1JUIjogIiIsICJPQl9VU0VSIjogIiIsICJPQl9QQVNTV09SRCI6ICIiLCAiT0JfREFUQUJBU0UiOiAiIn19)
+
 ## 📋 目录
 
 - [特性](#-特性)
@@ -165,6 +167,31 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 
 **配置 URL:** `http://ip:port/sse`
+#### 客户端配置示例
+
+**VSCode 插件 Cline:**
+```json
+"sse-ob": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+
+**Cursor:**
+```json
+"sse-ob": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+**Cherry Studio:**
+- MCP → 通用 → 类型: 从下拉菜单中选择 "服务器发送事件 (sse)"
 
 ### Streamable HTTP 模式
 
@@ -200,13 +227,13 @@ cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
   "autoApprove": [],
   "disabled": false,
   "timeout": 60,
-  "type": "streamableHttp", // "type": "http" 也是可以的
+  "type": "streamableHttp",
   "url": "http://ip:port/mcp"
 }
 ```
 
 **Cherry Studio:**
-- MCP → General → Type: 从下拉菜单中选择 "Streamable HTTP (streamableHttp)"
+- MCP → 通用 → 类型: 从下拉菜单中选择 "可流式传输的 HTTP (streamableHttp)"
 ## 🔧 高级功能
 
 ### 🔐 鉴权

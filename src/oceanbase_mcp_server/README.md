@@ -4,6 +4,8 @@ English | [简体中文](README_CN.md)
 
 A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. This server allows AI assistants to list tables, read data, and execute SQL queries through a controlled interface, making database exploration and analysis safer and more structured.
 
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=OceanBase-MCP&config=eyJjb21tYW5kIjogInV2eCIsICJhcmdzIjogWyItLWZyb20iLCAib2NlYW5iYXNlLW1jcCIsICJvY2VhbmJhc2VfbWNwX3NlcnZlciJdLCAiZW52IjogeyJPQl9IT1NUIjogIiIsICJPQl9QT1JUIjogIiIsICJPQl9VU0VSIjogIiIsICJPQl9QQVNTV09SRCI6ICIiLCAiT0JfREFUQUJBU0UiOiAiIn19)
+
 ## 📋 Table of Contents
 
 - [Features](#-features)
@@ -166,7 +168,31 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 
 **Configuration URL:** `http://ip:port/sse`
+#### Client Configuration Examples
 
+**VSCode Extension Cline:**
+```json
+"sse-ob": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+
+**Cursor:**
+```json
+"sse-ob": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+**Cherry Studio:**
+- MCP → General → Type: Select "Server-Sent Events (sse)" from dropdown
 ### Streamable HTTP
 
 Start the server in Streamable HTTP mode:
@@ -201,7 +227,7 @@ cd oceanbase_mcp/ && python3 -m server --transport streamable-http --port 8000
   "autoApprove": [],
   "disabled": false,
   "timeout": 60,
-  "type": "streamableHttp", // "type": "http" is also acceptable
+  "type": "streamableHttp",
   "url": "http://ip:port/mcp"
 }
 ```
