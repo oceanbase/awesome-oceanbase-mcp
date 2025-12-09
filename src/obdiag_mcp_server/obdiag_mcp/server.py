@@ -57,7 +57,7 @@ def run_obdiag_command(command: str, silent=True) -> str:
 @mcp.tool()
 async def obdiag_check_list() -> str:
     """
-    列出所有可用的巡检项目
+    列出所有可用的巡检项目,包括巡检的内容
     :return: 所有巡检项目列表
     """
     return run_obdiag_command("obdiag check list --all", silent=False)
