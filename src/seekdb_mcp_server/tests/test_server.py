@@ -1,0 +1,259 @@
+import json
+import os
+
+from seekdb_mcp.server import (
+    add_data_to_collection,
+    ai_complete,
+    ai_rerank,
+    create_ai_model,
+    create_ai_model_endpoint,
+    create_collection,
+    create_semantic_index,
+    delete_collection,
+    execute_sql,
+    hybrid_search,
+    query_collection,
+    delete_collection,
+    full_text_search,
+    semantic_search,
+)
+
+
+def test_execute_sql():
+    sql = "select 1"
+    result = execute_sql(sql)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    assert result_dict["data"] == [["1"]], f"Expected [['1']], got {result_dict['data']}"
+
+
+def test_create_collection():
+    collection_name = "test_collection"
+    result = create_collection(collection_name)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_add_data_to_collection():
+    collection_name = "test_collection"
+    test_create_collection()
+    ids = ["1", "2"]
+    documents = ["I love apple", "I love pear"]
+    metadatas = [{"category": "preference", "index": 0}, {"category": "preference", "index": 1}]
+    result = add_data_to_collection(
+        collection_name=collection_name, ids=ids, documents=documents, metadatas=metadatas
+    )
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_query_collection():
+    collection_name = "test_collection"
+    test_add_data_to_collection()
+    query_texts = ["pear"]
+    result = query_collection(collection_name=collection_name, query_texts=query_texts, n_results=1)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    # 检查返回的 document 中是否包含 "pear"
+    documents = result_dict["data"]["documents"]
+    assert any("pear" in doc for docs in documents for doc in docs), (
+        f"Expected 'pear' in documents, got {documents}"
+    )
+
+
+def test_delete_collection():
+    collection_name = "test_collection"
+    test_create_collection()
+    result = delete_collection(collection_name)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_full_text_search():
+    create_table = """
+    CREATE TABLE if not exists sport_data_whole (
+    event VARCHAR(64),
+    date VARCHAR(16),
+    news VARCHAR(65535),
+    FULLTEXT INDEX ft_idx1_news(news)
+        WITH PARSER ik PARSER_PROPERTIES = (ik_mode = "max_word")
+)
+    """
+    execute_sql(create_table)
+    insert_data = """insert into sport_data_whole values 
+    ('世界杯','2025-12-11 16:00:00','格策 黄牌 冠军 乌龙球 博阿滕 比赛 观众 球员'),
+    ('足球赛','2025-12-11 15:00:00','逆转 博阿滕 犯规 黄牌 进球 球员 精彩 精彩'),
+    ('奥运会','2025-12-11 15:17:00','逆转 红牌 红牌 犯规 逆转 比赛 观众 观众')
+    """
+    execute_sql(insert_data)
+    table_name = "sport_data_whole"
+    column_name = "news"
+    search_expr = "+黄牌 +进球"
+    result = full_text_search(
+        table_name=table_name, column_name=column_name, search_expr=search_expr
+    )
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    assert result_dict["data"][0][2] == "逆转 博阿滕 犯规 黄牌 进球 球员 精彩 精彩", (
+        f"Expected '逆转 博阿滕 犯规 黄牌 进球 球员 精彩 精彩', got {result_dict['data'][0][2]}"
+    )
+    drop_table = "drop table if exists sport_data_whole"
+    execute_sql(drop_table)
+
+
+def test_hybrid_search():
+    collection_name = "my_test_collection"
+    create_collection(collection_name)
+    documents = [
+        "Machine learning is a subset of artificial intelligence",
+        "Python is a popular programming language",
+        "Vector databases enable semantic search",
+        "Neural networks are inspired by the human brain",
+        "Natural language processing helps computers understand text",
+    ]
+    ids = ["id1", "id2", "id3", "id4", "id5"]
+    metadatas = [
+        {"category": "AI", "index": 0, "year": 2021},
+        {"category": "Programming", "index": 1, "year": 2018},
+        {"category": "Database", "index": 2, "year": 2027},
+        {"category": "AI", "index": 3, "year": 2019},
+        {"category": "NLP", "index": 4, "year": 2016},
+    ]
+    add_data_to_collection(
+        collection_name=collection_name, ids=ids, documents=documents, metadatas=metadatas
+    )
+    fulltext_search_keyword = "machine learning"
+    fulltext_where = {"category": {"$eq": "AI"}}
+    knn_query_texts = ["AI research"]
+    knn_where = {"year": {"$gte": 2020}}
+    result = hybrid_search(
+        collection_name=collection_name,
+        fulltext_search_keyword=fulltext_search_keyword,
+        fulltext_where=fulltext_where,
+        knn_query_texts=knn_query_texts,
+        knn_where=knn_where,
+    )
+    print(result)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    assert result_dict["data"]["ids"][0] == ["id1", "id3"], (
+        f"Expected ['id1', 'id3'], got {result_dict['data']['ids'][0]}"
+    )
+    delete_collection(collection_name)
+
+
+def test_create_ai_model():
+    model_name = "seekdb_embed"
+    model_type = "dense_embedding"
+    provider_model_name = "BAAI/bge-m3"
+    result = create_ai_model(
+        model_name=model_name, model_type=model_type, provider_model_name=provider_model_name
+    )
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_create_ai_model_endpoint():
+    endpoint_name = "seekdb_embed_endpoint"
+    ai_model_name = "seekdb_embed"
+    url = "https://api.siliconflow.cn/v1/embeddings"
+    access_key = os.getenv("siliconflow_access_key")
+    provider = "siliconflow"
+    result = create_ai_model_endpoint(
+        endpoint_name=endpoint_name,
+        ai_model_name=ai_model_name,
+        url=url,
+        access_key=access_key,
+        provider=provider,
+    )
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_ai_complete():
+    model_name = "seekdb_complete"
+    model_type = "completion"
+    provider_model_name = "THUDM/GLM-4-9B-0414"
+    create_ai_model(
+        model_name=model_name, model_type=model_type, provider_model_name=provider_model_name
+    )
+    endpoint_name = "seekdb_complete_endpoint"
+    url = "https://api.siliconflow.cn/v1/chat/completions"
+    access_key = os.getenv("siliconflow_access_key")
+    provider = "siliconflow"
+    create_ai_model_endpoint(
+        endpoint_name=endpoint_name,
+        ai_model_name=model_name,
+        url=url,
+        access_key=access_key,
+        provider=provider,
+    )
+    prompt = "Translate 'Hello World' to Chinese"
+    result = ai_complete(model_name, prompt)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    # 检查返回的响应中是否包含 "你好，世界"
+    response_text = result_dict["response"]
+    assert "你好" in response_text and "世界" in response_text, (
+        f"Expected '你好，世界' in response, got {response_text}"
+    )
+
+
+def test_ai_rerank():
+    model_name = "seekdb_rerank"
+    model_type = "rerank"
+    provider_model_name = "BAAI/bge-reranker-v2-m3"
+    create_ai_model(
+        model_name=model_name, model_type=model_type, provider_model_name=provider_model_name
+    )
+    endpoint_name = "seekdb_rerank_endpoint"
+    url = "https://api.siliconflow.cn/v1/rerank"
+    access_key = os.getenv("siliconflow_access_key")
+    provider = "siliconflow"
+    create_ai_model_endpoint(
+        endpoint_name=endpoint_name,
+        ai_model_name=model_name,
+        url=url,
+        access_key=access_key,
+        provider=provider,
+    )
+    query = "Apple"
+    documents = ["vegetable", "fruit", "banana", "apple"]
+    result = ai_rerank(model_name, query, documents)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    assert result_dict["reranked_documents"] == ["apple", "banana", "fruit", "vegetable"], (
+        f"Expected ['apple', 'banana', 'fruit', 'vegetable'], got {result_dict['reranked_documents']}"
+    )
+
+
+def test_create_sematic_index():
+    table_name = "items"
+    create_table = f"""
+    create table if not exists {table_name} (id int primary key,doc varchar(100))
+    """
+    execute_sql(create_table)
+    column_name = "doc"
+    index_name = "vector_idx"
+    model_name = "seekdb_embed"
+    result = create_semantic_index(
+        table_name=table_name, column_name=column_name, index_name=index_name, model_name=model_name
+    )
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_semantic_search():
+    table_name = "items"
+    insert_data = f"""
+    INSERT INTO {table_name} (id, doc) VALUES(1, 'Rose');
+    INSERT INTO {table_name} (id, doc) VALUES(2, 'Lily');
+    INSERT INTO {table_name} (id, doc) VALUES(3, 'Sunflower');
+    """
+    # execute_sql(insert_data)
+    column_name = "doc"
+    query_text = "flower"
+    result = semantic_search(
+        table_name=table_name, column_name=column_name, query_text=query_text, limit=1
+    )
+    print(result)
