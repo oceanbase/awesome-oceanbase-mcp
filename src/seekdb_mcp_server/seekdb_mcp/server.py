@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error
 import pyseekdb
+import pylibseekdb as seekdb
 
 # Configure logging
 logging.basicConfig(
@@ -19,26 +20,38 @@ load_dotenv()
 
 app = FastMCP("seekdb_mcp_server")
 client = pyseekdb.Client()
-server = client._server
-
+seekdb.open()
 
 @app.tool()
 def execute_sql(sql: str) -> str:
     """Execute a sql on the seekdb"""
     logger.info(f"Calling tool: execute_sql with arguments: {sql}")
     result = {"sql": sql, "success": False, "data": None, "error": None}
+    conn = None
+    cursor = None
     try:
-        data = server.execute(sql)
-        if isinstance(data, list):
+        conn = seekdb.connect()
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        data = cursor.fetchall()
+        if data:
             result["data"] = [[str(cell) for cell in row] for row in data]
+        else:
+            conn.commit()
         result["success"] = True
     except Error as e:
         result["error"] = f"[Error]: {e}"
     except Exception as e:
         result["error"] = f"[Exception]: {e}"
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
     json_result = json.dumps(result, ensure_ascii=False)
     if result["error"]:
         logger.error(f"SQL executed failed, result: {json_result}")
+    print(json_result)
     return json_result
 
 
@@ -126,6 +139,43 @@ def list_collections() -> str:
     json_result = json.dumps(result, ensure_ascii=False)
     return json_result
 
+@app.tool()
+def has_collection(collection_name: str) -> str:
+    """
+    This method checks if a collection with the given name exists in seekdb.
+
+    Args:
+        collection_name: The name of the collection to check.
+
+    Returns:
+        A JSON string containing:
+        - success: Whether the check operation succeeded
+        - exists: Boolean indicating if the collection exists
+        - collection_name: The name of the collection that was checked
+        - error: Error message if the operation failed
+
+    Examples:
+        - Check if a collection exists:
+          has_collection("my_collection")
+          Returns: {"success": true, "exists": true, "collection_name": "my_collection"}
+    """
+    logger.info(f"Calling tool: has_collection with arguments: collection_name={collection_name}")
+    result = {"collection_name": collection_name, "success": False, "exists": False, "error": None}
+
+    try:
+        exists = client.has_collection(collection_name)
+        result["success"] = True
+        result["exists"] = exists
+        if exists:
+            result["message"] = f"Collection '{collection_name}' exists"
+        else:
+            result["message"] = f"Collection '{collection_name}' does not exist"
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to check collection existence: {e}")
+
+    json_result = json.dumps(result, ensure_ascii=False)
+    return json_result
 
 @app.tool()
 def peek_collection(collection_name: str, limit: int = 3) -> str:

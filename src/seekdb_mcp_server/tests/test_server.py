@@ -1,6 +1,8 @@
 import json
 import os
 
+import pytest
+
 from seekdb_mcp.server import (
     add_data_to_collection,
     ai_complete,
@@ -11,12 +13,24 @@ from seekdb_mcp.server import (
     create_semantic_index,
     delete_collection,
     execute_sql,
+    get_current_time,
     hybrid_search,
+    list_collections,
     query_collection,
-    delete_collection,
     full_text_search,
     semantic_search,
+    has_collection,
+    update_collection
 )
+
+
+@pytest.fixture
+def test_collection():
+    """Fixture that creates a collection before test and deletes it after."""
+    collection_name = "test_collection"
+    create_collection(collection_name)
+    yield collection_name
+    delete_collection(collection_name)
 
 
 def test_execute_sql():
@@ -26,32 +40,52 @@ def test_execute_sql():
     assert result_dict["success"] is True
     assert result_dict["data"] == [["1"]], f"Expected [['1']], got {result_dict['data']}"
 
+def test_get_current_time():
+    result = get_current_time()
+    print(result)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
 
 def test_create_collection():
     collection_name = "test_collection"
     result = create_collection(collection_name)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
+    delete_collection(collection_name)
 
+def test_has_collection(test_collection):
+    # Test that collection exists
+    result = has_collection(test_collection)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    assert result_dict["exists"] is True, (
+        f"Expected 'exists' to be True, got {result_dict['exists']}"
+    )
 
-def test_add_data_to_collection():
-    collection_name = "test_collection"
-    test_create_collection()
+def test_list_collection(test_collection):
+    result = list_collections()
+    result_dict = json.loads(result)
+    
+    assert result_dict["success"] is True
+    assert test_collection in result_dict["collections"], (
+        f"Expected '{test_collection}' in collections, got {result_dict['collections']}"
+    )
+
+def test_add_data_to_collection(test_collection):
     ids = ["1", "2"]
     documents = ["I love apple", "I love pear"]
     metadatas = [{"category": "preference", "index": 0}, {"category": "preference", "index": 1}]
     result = add_data_to_collection(
-        collection_name=collection_name, ids=ids, documents=documents, metadatas=metadatas
+        collection_name=test_collection, ids=ids, documents=documents, metadatas=metadatas
     )
     result_dict = json.loads(result)
     assert result_dict["success"] is True
 
-
-def test_query_collection():
-    collection_name = "test_collection"
-    test_add_data_to_collection()
+def test_query_collection(test_collection):
+    # 先添加数据
+    test_add_data_to_collection(test_collection)
     query_texts = ["pear"]
-    result = query_collection(collection_name=collection_name, query_texts=query_texts, n_results=1)
+    result = query_collection(collection_name=test_collection, query_texts=query_texts, n_results=1)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
     # 检查返回的 document 中是否包含 "pear"
@@ -60,20 +94,40 @@ def test_query_collection():
         f"Expected 'pear' in documents, got {documents}"
     )
 
+def test_update_collection(test_collection):
+    test_add_data_to_collection(test_collection)
+    ids = ["1"]
+    documents = ["I love banana"]
+    result = update_collection(collection_name=test_collection, ids=ids, documents=documents)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True, (
+        f"Expected update_collection to succeed, got {result_dict}"
+    )
+    
+    # Query to verify document with id=1 has been updated to "I love banana"
+    query_result = query_collection(
+        collection_name=test_collection, query_texts=["banana"], n_results=1
+    )
+    query_result_dict = json.loads(query_result)
+    returned_documents = query_result_dict["data"]["documents"]
+    assert returned_documents[0][0] == "I love banana", (
+        f"Expected 'I love banana', got {returned_documents[0][0]}"
+    )
 
 def test_delete_collection():
     collection_name = "test_collection"
-    test_create_collection()
     result = delete_collection(collection_name)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
 
 
 def test_full_text_search():
+    drop_table = "drop table if exists sport_data_whole"
+    execute_sql(drop_table)
     create_table = """
     CREATE TABLE if not exists sport_data_whole (
     event VARCHAR(64),
-    date VARCHAR(16),
+    date VARCHAR(20),
     news VARCHAR(65535),
     FULLTEXT INDEX ft_idx1_news(news)
         WITH PARSER ik PARSER_PROPERTIES = (ik_mode = "max_word")
@@ -133,7 +187,6 @@ def test_hybrid_search():
         knn_query_texts=knn_query_texts,
         knn_where=knn_where,
     )
-    print(result)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
     assert result_dict["data"]["ids"][0] == ["id1", "id3"], (
