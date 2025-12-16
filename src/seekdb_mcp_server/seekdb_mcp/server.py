@@ -1178,23 +1178,8 @@ def ai_rerank(model_name: str, query: str, documents: list[str]) -> str:
 
 def main():
     """Main entry point to run the MCP server."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--transport",
-        type=str,
-        default="stdio",
-        help="Specify the MCP server transport type as stdio or sse or streamable-http.",
-    )
-    parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
-    parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
-    args = parser.parse_args()
-    transport = args.transport
-    logger.info(f"Starting OceanBase MCP server with {transport} mode...")
-    if transport in {"sse", "streamable-http"}:
-        app.settings.host = args.host
-        app.settings.port = args.port
-    app.run(transport=transport)
-
+    logger.info(f"Starting OceanBase MCP server with stdio mode...")
+    app.run(transport="stdio")
 
 if __name__ == "__main__":
     main()
