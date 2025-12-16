@@ -65,11 +65,12 @@ def get_current_time() -> str:
         return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error getting database time: {e}")
-        # Fallback to system time if database query fails
-        local_time = time.localtime()
-        formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-        logger.info(f"Fallback to system time: {formatted_time}")
-        return formatted_time
+        result = {
+            "success": False,
+            "data": None,
+            "error": f"[Error]: {e}"
+        }
+        return json.dumps(result, ensure_ascii=False)
 
 
 @app.tool()
