@@ -10,17 +10,18 @@ from seekdb_mcp.server import (
     create_ai_model,
     create_ai_model_endpoint,
     create_collection,
-    create_semantic_index,
     delete_collection,
+    delete_documents,
+    drop_ai_model,
+    drop_ai_model_endpoint,
     execute_sql,
     get_current_time,
     hybrid_search,
     list_collections,
     query_collection,
     full_text_search,
-    semantic_search,
     has_collection,
-    update_collection
+    update_collection,
 )
 
 
@@ -40,11 +41,13 @@ def test_execute_sql():
     assert result_dict["success"] is True
     assert result_dict["data"] == [["1"]], f"Expected [['1']], got {result_dict['data']}"
 
+
 def test_get_current_time():
     result = get_current_time()
     print(result)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
+
 
 def test_create_collection():
     collection_name = "test_collection"
@@ -52,6 +55,7 @@ def test_create_collection():
     result_dict = json.loads(result)
     assert result_dict["success"] is True
     delete_collection(collection_name)
+
 
 def test_has_collection(test_collection):
     # Test that collection exists
@@ -62,14 +66,16 @@ def test_has_collection(test_collection):
         f"Expected 'exists' to be True, got {result_dict['exists']}"
     )
 
+
 def test_list_collection(test_collection):
     result = list_collections()
     result_dict = json.loads(result)
-    
+
     assert result_dict["success"] is True
     assert test_collection in result_dict["collections"], (
         f"Expected '{test_collection}' in collections, got {result_dict['collections']}"
     )
+
 
 def test_add_data_to_collection(test_collection):
     ids = ["1", "2"]
@@ -80,6 +86,28 @@ def test_add_data_to_collection(test_collection):
     )
     result_dict = json.loads(result)
     assert result_dict["success"] is True
+
+
+def test_delete_documents(test_collection):
+    test_add_data_to_collection(test_collection)
+    where_document = {"$contains": "apple"}
+    result = delete_documents(collection_name=test_collection, where_document=where_document)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True, (
+        f"Expected delete_documents to succeed, got {result_dict}"
+    )
+
+    query_result = query_collection(
+        collection_name=test_collection, query_texts=["apple"], n_results=10
+    )
+    query_result_dict = json.loads(query_result)
+    # Verify "I love apple" is not in the returned documents
+    returned_documents = query_result_dict["data"]["documents"]
+    all_docs = [doc for docs in returned_documents for doc in docs]
+    assert "I love apple" not in all_docs, (
+        f"Expected 'I love apple' to be deleted, but found it in {all_docs}"
+    )
+
 
 def test_query_collection(test_collection):
     # 先添加数据
@@ -94,6 +122,7 @@ def test_query_collection(test_collection):
         f"Expected 'pear' in documents, got {documents}"
     )
 
+
 def test_update_collection(test_collection):
     test_add_data_to_collection(test_collection)
     ids = ["1"]
@@ -103,7 +132,7 @@ def test_update_collection(test_collection):
     assert result_dict["success"] is True, (
         f"Expected update_collection to succeed, got {result_dict}"
     )
-    
+
     # Query to verify document with id=1 has been updated to "I love banana"
     query_result = query_collection(
         collection_name=test_collection, query_texts=["banana"], n_results=1
@@ -113,6 +142,7 @@ def test_update_collection(test_collection):
     assert returned_documents[0][0] == "I love banana", (
         f"Expected 'I love banana', got {returned_documents[0][0]}"
     )
+
 
 def test_delete_collection():
     collection_name = "test_collection"
@@ -155,9 +185,7 @@ def test_full_text_search():
     execute_sql(drop_table)
 
 
-def test_hybrid_search():
-    collection_name = "my_test_collection"
-    create_collection(collection_name)
+def test_hybrid_search(test_collection):
     documents = [
         "Machine learning is a subset of artificial intelligence",
         "Python is a popular programming language",
@@ -174,14 +202,14 @@ def test_hybrid_search():
         {"category": "NLP", "index": 4, "year": 2016},
     ]
     add_data_to_collection(
-        collection_name=collection_name, ids=ids, documents=documents, metadatas=metadatas
+        collection_name=test_collection, ids=ids, documents=documents, metadatas=metadatas
     )
     fulltext_search_keyword = "machine learning"
     fulltext_where = {"category": {"$eq": "AI"}}
     knn_query_texts = ["AI research"]
     knn_where = {"year": {"$gte": 2020}}
     result = hybrid_search(
-        collection_name=collection_name,
+        collection_name=test_collection,
         fulltext_search_keyword=fulltext_search_keyword,
         fulltext_where=fulltext_where,
         knn_query_texts=knn_query_texts,
@@ -192,7 +220,6 @@ def test_hybrid_search():
     assert result_dict["data"]["ids"][0] == ["id1", "id3"], (
         f"Expected ['id1', 'id3'], got {result_dict['data']['ids'][0]}"
     )
-    delete_collection(collection_name)
 
 
 def test_create_ai_model():
@@ -202,6 +229,13 @@ def test_create_ai_model():
     result = create_ai_model(
         model_name=model_name, model_type=model_type, provider_model_name=provider_model_name
     )
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_drop_ai_model():
+    model_name = "seekdb_embed"
+    result = drop_ai_model(model_name)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
 
@@ -219,6 +253,13 @@ def test_create_ai_model_endpoint():
         access_key=access_key,
         provider=provider,
     )
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+
+
+def test_drop_ai_model_endpoint():
+    endpoint_name = "seekdb_embed_endpoint"
+    result = drop_ai_model_endpoint(endpoint_name)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
 
@@ -278,35 +319,3 @@ def test_ai_rerank():
     assert result_dict["reranked_documents"] == ["apple", "banana", "fruit", "vegetable"], (
         f"Expected ['apple', 'banana', 'fruit', 'vegetable'], got {result_dict['reranked_documents']}"
     )
-
-
-def test_create_sematic_index():
-    table_name = "items"
-    create_table = f"""
-    create table if not exists {table_name} (id int primary key,doc varchar(100))
-    """
-    execute_sql(create_table)
-    column_name = "doc"
-    index_name = "vector_idx"
-    model_name = "seekdb_embed"
-    result = create_semantic_index(
-        table_name=table_name, column_name=column_name, index_name=index_name, model_name=model_name
-    )
-    result_dict = json.loads(result)
-    assert result_dict["success"] is True
-
-
-def test_semantic_search():
-    table_name = "items"
-    insert_data = f"""
-    INSERT INTO {table_name} (id, doc) VALUES(1, 'Rose');
-    INSERT INTO {table_name} (id, doc) VALUES(2, 'Lily');
-    INSERT INTO {table_name} (id, doc) VALUES(3, 'Sunflower');
-    """
-    # execute_sql(insert_data)
-    column_name = "doc"
-    query_text = "flower"
-    result = semantic_search(
-        table_name=table_name, column_name=column_name, query_text=query_text, limit=1
-    )
-    print(result)
