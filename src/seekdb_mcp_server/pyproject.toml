@@ -13,7 +13,7 @@ keywords = [
     "oceanbase",
     "mcp",
 ]
-requires-python = ">=3.10,<3.13" # ≥ 3.13 limited by pyobvector's numpy requirement.
+requires-python = ">=3.11,<3.13" # ≥ 3.11 required by pyseekdb
 dependencies = [
     "mcp>=1.13.1",
     "fastmcp>=2.12.0",
@@ -47,7 +47,7 @@ name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 
 [project.scripts]
-oceanbase_mcp_server = "oceanbase_mcp.server:main"
+seekdb_mcp_server = "seekdb_mcp.server:main"
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]

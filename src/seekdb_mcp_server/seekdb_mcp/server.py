@@ -3,7 +3,6 @@ import logging
 import time
 from typing import Optional
 import json
-import argparse
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error
@@ -1175,6 +1174,128 @@ def ai_rerank(model_name: str, query: str, documents: list[str]) -> str:
     json_result = json.dumps(result, ensure_ascii=False)
     return json_result
 
+@app.tool()
+def get_registered_ai_models() -> str:
+    """
+    List all registered AI models in seekdb.
+
+    This function queries the oceanbase.DBA_OB_AI_MODELS system view to retrieve
+    information about all AI models registered in the current tenant.
+
+    Returns:
+        A JSON string containing the list of registered AI models with their details:
+        - MODEL_ID: The unique identifier of the AI model
+        - NAME: The name used to identify this model in seekdb
+        - TYPE: The type of AI model (e.g., DENSE_EMBEDDING, COMPLETION, RERANK)
+        - MODEL_NAME: The provider's model name
+
+    Examples:
+        - List all registered AI models:
+          get_registered_ai_models()
+          Returns: {"success": true, "models": [{"MODEL_ID": "500005", "NAME": "my_ai_model_1", "TYPE": "DENSE_EMBEDDING", "MODEL_NAME": "text-embedding-v1"}], "count": 1}
+    """
+    logger.info("Calling tool: get_registered_ai_models")
+    result = {"success": False, "models": None, "count": 0, "error": None}
+
+    try:
+        sql = "SELECT * FROM oceanbase.DBA_OB_AI_MODELS"
+        sql_result = json.loads(execute_sql(sql))
+
+        if not sql_result.get("success"):
+            result["error"] = sql_result.get("error")
+            return json.dumps(result, ensure_ascii=False)
+
+        data = sql_result.get("data")
+        if data:
+            models = []
+            for row in data:
+                model = {
+                    "MODEL_ID": row[0] if len(row) > 0 else None,
+                    "NAME": row[1] if len(row) > 1 else None,
+                    "TYPE": row[2] if len(row) > 2 else None,
+                    "MODEL_NAME": row[3] if len(row) > 3 else None,
+                }
+                models.append(model)
+            result["models"] = models
+            result["count"] = len(models)
+            result["message"] = f"Found {len(models)} registered AI model(s)"
+        else:
+            result["models"] = []
+            result["count"] = 0
+            result["message"] = "No registered AI models found"
+
+        result["success"] = True
+
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to get registered AI models: {e}")
+
+    json_result = json.dumps(result, ensure_ascii=False)
+    return json_result
+
+@app.tool()
+def get_ai_model_endpoints() -> str:
+    """
+    Get all registered AI model endpoints from seekdb.
+
+    Returns:
+        str: JSON string containing the list of AI model endpoints with fields:
+            - ENDPOINT_ID: Endpoint identifier
+            - ENDPOINT_NAME: Name of the endpoint
+            - AI_MODEL_NAME: Associated AI model name
+            - SCOPE: Scope of the endpoint
+            - URL: URL of the AI model service
+            - ACCESS_KEY: Access key (encrypted)
+            - PROVIDER: Provider name (e.g., openai, siliconflow)
+            - REQUEST_MODEL_NAME: Model name used in requests
+            - PARAMETERS: Additional parameters
+            - REQUEST_TRANSFORM_FN: Request transformation function
+            - RESPONSE_TRANSFORM_FN: Response transformation function
+    """
+    result = {"success": False, "endpoints": [], "count": 0, "error": None, "message": ""}
+
+    try:
+        sql = "SELECT * FROM oceanbase.DBA_OB_AI_MODEL_ENDPOINTS"
+        sql_result = json.loads(execute_sql(sql))
+
+        if not sql_result.get("success"):
+            result["error"] = sql_result.get("error")
+            return json.dumps(result, ensure_ascii=False)
+
+        data = sql_result.get("data")
+        if data:
+            endpoints = []
+            for row in data:
+                endpoint = {
+                    "ENDPOINT_ID": row[0] if len(row) > 0 else None,
+                    "ENDPOINT_NAME": row[1] if len(row) > 1 else None,
+                    "AI_MODEL_NAME": row[2] if len(row) > 2 else None,
+                    "SCOPE": row[3] if len(row) > 3 else None,
+                    "URL": row[4] if len(row) > 4 else None,
+                    "ACCESS_KEY": row[5] if len(row) > 5 else None,
+                    "PROVIDER": row[6] if len(row) > 6 else None,
+                    "REQUEST_MODEL_NAME": row[7] if len(row) > 7 else None,
+                    "PARAMETERS": row[8] if len(row) > 8 else None,
+                    "REQUEST_TRANSFORM_FN": row[9] if len(row) > 9 else None,
+                    "RESPONSE_TRANSFORM_FN": row[10] if len(row) > 10 else None,
+                }
+                endpoints.append(endpoint)
+            result["endpoints"] = endpoints
+            result["count"] = len(endpoints)
+            result["message"] = f"Found {len(endpoints)} AI model endpoint(s)"
+        else:
+            result["endpoints"] = []
+            result["count"] = 0
+            result["message"] = "No AI model endpoints found"
+
+        result["success"] = True
+
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to get AI model endpoints: {e}")
+
+    json_result = json.dumps(result, ensure_ascii=False)
+    return json_result
 
 def main():
     """Main entry point to run the MCP server."""

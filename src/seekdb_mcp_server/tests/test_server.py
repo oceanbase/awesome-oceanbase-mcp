@@ -15,7 +15,9 @@ from seekdb_mcp.server import (
     drop_ai_model,
     drop_ai_model_endpoint,
     execute_sql,
+    get_ai_model_endpoints,
     get_current_time,
+    get_registered_ai_models,
     hybrid_search,
     list_collections,
     query_collection,
@@ -32,6 +34,38 @@ def test_collection():
     create_collection(collection_name)
     yield collection_name
     delete_collection(collection_name)
+
+@pytest.fixture
+def test_ai_model():
+    """Fixture that creates an AI embedding model before test and drops it after."""
+    model_name = "seekdb_embed"
+    model_type = "dense_embedding"
+    provider_model_name = "BAAI/bge-m3"
+    create_ai_model(
+        model_name=model_name, model_type=model_type, provider_model_name=provider_model_name
+    )
+    yield model_name
+    drop_ai_model(model_name)
+
+@pytest.fixture
+def test_ai_model_endpoint(test_ai_model):
+    """Fixture that creates an AI model endpoint before test and drops it after.
+    
+    Depends on test_ai_model fixture to ensure the AI model exists first.
+    """
+    endpoint_name = "seekdb_embed_endpoint"
+    url = "https://api.siliconflow.cn/v1/embeddings"
+    access_key = os.getenv("siliconflow_access_key")
+    provider = "siliconflow"
+    create_ai_model_endpoint(
+        endpoint_name=endpoint_name,
+        ai_model_name=test_ai_model,
+        url=url,
+        access_key=access_key,
+        provider=provider,
+    )
+    yield endpoint_name
+    drop_ai_model_endpoint(endpoint_name)
 
 
 def test_execute_sql():
@@ -110,13 +144,13 @@ def test_delete_documents(test_collection):
 
 
 def test_query_collection(test_collection):
-    # 先添加数据
+    # Add data first
     test_add_data_to_collection(test_collection)
     query_texts = ["pear"]
     result = query_collection(collection_name=test_collection, query_texts=query_texts, n_results=1)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
-    # 检查返回的 document 中是否包含 "pear"
+    # Check if the returned documents contain "pear"
     documents = result_dict["data"]["documents"]
     assert any("pear" in doc for docs in documents for doc in docs), (
         f"Expected 'pear' in documents, got {documents}"
@@ -231,6 +265,7 @@ def test_create_ai_model():
     )
     result_dict = json.loads(result)
     assert result_dict["success"] is True
+    drop_ai_model(model_name)
 
 
 def test_drop_ai_model():
@@ -240,21 +275,21 @@ def test_drop_ai_model():
     assert result_dict["success"] is True
 
 
-def test_create_ai_model_endpoint():
+def test_create_ai_model_endpoint(test_ai_model):
     endpoint_name = "seekdb_embed_endpoint"
-    ai_model_name = "seekdb_embed"
     url = "https://api.siliconflow.cn/v1/embeddings"
     access_key = os.getenv("siliconflow_access_key")
     provider = "siliconflow"
     result = create_ai_model_endpoint(
         endpoint_name=endpoint_name,
-        ai_model_name=ai_model_name,
+        ai_model_name=test_ai_model,
         url=url,
         access_key=access_key,
         provider=provider,
     )
     result_dict = json.loads(result)
     assert result_dict["success"] is True
+    drop_ai_model_endpoint(endpoint_name)
 
 
 def test_drop_ai_model_endpoint():
@@ -286,7 +321,6 @@ def test_ai_complete():
     result = ai_complete(model_name, prompt)
     result_dict = json.loads(result)
     assert result_dict["success"] is True
-    # 检查返回的响应中是否包含 "你好，世界"
     response_text = result_dict["response"]
     assert "你好" in response_text and "世界" in response_text, (
         f"Expected '你好，世界' in response, got {response_text}"
@@ -318,4 +352,24 @@ def test_ai_rerank():
     assert result_dict["success"] is True
     assert result_dict["reranked_documents"] == ["apple", "banana", "fruit", "vegetable"], (
         f"Expected ['apple', 'banana', 'fruit', 'vegetable'], got {result_dict['reranked_documents']}"
+    )
+
+def test_get_registered_ai_model(test_ai_model):
+    result = get_registered_ai_models()
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    # Check that seekdb_embed is in the returned models
+    model_names = [model["NAME"] for model in result_dict["models"]]
+    assert test_ai_model in model_names, (
+        f"Expected 'seekdb_embed' in model names, got {model_names}"
+    )
+
+def test_get_ai_model_endpoints(test_ai_model_endpoint):
+    result = get_ai_model_endpoints()
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True
+    # Check that the endpoint we created is in the returned list
+    endpoint_names = [endpoint["ENDPOINT_NAME"] for endpoint in result_dict["endpoints"]]
+    assert test_ai_model_endpoint in endpoint_names, (
+        f"Expected '{test_ai_model_endpoint}' in endpoint names, got {endpoint_names}"
     )
