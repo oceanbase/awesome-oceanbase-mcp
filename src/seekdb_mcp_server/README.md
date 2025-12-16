@@ -1,6 +1,6 @@
 English | [简体中文](README_CN.md)  
 
-# Seekdb MCP Server
+# seekdb MCP Server
 
 A Model Context Protocol (MCP) server that enables secure interaction with seekdb databases. This server allows AI assistants to list tables, read data, and execute SQL queries through a controlled interface, making database exploration and analysis safer and more structured.
 

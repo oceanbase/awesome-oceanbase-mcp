@@ -23,7 +23,13 @@ from seekdb_mcp.server import (
     query_collection,
     full_text_search,
     has_collection,
+    seekdb_memory_insert,
+    seekdb_memory_query,
+    seekdb_memory_delete,
+    seekdb_memory_update,
     update_collection,
+    seekdb_memory_collection_name,
+    client
 )
 
 
@@ -67,6 +73,11 @@ def test_ai_model_endpoint(test_ai_model):
     yield endpoint_name
     drop_ai_model_endpoint(endpoint_name)
 
+@pytest.fixture
+def test_memory():
+    create_collection(seekdb_memory_collection_name)
+    yield
+    delete_collection(seekdb_memory_collection_name)
 
 def test_execute_sql():
     sql = "select 1"
@@ -373,3 +384,116 @@ def test_get_ai_model_endpoints(test_ai_model_endpoint):
     assert test_ai_model_endpoint in endpoint_names, (
         f"Expected '{test_ai_model_endpoint}' in endpoint names, got {endpoint_names}"
     )
+
+def test_seekdb_memory_insert_and_query(test_memory):
+    content = "I love apple"
+    meta = {}
+    
+    # Insert the memory
+    insert_result = seekdb_memory_insert(content=content, meta=meta)
+    insert_result_dict = json.loads(insert_result)
+    assert insert_result_dict["success"] is True, (
+        f"Expected insert to succeed, got {insert_result_dict}"
+    )
+    
+    # Query to verify insertion
+    query_result = seekdb_memory_query(query="apple", topk=5)
+    query_result_dict = json.loads(query_result)
+    
+    # Find the memory we just inserted
+    memories = query_result_dict["memories"]
+    matching_memories = [m for m in memories if m["content"] == content]
+    assert len(matching_memories) > 0, (
+        f"Expected to find '{content}' in memories, got {memories}"
+    )
+
+def test_seekdb_memory_update(test_memory):
+    content = "I love apple"
+    meta = {}
+    
+    # Insert the memory
+    insert_result = seekdb_memory_insert(content=content, meta=meta)
+    insert_result_dict = json.loads(insert_result)
+    assert insert_result_dict["success"] is True, (
+        f"Expected insert to succeed, got {insert_result_dict}"
+    )
+    
+    # Query to verify insertion
+    query_result = seekdb_memory_query(query="apple", topk=5)
+    query_result_dict = json.loads(query_result)
+    
+    # Find the memory we just inserted
+    memories = query_result_dict["memories"]
+    matching_memories = [m for m in memories if m["content"] == content]
+    assert len(matching_memories) > 0, (
+        f"Expected to find '{content}' in memories, got {memories}"
+    )
+    
+    # Get the mem_id of the memory we want to update
+    mem_id = matching_memories[0]["mem_id"]
+    
+    # Update the memory content
+    new_content = "I love pear"
+    update_result = seekdb_memory_update(mem_id=mem_id, content=new_content, meta=meta)
+    update_result_dict = json.loads(update_result)
+    assert update_result_dict["success"] is True, (
+        f"Expected update to succeed, got {update_result_dict}"
+    )
+    
+    # Query to verify update
+    query_result_after_update = seekdb_memory_query(query="pear", topk=5)
+    query_result_after_update_dict = json.loads(query_result_after_update)
+    
+    # Verify the memory was updated - same mem_id should now have new content
+    memories_after_update = query_result_after_update_dict["memories"]
+    matching_updated_memories = [m for m in memories_after_update if m["content"] == new_content]
+    # Verify it's the same memory record (same mem_id)
+    assert matching_updated_memories[0]["mem_id"] == mem_id, (
+        f"Expected mem_id to be '{mem_id}', got '{matching_updated_memories[0]['mem_id']}'"
+    )
+
+def test_seekdb_memory_delete(test_memory):
+    content = "I love apple"
+    meta = {}
+    
+    # Insert the memory
+    insert_result = seekdb_memory_insert(content=content, meta=meta)
+    insert_result_dict = json.loads(insert_result)
+    assert insert_result_dict["success"] is True, (
+        f"Expected insert to succeed, got {insert_result_dict}"
+    )
+    
+    # Query to verify insertion
+    query_result = seekdb_memory_query(query="apple", topk=5)
+    query_result_dict = json.loads(query_result)
+    
+    # Find the memory we just inserted
+    memories = query_result_dict["memories"]
+    matching_memories = [m for m in memories if m["content"] == content]
+    assert len(matching_memories) > 0, (
+        f"Expected to find '{content}' in memories, got {memories}"
+    )
+    
+    # Get the mem_id of the memory we want to delete
+    mem_id = matching_memories[0]["mem_id"]
+    
+    # Delete the memory
+    delete_result = seekdb_memory_delete(mem_id=mem_id)
+    delete_result_dict = json.loads(delete_result)
+    assert delete_result_dict["success"] is True, (
+        f"Expected delete to succeed, got {delete_result_dict}"
+    )
+    
+    # Query to verify deletion
+    query_result_after_delete = seekdb_memory_query(query="apple", topk=5)
+    query_result_after_delete_dict = json.loads(query_result_after_delete)
+    
+    # Verify the memory was deleted - same mem_id should no longer exist
+    memories_after_delete = query_result_after_delete_dict["memories"]
+    matching_deleted_memories = [m for m in memories_after_delete if m["mem_id"] == mem_id]
+    assert len(matching_deleted_memories) == 0, (
+        f"Expected mem_id '{mem_id}' to be deleted, but still found it in memories: {memories_after_delete}"
+    )
+
+def test_my_test():
+    print(list_collections())

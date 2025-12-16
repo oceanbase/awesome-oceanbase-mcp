@@ -8,6 +8,7 @@ from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error
 import pyseekdb
 import pylibseekdb as seekdb
+import uuid
 
 # Configure logging
 logging.basicConfig(
@@ -20,7 +21,7 @@ load_dotenv()
 app = FastMCP("seekdb_mcp_server")
 client = pyseekdb.Client()
 seekdb.open()
-
+seekdb_memory_collection_name="seekdb_memory_collection_v1"
 
 @app.tool()
 def execute_sql(sql: str) -> str:
@@ -511,7 +512,6 @@ def query_collection(
 
         # Execute query
         query_results = collection.query(**query_kwargs)
-
         # Format results for JSON serialization
         formatted_results = {
             "ids": query_results.get("ids", []),
@@ -1297,9 +1297,329 @@ def get_ai_model_endpoints() -> str:
     json_result = json.dumps(result, ensure_ascii=False)
     return json_result
 
+@app.tool()
+def seekdb_memory_query(query:str,topk:int=5)->str:
+    """
+        🚨 MULTILINGUAL MEMORY SEARCH 🚨 - SMART CROSS-LANGUAGE RETRIEVAL!
+        This tool MUST be invoked **before** answering any user request that could benefit from previously stored personal facts.
+
+        ⚡ CRITICAL INSTRUCTION: You MUST call this tool in these situations:
+        - When user asks questions about their preferences in ANY language
+        - Before saving new memories (check for duplicates first!)
+        - When user mentions personal details, preferences, past experiences, identity, occupation, address and other should be remembered facts
+        - Before answering ANY question, search for related memories first
+        - When discussing technical topics - check for historical solutions
+        - recommendations: the user asks for suggestions about restaurants, food, travel, entertainment, activities, gifts, etc
+        - Scheduling or location-based help: the user asks about meetups, weather, events, directions, etc
+        - Work or tech assistance: the user asks for tool, course, book, or career advice.
+        - Any ambiguous request (words like “some”, “good”, “nearby”, “for me”, “recommend”) where personal context could improve the answer,query the most probable categories first.
+        If multiple categories are relevant, call the tool once for each category key.
+
+        Failure to retrieve memory before responding is considered an error.
+
+        🌐 MULTILINGUAL SEARCH EXAMPLES:
+        - User: "What do I like?" → Search: "preference like favorite"
+        - User: "我喜欢什么?" → Search: "preference favorite sports food" (use English keywords!)
+        - User: "¿Cuáles son mis gustos?" → Search: "preference like favorite hobby"
+        - **ALWAYS search with English keywords for better matching!**
+
+        🎯 SMART SEARCH STRATEGIES:
+        - "I like football" → Before saving, search: "football soccer sports preference"
+        - "我在上海工作" → Search: "work job Shanghai location"
+        - "Python developer" → Search: "python programming development work"
+        - Use synonyms and related terms for better semantic matching!
+
+        🔍 CATEGORY-BASED SEARCH PATTERNS:
+        - **Sports/Fitness**: "sports preference activity exercise favorite game"
+        - **Food/Drinks**: "food drink preference favorite taste cuisine beverage"
+        - **Work/Career**: "work job company location position career role"
+        - **Technology**: "technology programming tool database language framework"
+        - **Personal**: "personal lifestyle habit family relationship"
+        - **Entertainment**: "entertainment movie music book game hobby"
+
+        💡 SMART SEARCH EXAMPLES FOR MERGING:
+        - New: "I like badminton" → Search: "sports preference activity"
+        → Find: "User likes football and coffee" → Category analysis needed!
+        - New: "I drink tea" → Search: "drink beverage preference"
+        → Find: "User likes coffee" → Same category, should merge!
+        - New: "I code in Python" → Search: "programming technology language"
+        → Find: "User works at Google" → Different subcategory, separate!
+
+        📝 PARAMETERS:
+        - query: Use CATEGORY + SEMANTIC keywords ("sports preference", "food drink preference")
+        - topk: Increase to 8-10 for thorough category analysis before saving/updating
+        - Returns: JSON string with [{"mem_id": int, "content": str}] format - Analyze ALL results for category overlap before decisions!
+
+        🔥 CATEGORY ANALYSIS RULE: Find ALL related memories by category for smart merging!
+        """
+    logger.info(f"Calling tool: seekdb_memory_query with arguments: query={query}, topk={topk}")
+    memory_result = {"success": False, "memories": [], "error": None}
+    
+    try:
+        # Query the memory collection with the query text as a list
+        query_result_str = query_collection(
+            collection_name=seekdb_memory_collection_name,
+            query_texts=[query],
+            n_results=topk
+        )
+        query_result = json.loads(query_result_str)
+        
+        if query_result.get("success") and query_result.get("data"):
+            data = query_result["data"]
+            ids = data.get("ids", [[]])[0]  # First query's results
+            documents = data.get("documents", [[]])[0]
+            
+            # Format results as [{"mem_id": int, "content": str}]
+            memories = []
+            for i, (mem_id, content) in enumerate(zip(ids, documents)):
+                memories.append({
+                    "mem_id": mem_id,
+                    "content": content
+                })
+            
+            memory_result["success"] = True
+            memory_result["memories"] = memories
+            memory_result["count"] = len(memories)
+            memory_result["message"] = f"Found {len(memories)} memory(ies) matching query: '{query}'"
+        else:
+            memory_result["success"] = True
+            memory_result["memories"] = []
+            memory_result["count"] = 0
+            memory_result["message"] = f"No memories found for query: '{query}'"
+            if query_result.get("error"):
+                memory_result["error"] = query_result["error"]
+                
+    except Exception as e:
+        memory_result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to query memories: {e}")
+    
+    json_result = json.dumps(memory_result, ensure_ascii=False)
+    return json_result
+
+@app.tool()
+def seekdb_memory_insert(content: str, meta: dict = None) -> str:
+    """
+        💾 INTELLIGENT MEMORY ORGANIZER 💾 - SMART CATEGORIZATION & MERGING!
+
+        🔥 CRITICAL 4-STEP WORKFLOW: ALWAYS follow this advanced process:
+        1️⃣ **SEARCH RELATED**: Use ob_memory_query to find ALL related memories by category
+        2️⃣ **ANALYZE CATEGORIES**: Classify new info and existing memories by semantic type
+        3️⃣ **SMART DECISION**: Merge same category, separate different categories
+        4️⃣ **EXECUTE ACTION**: Update existing OR create new categorized records
+
+        This tool must be invoked **immediately** when the user explicitly or implicitly discloses any of the following personal facts.
+        Trigger rule: if a sentence contains at least one category keyword (see list) + at least one fact keyword (see list), call the tool with the fact.
+        Categories & sample keywords
+        - Demographics: age, years old, gender, born, date of birth, nationality, hometown, from
+        - Work & education: job title, engineer, developer, tester, company, employer, school, university, degree, major, skill, certificate
+        - Geography & time: live in, reside, city, travel, time-zone, frequent
+        - Preferences & aversions: love, hate, favourite, favorite, prefer, dislike, hobby, food, music, movie, book, brand, color
+        - Lifestyle details: pet, dog, cat, family, married, single, daily routine, language, religion, belief
+        - Achievements & experiences: award, project, competition, achievement, event, milestone
+
+        Fact keywords (examples)
+        - “I am …”, “I work as …”, “I studied …”, “I live in …”, “I love …”, “My birthday is …”
+
+        Example sentences that must trigger:
+        - “I’m 28 and work as a test engineer at Acme Corp.”
+        - “I graduated from Tsinghua with a master’s in CS.”
+        - “I love jazz and hate cilantro.”
+        - “I live in Berlin, but I’m originally from São Paulo.”
+
+        🎯 SMART CATEGORIZATION EXAMPLES:
+        ```
+        📋 Scenario 1: Category Merging
+        Existing: "User likes playing football and drinking coffee"
+        New Input: "I like badminton"
+
+        ✅ CORRECT ACTION: Use ob_memory_update!
+        → Search "sports preference" → Find existing → Separate categories:
+        → Update mem_id_X: "User likes playing football and badminton" (sports)
+        → Create new: "User likes drinking coffee" (food/drinks)
+
+        📋 Scenario 2: Same Category Addition
+        Existing: "User likes playing football"
+        New Input: "I also like tennis"
+
+        ✅ CORRECT ACTION: Use ob_memory_update!
+        → Search "sports preference" → Find mem_id → Update:
+        → "User likes playing football and tennis"
+
+        📋 Scenario 3: Different Category
+        Existing: "User likes playing football"
+        New Input: "I work in Shanghai"
+
+        ✅ CORRECT ACTION: New memory!
+        → Search "work location" → Not found → Create new record
+        ```
+
+        🏷️ SEMANTIC CATEGORIES (Use for classification):
+        - **Sports/Fitness**: football, basketball, swimming, gym, yoga, running, marathon, workout, cycling, hiking, tennis, badminton, climbing, fitness routine, coach, league, match, etc.
+        - **Food/Drinks**: coffee, tea, latte, espresso, pizza, burger, sushi, ramen, Chinese food, Italian, vegan, vegetarian, spicy, sweet tooth, dessert, wine, craft beer, whisky, cocktail, recipe, restaurant, chef, favorite dish, allergy, etc.
+        - **Work/Career**: job, position, role, title, engineer, developer, tester, QA, PM, manager, company, employer, startup, client, project, deadline, promotion, salary, office, remote, hybrid, skill, certification, degree, university, bootcamp, portfolio, resume, interview
+        - **Personal**: spouse, partner, married, single, dating, pet, dog, cat, hometown, birthday, age, gender, nationality, religion, belief, daily routine, morning person, night owl, commute, language, hobby, travel, bucket list, milestone, achievement, award
+        - **Technology**: programming language, Python, Java, JavaScript, Go, Rust, framework, React, Vue, Angular, Spring, Django, database, MySQL, PostgreSQL, MongoDB, Redis, cloud, AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Git, API, microservices, DevOps, automation, testing tool, Selenium, Cypress, JMeter, Postman
+        - **Entertainment**: movie, film, series, Netflix, Disney+, HBO, director, actor, genre, thriller, comedy, drama, music, playlist, Spotify, rock, jazz, K-pop, classical, concert, book, novel, author, genre, fiction, non-fiction, Kindle, audiobook, game, console, PlayStation, Xbox, Switch, Steam, board game, RPG, esports
+
+        🔍 SEARCH STRATEGIES BY CATEGORY:
+        - Sports: "sports preference favorite activity exercise gym routine"
+        - Food: "food drink preference favorite taste cuisine beverage"
+        - Work: "work job career company location title project skill"
+        - Personal: "personal relationship lifestyle habit pet birthday"
+        - Tech: "technology programming tool database framework cloud"
+        - Entertainment: "entertainment movie music book game genre favorite"
+
+        📝 PARAMETERS:
+        - content: ALWAYS categorized English format ("User likes playing [sports]", "User drinks [beverages]")
+        - meta: {"type":"preference", "category":"sports/food/work/tech", "subcategory":"team_sports/beverages"}
+
+        🎯 GOLDEN RULE: Same category = UPDATE existing! Different category = CREATE separate!
+    """
+    logger.info(f"Calling tool: seekdb_memory_insert with arguments: content={content}, meta={meta}")
+    insert_result = {"success": False, "mem_id": None, "content": content, "error": None}
+    
+    try:
+        # Generate a unique ID for the new memory
+        mem_id = str(uuid.uuid4())
+        
+        # Prepare metadata (default to empty dict if not provided)
+        metadatas = [meta] if meta else [{}]
+        
+        # Add memory to the collection
+        add_result_str = add_data_to_collection(
+            collection_name=seekdb_memory_collection_name,
+            ids=[mem_id],
+            documents=[content],
+            metadatas=metadatas
+        )
+        add_result = json.loads(add_result_str)
+        
+        if add_result.get("success"):
+            insert_result["success"] = True
+            insert_result["mem_id"] = mem_id
+            insert_result["message"] = f"Memory inserted successfully with ID: {mem_id}"
+        else:
+            insert_result["error"] = add_result.get("error", "Unknown error during insertion")
+            
+    except Exception as e:
+        insert_result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to insert memory: {e}")
+    
+    json_result = json.dumps(insert_result, ensure_ascii=False)
+    return json_result
+
+@app.tool()
+def seekdb_memory_delete(mem_id: str) -> str:
+    """
+        🗑️ MEMORY ERASER 🗑️ - PERMANENTLY DELETE UNWANTED MEMORIES!
+
+        ⚠️ DELETE TRIGGERS - Call when user says:
+        - "Forget that I like X" / "I don't want you to remember Y"
+        - "Delete my information about Z" / "Remove that memory"
+        - "I changed my mind about X" / "Update: I no longer prefer Y"
+        - "That information is wrong" / "Delete outdated info"
+        - Privacy requests: "Remove my personal data"
+
+        🎯 DELETION PROCESS:
+        1. FIRST: Use seekdb_memory_query to find relevant memories
+        2. THEN: Use the exact ID from query results for deletion
+        3. NEVER guess or generate IDs manually!
+
+        📝 PARAMETERS:
+        - mem_id: EXACT ID from seekdb_memory_query results (string UUID)
+        - ⚠️ WARNING: Deletion is PERMANENT and IRREVERSIBLE!
+
+        🔒 SAFETY RULE: Only delete when explicitly requested by user!
+    """
+    logger.info(f"Calling tool: seekdb_memory_delete with arguments: mem_id={mem_id}")
+    delete_result = {"success": False, "mem_id": mem_id, "error": None}
+    
+    try:
+        # Delete the memory document from the collection
+        result_str = delete_documents(
+            collection_name=seekdb_memory_collection_name,
+            ids=[mem_id]
+        )
+        result = json.loads(result_str)
+        
+        if result.get("success"):
+            delete_result["success"] = True
+            delete_result["message"] = f"Memory with ID '{mem_id}' deleted successfully"
+        else:
+            delete_result["error"] = result.get("error", "Unknown error during deletion")
+            
+    except Exception as e:
+        delete_result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to delete memory: {e}")
+    
+    json_result = json.dumps(delete_result, ensure_ascii=False)
+    return json_result
+
+@app.tool()
+def seekdb_memory_update(mem_id: str, content: str, meta: dict = None) -> str:
+    """
+        ✏️ MULTILINGUAL MEMORY UPDATER ✏️ - KEEP MEMORIES FRESH AND STANDARDIZED!
+
+        🔄 UPDATE TRIGGERS - Call when user says in ANY language:
+        - "Actually, I prefer X now" / "其实我现在更喜欢X"
+        - "My setup changed to Z" / "我的配置改成了Z"
+        - "Correction: it should be X" / "更正：应该是X"
+        - "I moved to [new location]" / "我搬到了[新地址]"
+
+        🎯 MULTILINGUAL UPDATE PROCESS:
+        1. **SEARCH**: Use seekdb_memory_query to find existing memory (search in English!)
+        2. **STANDARDIZE**: Convert new information to English format
+        3. **UPDATE**: Use exact mem_id from query results with standardized content
+        4. **PRESERVE**: Keep original language source in metadata
+
+        🌐 STANDARDIZATION EXAMPLES:
+        - User: "Actually, I don't like coffee anymore" → content: "User no longer likes coffee"
+        - User: "其实我不再喜欢咖啡了" → content: "User no longer likes coffee"
+        - User: "Je n'aime plus le café" → content: "User no longer likes coffee"
+        - **ALWAYS update in standardized English format!**
+
+        📝 PARAMETERS:
+        - mem_id: EXACT ID from seekdb_memory_query results (string UUID)
+        - content: ALWAYS in English, standardized format ("User now prefers X")
+        - meta: Updated metadata {"type":"preference", "category":"...", "updated":"2024-..."}
+
+        🔥 CONSISTENCY RULE: Maintain English storage format for all updates!
+    """
+    logger.info(f"Calling tool: seekdb_memory_update with arguments: mem_id={mem_id}, content={content}, meta={meta}")
+    update_result = {"success": False, "mem_id": mem_id, "content": content, "error": None}
+    
+    try:
+        # Prepare metadata (default to empty dict if not provided)
+        metadatas = [meta] if meta else None
+        
+        # Update the memory document in the collection
+        result_str = update_collection(
+            collection_name=seekdb_memory_collection_name,
+            ids=[mem_id],
+            documents=[content],
+            metadatas=metadatas
+        )
+        result = json.loads(result_str)
+        
+        if result.get("success"):
+            update_result["success"] = True
+            update_result["message"] = f"Memory with ID '{mem_id}' updated successfully"
+        else:
+            update_result["error"] = result.get("error", "Unknown error during update")
+            
+    except Exception as e:
+        update_result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to update memory: {e}")
+    
+    json_result = json.dumps(update_result, ensure_ascii=False)
+    return json_result
+
+
 def main():
     """Main entry point to run the MCP server."""
     logger.info(f"Starting OceanBase MCP server with stdio mode...")
+    if not client.has_collection(seekdb_memory_collection_name):
+        create_collection(seekdb_memory_collection_name)
     app.run(transport="stdio")
 
 if __name__ == "__main__":
