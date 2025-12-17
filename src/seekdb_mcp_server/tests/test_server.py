@@ -1,5 +1,7 @@
+import csv
 import json
 import os
+import tempfile
 
 import pytest
 
@@ -15,10 +17,12 @@ from seekdb_mcp.server import (
     drop_ai_model,
     drop_ai_model_endpoint,
     execute_sql,
+    export_csv_file_from_seekdb,
     get_ai_model_endpoints,
     get_current_time,
     get_registered_ai_models,
     hybrid_search,
+    import_csv_file_to_seekdb,
     list_collections,
     query_collection,
     full_text_search,
@@ -29,7 +33,7 @@ from seekdb_mcp.server import (
     seekdb_memory_update,
     update_collection,
     seekdb_memory_collection_name,
-    client
+    client,
 )
 
 
@@ -40,6 +44,7 @@ def test_collection():
     create_collection(collection_name)
     yield collection_name
     delete_collection(collection_name)
+
 
 @pytest.fixture
 def test_ai_model():
@@ -53,10 +58,11 @@ def test_ai_model():
     yield model_name
     drop_ai_model(model_name)
 
+
 @pytest.fixture
 def test_ai_model_endpoint(test_ai_model):
     """Fixture that creates an AI model endpoint before test and drops it after.
-    
+
     Depends on test_ai_model fixture to ensure the AI model exists first.
     """
     endpoint_name = "seekdb_embed_endpoint"
@@ -73,11 +79,48 @@ def test_ai_model_endpoint(test_ai_model):
     yield endpoint_name
     drop_ai_model_endpoint(endpoint_name)
 
+
 @pytest.fixture
 def test_memory():
     create_collection(seekdb_memory_collection_name)
     yield
     delete_collection(seekdb_memory_collection_name)
+
+
+@pytest.fixture
+def student_csv_file():
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        file_path = os.path.join(tmpdir, "student.csv")
+        # Write CSV content
+        with open(file_path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["name", "age"])
+            writer.writerow(["张三", "20"])
+            writer.writerow(["李四", "21"])
+        yield file_path
+        # Cleanup: drop the table if it exists
+        table_name = "student"
+        drop_sql = f"DROP TABLE IF EXISTS `{table_name}`"
+        execute_sql(drop_sql)
+
+
+@pytest.fixture
+def documents_csv_file():
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        file_path = os.path.join(tmpdir, "documents.csv")
+        # Write CSV content
+        with open(file_path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["document", "category"])
+            writer.writerow(["Machine learning is a subset of artificial intelligence", "AI"])
+            writer.writerow(["Vector databases enable semantic search", "Database"])
+        yield file_path
+        # Cleanup: delete the collection if it exists
+        collection_name = "documents"
+        delete_collection(collection_name)
+
 
 def test_execute_sql():
     sql = "select 1"
@@ -365,6 +408,7 @@ def test_ai_rerank():
         f"Expected ['apple', 'banana', 'fruit', 'vegetable'], got {result_dict['reranked_documents']}"
     )
 
+
 def test_get_registered_ai_model(test_ai_model):
     result = get_registered_ai_models()
     result_dict = json.loads(result)
@@ -374,6 +418,7 @@ def test_get_registered_ai_model(test_ai_model):
     assert test_ai_model in model_names, (
         f"Expected 'seekdb_embed' in model names, got {model_names}"
     )
+
 
 def test_get_ai_model_endpoints(test_ai_model_endpoint):
     result = get_ai_model_endpoints()
@@ -385,53 +430,51 @@ def test_get_ai_model_endpoints(test_ai_model_endpoint):
         f"Expected '{test_ai_model_endpoint}' in endpoint names, got {endpoint_names}"
     )
 
+
 def test_seekdb_memory_insert_and_query(test_memory):
     content = "I love apple"
     meta = {}
-    
+
     # Insert the memory
     insert_result = seekdb_memory_insert(content=content, meta=meta)
     insert_result_dict = json.loads(insert_result)
     assert insert_result_dict["success"] is True, (
         f"Expected insert to succeed, got {insert_result_dict}"
     )
-    
+
     # Query to verify insertion
     query_result = seekdb_memory_query(query="apple", topk=5)
     query_result_dict = json.loads(query_result)
-    
+
     # Find the memory we just inserted
     memories = query_result_dict["memories"]
     matching_memories = [m for m in memories if m["content"] == content]
-    assert len(matching_memories) > 0, (
-        f"Expected to find '{content}' in memories, got {memories}"
-    )
+    assert len(matching_memories) > 0, f"Expected to find '{content}' in memories, got {memories}"
+
 
 def test_seekdb_memory_update(test_memory):
     content = "I love apple"
     meta = {}
-    
+
     # Insert the memory
     insert_result = seekdb_memory_insert(content=content, meta=meta)
     insert_result_dict = json.loads(insert_result)
     assert insert_result_dict["success"] is True, (
         f"Expected insert to succeed, got {insert_result_dict}"
     )
-    
+
     # Query to verify insertion
     query_result = seekdb_memory_query(query="apple", topk=5)
     query_result_dict = json.loads(query_result)
-    
+
     # Find the memory we just inserted
     memories = query_result_dict["memories"]
     matching_memories = [m for m in memories if m["content"] == content]
-    assert len(matching_memories) > 0, (
-        f"Expected to find '{content}' in memories, got {memories}"
-    )
-    
+    assert len(matching_memories) > 0, f"Expected to find '{content}' in memories, got {memories}"
+
     # Get the mem_id of the memory we want to update
     mem_id = matching_memories[0]["mem_id"]
-    
+
     # Update the memory content
     new_content = "I love pear"
     update_result = seekdb_memory_update(mem_id=mem_id, content=new_content, meta=meta)
@@ -439,11 +482,11 @@ def test_seekdb_memory_update(test_memory):
     assert update_result_dict["success"] is True, (
         f"Expected update to succeed, got {update_result_dict}"
     )
-    
+
     # Query to verify update
     query_result_after_update = seekdb_memory_query(query="pear", topk=5)
     query_result_after_update_dict = json.loads(query_result_after_update)
-    
+
     # Verify the memory was updated - same mem_id should now have new content
     memories_after_update = query_result_after_update_dict["memories"]
     matching_updated_memories = [m for m in memories_after_update if m["content"] == new_content]
@@ -452,42 +495,41 @@ def test_seekdb_memory_update(test_memory):
         f"Expected mem_id to be '{mem_id}', got '{matching_updated_memories[0]['mem_id']}'"
     )
 
+
 def test_seekdb_memory_delete(test_memory):
     content = "I love apple"
     meta = {}
-    
+
     # Insert the memory
     insert_result = seekdb_memory_insert(content=content, meta=meta)
     insert_result_dict = json.loads(insert_result)
     assert insert_result_dict["success"] is True, (
         f"Expected insert to succeed, got {insert_result_dict}"
     )
-    
+
     # Query to verify insertion
     query_result = seekdb_memory_query(query="apple", topk=5)
     query_result_dict = json.loads(query_result)
-    
+
     # Find the memory we just inserted
     memories = query_result_dict["memories"]
     matching_memories = [m for m in memories if m["content"] == content]
-    assert len(matching_memories) > 0, (
-        f"Expected to find '{content}' in memories, got {memories}"
-    )
-    
+    assert len(matching_memories) > 0, f"Expected to find '{content}' in memories, got {memories}"
+
     # Get the mem_id of the memory we want to delete
     mem_id = matching_memories[0]["mem_id"]
-    
+
     # Delete the memory
     delete_result = seekdb_memory_delete(mem_id=mem_id)
     delete_result_dict = json.loads(delete_result)
     assert delete_result_dict["success"] is True, (
         f"Expected delete to succeed, got {delete_result_dict}"
     )
-    
+
     # Query to verify deletion
     query_result_after_delete = seekdb_memory_query(query="apple", topk=5)
     query_result_after_delete_dict = json.loads(query_result_after_delete)
-    
+
     # Verify the memory was deleted - same mem_id should no longer exist
     memories_after_delete = query_result_after_delete_dict["memories"]
     matching_deleted_memories = [m for m in memories_after_delete if m["mem_id"] == mem_id]
@@ -495,5 +537,181 @@ def test_seekdb_memory_delete(test_memory):
         f"Expected mem_id '{mem_id}' to be deleted, but still found it in memories: {memories_after_delete}"
     )
 
-def test_my_test():
-    print(list_collections())
+
+def test_import_csv_file_to_seekdb_without_vector(student_csv_file):
+    file_path = student_csv_file
+    table_name = os.path.splitext(os.path.basename(file_path))[0]
+
+    # Import CSV file to seekdb (without vector)
+    result = import_csv_file_to_seekdb(file_path)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True, f"Expected import to succeed, got {result_dict}"
+
+    # Verify table exists by querying it
+    check_table_sql = f"SELECT 1 FROM `{table_name}` LIMIT 1"
+    check_result = execute_sql(check_table_sql)
+    check_result_dict = json.loads(check_result)
+    assert check_result_dict["success"] is True, (
+        f"Expected table '{table_name}' to exist, but query failed: {check_result_dict}"
+    )
+
+    # Query all data from the table
+    query_sql = f"SELECT name, age FROM `{table_name}` ORDER BY age"
+    query_result = execute_sql(query_sql)
+    query_result_dict = json.loads(query_result)
+    assert query_result_dict["success"] is True, (
+        f"Expected query to succeed, got {query_result_dict}"
+    )
+
+    # Verify the data
+    data = query_result_dict["data"]
+    assert len(data) == 2, f"Expected 2 rows, got {len(data)}"
+
+    # Check first row: 张三, 20
+    assert data[0][0] == "张三", f"Expected first row name to be '张三', got '{data[0][0]}'"
+    assert data[0][1] == "20", f"Expected first row age to be '20', got '{data[0][1]}'"
+
+    # Check second row: 李四, 21
+    assert data[1][0] == "李四", f"Expected second row name to be '李四', got '{data[1][0]}'"
+    assert data[1][1] == "21", f"Expected second row age to be '21', got '{data[1][1]}'"
+
+
+def test_import_csv_file_to_seekdb_with_vector(documents_csv_file):
+    file_path = documents_csv_file
+    collection_name = os.path.splitext(os.path.basename(file_path))[0]
+
+    # Import CSV file to seekdb (with vector)
+    result = import_csv_file_to_seekdb(file_path, 1)
+    result_dict = json.loads(result)
+    assert result_dict["success"] is True, f"Expected import to succeed, got {result_dict}"
+
+    # Verify the 'documents' collection exists
+    has_result = has_collection(collection_name)
+    has_result_dict = json.loads(has_result)
+    assert has_result_dict["success"] is True
+    assert has_result_dict["exists"] is True, (
+        f"Expected collection '{collection_name}' to exist, got {has_result_dict}"
+    )
+
+    # Query the collection and verify the content matches documents.csv
+    # CSV content:
+    # document,category
+    # Machine learning is a subset of artificial intelligence,AI
+    # Vector databases enable semantic search,Database
+
+    # Query for "Machine learning"
+    query_result1 = query_collection(
+        collection_name=collection_name, query_texts=["Machine learning"], n_results=2
+    )
+    query_result1_dict = json.loads(query_result1)
+    assert query_result1_dict["success"] is True, (
+        f"Expected query to succeed, got {query_result1_dict}"
+    )
+
+    # Verify the documents contain expected content
+    documents = query_result1_dict["data"]["documents"]
+    all_docs = [doc for docs in documents for doc in docs]
+    assert any("Machine learning is a subset of artificial intelligence" in doc for doc in all_docs), (
+        f"Expected 'Machine learning is a subset of artificial intelligence' in documents, got {all_docs}"
+    )
+    assert any("Vector databases enable semantic search" in doc for doc in all_docs), (
+        f"Expected 'Vector databases enable semantic search' in documents, got {all_docs}"
+    )
+
+    # Verify metadatas contain the category information
+    metadatas = query_result1_dict["data"]["metadatas"]
+    all_metadatas = [m for metas in metadatas for m in metas]
+    categories = [m.get("category") for m in all_metadatas if m.get("category")]
+    assert "AI" in categories, f"Expected 'AI' in categories, got {categories}"
+    assert "Database" in categories, f"Expected 'Database' in categories, got {categories}"
+
+def test_export_csv_file_from_seekdb_with_table(student_csv_file):
+    file_path_input = student_csv_file
+    table_name = os.path.splitext(os.path.basename(file_path_input))[0]
+
+    # Create output file in the same temp directory
+    output_dir = os.path.dirname(file_path_input)
+    file_path_output = os.path.join(output_dir, "student-output.csv")
+
+    # Import CSV file to seekdb
+    import_result = import_csv_file_to_seekdb(file_path_input)
+    import_result_dict = json.loads(import_result)
+    assert import_result_dict["success"] is True, f"Expected import to succeed, got {import_result_dict}"
+
+    # Export data from seekdb to CSV file
+    export_result = export_csv_file_from_seekdb(table_name, file_path_output)
+    export_result_dict = json.loads(export_result)
+    assert export_result_dict["success"] is True, f"Expected export to succeed, got {export_result_dict}"
+
+    # Read input CSV file
+    with open(file_path_input, 'r', encoding='utf-8') as f:
+        input_reader = csv.reader(f)
+        input_rows = list(input_reader)
+
+    # Read output CSV file
+    with open(file_path_output, 'r', encoding='utf-8') as f:
+        output_reader = csv.reader(f)
+        output_rows = list(output_reader)
+
+    # Verify headers are the same
+    assert input_rows[0] == output_rows[0], (
+        f"Expected headers to match. Input: {input_rows[0]}, Output: {output_rows[0]}"
+    )
+
+    # Verify row count is the same (excluding header)
+    assert len(input_rows) == len(output_rows), (
+        f"Expected same number of rows. Input: {len(input_rows)}, Output: {len(output_rows)}"
+    )
+
+    # Verify data rows match (compare as sets to handle potential order differences)
+    input_data = set(tuple(row) for row in input_rows[1:])
+    output_data = set(tuple(row) for row in output_rows[1:])
+    assert input_data == output_data, (
+        f"Expected data to match. Input: {input_data}, Output: {output_data}"
+    )
+
+
+def test_export_csv_file_from_seekdb_with_collection(documents_csv_file):
+    file_path_input = documents_csv_file
+    collection_name = os.path.splitext(os.path.basename(file_path_input))[0]
+
+    # Create output file in the same temp directory
+    output_dir = os.path.dirname(file_path_input)
+    file_path_output = os.path.join(output_dir, "documents-output.csv")
+
+    # Import CSV file to seekdb as collection (with vector)
+    import_result = import_csv_file_to_seekdb(file_path_input, 1)
+    import_result_dict = json.loads(import_result)
+    assert import_result_dict["success"] is True, f"Expected import to succeed, got {import_result_dict}"
+
+    # Export data from seekdb collection to CSV file
+    export_result = export_csv_file_from_seekdb(collection_name, file_path_output)
+    export_result_dict = json.loads(export_result)
+    assert export_result_dict["success"] is True, f"Expected export to succeed, got {export_result_dict}"
+
+    # Read input CSV file
+    with open(file_path_input, 'r', encoding='utf-8') as f:
+        input_reader = csv.reader(f)
+        input_rows = list(input_reader)
+
+    # Read output CSV file
+    with open(file_path_output, 'r', encoding='utf-8') as f:
+        output_reader = csv.reader(f)
+        output_rows = list(output_reader)
+
+    # Verify headers are the same
+    assert input_rows[0] == output_rows[0], (
+        f"Expected headers to match. Input: {input_rows[0]}, Output: {output_rows[0]}"
+    )
+
+    # Verify row count is the same (excluding header)
+    assert len(input_rows) == len(output_rows), (
+        f"Expected same number of rows. Input: {len(input_rows)}, Output: {len(output_rows)}"
+    )
+
+    # Verify data rows match (compare as sets to handle potential order differences)
+    input_data = set(tuple(row) for row in input_rows[1:])
+    output_data = set(tuple(row) for row in output_rows[1:])
+    assert input_data == output_data, (
+        f"Expected data to match. Input: {input_data}, Output: {output_data}"
+    )

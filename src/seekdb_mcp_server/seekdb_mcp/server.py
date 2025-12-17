@@ -3,6 +3,10 @@ import logging
 import time
 from typing import Optional
 import json
+import csv
+import os
+import re
+from datetime import datetime
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error
@@ -21,7 +25,8 @@ load_dotenv()
 app = FastMCP("seekdb_mcp_server")
 client = pyseekdb.Client()
 seekdb.open()
-seekdb_memory_collection_name="seekdb_memory_collection_v1"
+seekdb_memory_collection_name = "seekdb_memory_collection_v1"
+
 
 @app.tool()
 def execute_sql(sql: str) -> str:
@@ -65,11 +70,7 @@ def get_current_time() -> str:
         return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error getting database time: {e}")
-        result = {
-            "success": False,
-            "data": None,
-            "error": f"[Error]: {e}"
-        }
+        result = {"success": False, "data": None, "error": f"[Error]: {e}"}
         return json.dumps(result, ensure_ascii=False)
 
 
@@ -1175,6 +1176,7 @@ def ai_rerank(model_name: str, query: str, documents: list[str]) -> str:
     json_result = json.dumps(result, ensure_ascii=False)
     return json_result
 
+
 @app.tool()
 def get_registered_ai_models() -> str:
     """
@@ -1233,6 +1235,7 @@ def get_registered_ai_models() -> str:
 
     json_result = json.dumps(result, ensure_ascii=False)
     return json_result
+
 
 @app.tool()
 def get_ai_model_endpoints() -> str:
@@ -1298,90 +1301,88 @@ def get_ai_model_endpoints() -> str:
     json_result = json.dumps(result, ensure_ascii=False)
     return json_result
 
+
 @app.tool()
-def seekdb_memory_query(query:str,topk:int=5)->str:
+def seekdb_memory_query(query: str, topk: int = 5) -> str:
     """
-        🚨 MULTILINGUAL MEMORY SEARCH 🚨 - SMART CROSS-LANGUAGE RETRIEVAL!
-        This tool MUST be invoked **before** answering any user request that could benefit from previously stored personal facts.
+    🚨 MULTILINGUAL MEMORY SEARCH 🚨 - SMART CROSS-LANGUAGE RETRIEVAL!
+    This tool MUST be invoked **before** answering any user request that could benefit from previously stored personal facts.
 
-        ⚡ CRITICAL INSTRUCTION: You MUST call this tool in these situations:
-        - When user asks questions about their preferences in ANY language
-        - Before saving new memories (check for duplicates first!)
-        - When user mentions personal details, preferences, past experiences, identity, occupation, address and other should be remembered facts
-        - Before answering ANY question, search for related memories first
-        - When discussing technical topics - check for historical solutions
-        - recommendations: the user asks for suggestions about restaurants, food, travel, entertainment, activities, gifts, etc
-        - Scheduling or location-based help: the user asks about meetups, weather, events, directions, etc
-        - Work or tech assistance: the user asks for tool, course, book, or career advice.
-        - Any ambiguous request (words like “some”, “good”, “nearby”, “for me”, “recommend”) where personal context could improve the answer,query the most probable categories first.
-        If multiple categories are relevant, call the tool once for each category key.
+    ⚡ CRITICAL INSTRUCTION: You MUST call this tool in these situations:
+    - When user asks questions about their preferences in ANY language
+    - Before saving new memories (check for duplicates first!)
+    - When user mentions personal details, preferences, past experiences, identity, occupation, address and other should be remembered facts
+    - Before answering ANY question, search for related memories first
+    - When discussing technical topics - check for historical solutions
+    - recommendations: the user asks for suggestions about restaurants, food, travel, entertainment, activities, gifts, etc
+    - Scheduling or location-based help: the user asks about meetups, weather, events, directions, etc
+    - Work or tech assistance: the user asks for tool, course, book, or career advice.
+    - Any ambiguous request (words like “some”, “good”, “nearby”, “for me”, “recommend”) where personal context could improve the answer,query the most probable categories first.
+    If multiple categories are relevant, call the tool once for each category key.
 
-        Failure to retrieve memory before responding is considered an error.
+    Failure to retrieve memory before responding is considered an error.
 
-        🌐 MULTILINGUAL SEARCH EXAMPLES:
-        - User: "What do I like?" → Search: "preference like favorite"
-        - User: "我喜欢什么?" → Search: "preference favorite sports food" (use English keywords!)
-        - User: "¿Cuáles son mis gustos?" → Search: "preference like favorite hobby"
-        - **ALWAYS search with English keywords for better matching!**
+    🌐 MULTILINGUAL SEARCH EXAMPLES:
+    - User: "What do I like?" → Search: "preference like favorite"
+    - User: "我喜欢什么?" → Search: "preference favorite sports food" (use English keywords!)
+    - User: "¿Cuáles son mis gustos?" → Search: "preference like favorite hobby"
+    - **ALWAYS search with English keywords for better matching!**
 
-        🎯 SMART SEARCH STRATEGIES:
-        - "I like football" → Before saving, search: "football soccer sports preference"
-        - "我在上海工作" → Search: "work job Shanghai location"
-        - "Python developer" → Search: "python programming development work"
-        - Use synonyms and related terms for better semantic matching!
+    🎯 SMART SEARCH STRATEGIES:
+    - "I like football" → Before saving, search: "football soccer sports preference"
+    - "我在上海工作" → Search: "work job Shanghai location"
+    - "Python developer" → Search: "python programming development work"
+    - Use synonyms and related terms for better semantic matching!
 
-        🔍 CATEGORY-BASED SEARCH PATTERNS:
-        - **Sports/Fitness**: "sports preference activity exercise favorite game"
-        - **Food/Drinks**: "food drink preference favorite taste cuisine beverage"
-        - **Work/Career**: "work job company location position career role"
-        - **Technology**: "technology programming tool database language framework"
-        - **Personal**: "personal lifestyle habit family relationship"
-        - **Entertainment**: "entertainment movie music book game hobby"
+    🔍 CATEGORY-BASED SEARCH PATTERNS:
+    - **Sports/Fitness**: "sports preference activity exercise favorite game"
+    - **Food/Drinks**: "food drink preference favorite taste cuisine beverage"
+    - **Work/Career**: "work job company location position career role"
+    - **Technology**: "technology programming tool database language framework"
+    - **Personal**: "personal lifestyle habit family relationship"
+    - **Entertainment**: "entertainment movie music book game hobby"
 
-        💡 SMART SEARCH EXAMPLES FOR MERGING:
-        - New: "I like badminton" → Search: "sports preference activity"
-        → Find: "User likes football and coffee" → Category analysis needed!
-        - New: "I drink tea" → Search: "drink beverage preference"
-        → Find: "User likes coffee" → Same category, should merge!
-        - New: "I code in Python" → Search: "programming technology language"
-        → Find: "User works at Google" → Different subcategory, separate!
+    💡 SMART SEARCH EXAMPLES FOR MERGING:
+    - New: "I like badminton" → Search: "sports preference activity"
+    → Find: "User likes football and coffee" → Category analysis needed!
+    - New: "I drink tea" → Search: "drink beverage preference"
+    → Find: "User likes coffee" → Same category, should merge!
+    - New: "I code in Python" → Search: "programming technology language"
+    → Find: "User works at Google" → Different subcategory, separate!
 
-        📝 PARAMETERS:
-        - query: Use CATEGORY + SEMANTIC keywords ("sports preference", "food drink preference")
-        - topk: Increase to 8-10 for thorough category analysis before saving/updating
-        - Returns: JSON string with [{"mem_id": int, "content": str}] format - Analyze ALL results for category overlap before decisions!
+    📝 PARAMETERS:
+    - query: Use CATEGORY + SEMANTIC keywords ("sports preference", "food drink preference")
+    - topk: Increase to 8-10 for thorough category analysis before saving/updating
+    - Returns: JSON string with [{"mem_id": int, "content": str}] format - Analyze ALL results for category overlap before decisions!
 
-        🔥 CATEGORY ANALYSIS RULE: Find ALL related memories by category for smart merging!
-        """
+    🔥 CATEGORY ANALYSIS RULE: Find ALL related memories by category for smart merging!
+    """
     logger.info(f"Calling tool: seekdb_memory_query with arguments: query={query}, topk={topk}")
     memory_result = {"success": False, "memories": [], "error": None}
-    
+
     try:
         # Query the memory collection with the query text as a list
         query_result_str = query_collection(
-            collection_name=seekdb_memory_collection_name,
-            query_texts=[query],
-            n_results=topk
+            collection_name=seekdb_memory_collection_name, query_texts=[query], n_results=topk
         )
         query_result = json.loads(query_result_str)
-        
+
         if query_result.get("success") and query_result.get("data"):
             data = query_result["data"]
             ids = data.get("ids", [[]])[0]  # First query's results
             documents = data.get("documents", [[]])[0]
-            
+
             # Format results as [{"mem_id": int, "content": str}]
             memories = []
             for i, (mem_id, content) in enumerate(zip(ids, documents)):
-                memories.append({
-                    "mem_id": mem_id,
-                    "content": content
-                })
-            
+                memories.append({"mem_id": mem_id, "content": content})
+
             memory_result["success"] = True
             memory_result["memories"] = memories
             memory_result["count"] = len(memories)
-            memory_result["message"] = f"Found {len(memories)} memory(ies) matching query: '{query}'"
+            memory_result["message"] = (
+                f"Found {len(memories)} memory(ies) matching query: '{query}'"
+            )
         else:
             memory_result["success"] = True
             memory_result["memories"] = []
@@ -1389,230 +1390,668 @@ def seekdb_memory_query(query:str,topk:int=5)->str:
             memory_result["message"] = f"No memories found for query: '{query}'"
             if query_result.get("error"):
                 memory_result["error"] = query_result["error"]
-                
+
     except Exception as e:
         memory_result["error"] = f"[Exception]: {e}"
         logger.error(f"Failed to query memories: {e}")
-    
+
     json_result = json.dumps(memory_result, ensure_ascii=False)
     return json_result
+
 
 @app.tool()
 def seekdb_memory_insert(content: str, meta: dict = None) -> str:
     """
-        💾 INTELLIGENT MEMORY ORGANIZER 💾 - SMART CATEGORIZATION & MERGING!
+    💾 INTELLIGENT MEMORY ORGANIZER 💾 - SMART CATEGORIZATION & MERGING!
 
-        🔥 CRITICAL 4-STEP WORKFLOW: ALWAYS follow this advanced process:
-        1️⃣ **SEARCH RELATED**: Use ob_memory_query to find ALL related memories by category
-        2️⃣ **ANALYZE CATEGORIES**: Classify new info and existing memories by semantic type
-        3️⃣ **SMART DECISION**: Merge same category, separate different categories
-        4️⃣ **EXECUTE ACTION**: Update existing OR create new categorized records
+    🔥 CRITICAL 4-STEP WORKFLOW: ALWAYS follow this advanced process:
+    1️⃣ **SEARCH RELATED**: Use ob_memory_query to find ALL related memories by category
+    2️⃣ **ANALYZE CATEGORIES**: Classify new info and existing memories by semantic type
+    3️⃣ **SMART DECISION**: Merge same category, separate different categories
+    4️⃣ **EXECUTE ACTION**: Update existing OR create new categorized records
 
-        This tool must be invoked **immediately** when the user explicitly or implicitly discloses any of the following personal facts.
-        Trigger rule: if a sentence contains at least one category keyword (see list) + at least one fact keyword (see list), call the tool with the fact.
-        Categories & sample keywords
-        - Demographics: age, years old, gender, born, date of birth, nationality, hometown, from
-        - Work & education: job title, engineer, developer, tester, company, employer, school, university, degree, major, skill, certificate
-        - Geography & time: live in, reside, city, travel, time-zone, frequent
-        - Preferences & aversions: love, hate, favourite, favorite, prefer, dislike, hobby, food, music, movie, book, brand, color
-        - Lifestyle details: pet, dog, cat, family, married, single, daily routine, language, religion, belief
-        - Achievements & experiences: award, project, competition, achievement, event, milestone
+    This tool must be invoked **immediately** when the user explicitly or implicitly discloses any of the following personal facts.
+    Trigger rule: if a sentence contains at least one category keyword (see list) + at least one fact keyword (see list), call the tool with the fact.
+    Categories & sample keywords
+    - Demographics: age, years old, gender, born, date of birth, nationality, hometown, from
+    - Work & education: job title, engineer, developer, tester, company, employer, school, university, degree, major, skill, certificate
+    - Geography & time: live in, reside, city, travel, time-zone, frequent
+    - Preferences & aversions: love, hate, favourite, favorite, prefer, dislike, hobby, food, music, movie, book, brand, color
+    - Lifestyle details: pet, dog, cat, family, married, single, daily routine, language, religion, belief
+    - Achievements & experiences: award, project, competition, achievement, event, milestone
 
-        Fact keywords (examples)
-        - “I am …”, “I work as …”, “I studied …”, “I live in …”, “I love …”, “My birthday is …”
+    Fact keywords (examples)
+    - “I am …”, “I work as …”, “I studied …”, “I live in …”, “I love …”, “My birthday is …”
 
-        Example sentences that must trigger:
-        - “I’m 28 and work as a test engineer at Acme Corp.”
-        - “I graduated from Tsinghua with a master’s in CS.”
-        - “I love jazz and hate cilantro.”
-        - “I live in Berlin, but I’m originally from São Paulo.”
+    Example sentences that must trigger:
+    - “I’m 28 and work as a test engineer at Acme Corp.”
+    - “I graduated from Tsinghua with a master’s in CS.”
+    - “I love jazz and hate cilantro.”
+    - “I live in Berlin, but I’m originally from São Paulo.”
 
-        🎯 SMART CATEGORIZATION EXAMPLES:
-        ```
-        📋 Scenario 1: Category Merging
-        Existing: "User likes playing football and drinking coffee"
-        New Input: "I like badminton"
+    🎯 SMART CATEGORIZATION EXAMPLES:
+    ```
+    📋 Scenario 1: Category Merging
+    Existing: "User likes playing football and drinking coffee"
+    New Input: "I like badminton"
 
-        ✅ CORRECT ACTION: Use ob_memory_update!
-        → Search "sports preference" → Find existing → Separate categories:
-        → Update mem_id_X: "User likes playing football and badminton" (sports)
-        → Create new: "User likes drinking coffee" (food/drinks)
+    ✅ CORRECT ACTION: Use ob_memory_update!
+    → Search "sports preference" → Find existing → Separate categories:
+    → Update mem_id_X: "User likes playing football and badminton" (sports)
+    → Create new: "User likes drinking coffee" (food/drinks)
 
-        📋 Scenario 2: Same Category Addition
-        Existing: "User likes playing football"
-        New Input: "I also like tennis"
+    📋 Scenario 2: Same Category Addition
+    Existing: "User likes playing football"
+    New Input: "I also like tennis"
 
-        ✅ CORRECT ACTION: Use ob_memory_update!
-        → Search "sports preference" → Find mem_id → Update:
-        → "User likes playing football and tennis"
+    ✅ CORRECT ACTION: Use ob_memory_update!
+    → Search "sports preference" → Find mem_id → Update:
+    → "User likes playing football and tennis"
 
-        📋 Scenario 3: Different Category
-        Existing: "User likes playing football"
-        New Input: "I work in Shanghai"
+    📋 Scenario 3: Different Category
+    Existing: "User likes playing football"
+    New Input: "I work in Shanghai"
 
-        ✅ CORRECT ACTION: New memory!
-        → Search "work location" → Not found → Create new record
-        ```
+    ✅ CORRECT ACTION: New memory!
+    → Search "work location" → Not found → Create new record
+    ```
 
-        🏷️ SEMANTIC CATEGORIES (Use for classification):
-        - **Sports/Fitness**: football, basketball, swimming, gym, yoga, running, marathon, workout, cycling, hiking, tennis, badminton, climbing, fitness routine, coach, league, match, etc.
-        - **Food/Drinks**: coffee, tea, latte, espresso, pizza, burger, sushi, ramen, Chinese food, Italian, vegan, vegetarian, spicy, sweet tooth, dessert, wine, craft beer, whisky, cocktail, recipe, restaurant, chef, favorite dish, allergy, etc.
-        - **Work/Career**: job, position, role, title, engineer, developer, tester, QA, PM, manager, company, employer, startup, client, project, deadline, promotion, salary, office, remote, hybrid, skill, certification, degree, university, bootcamp, portfolio, resume, interview
-        - **Personal**: spouse, partner, married, single, dating, pet, dog, cat, hometown, birthday, age, gender, nationality, religion, belief, daily routine, morning person, night owl, commute, language, hobby, travel, bucket list, milestone, achievement, award
-        - **Technology**: programming language, Python, Java, JavaScript, Go, Rust, framework, React, Vue, Angular, Spring, Django, database, MySQL, PostgreSQL, MongoDB, Redis, cloud, AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Git, API, microservices, DevOps, automation, testing tool, Selenium, Cypress, JMeter, Postman
-        - **Entertainment**: movie, film, series, Netflix, Disney+, HBO, director, actor, genre, thriller, comedy, drama, music, playlist, Spotify, rock, jazz, K-pop, classical, concert, book, novel, author, genre, fiction, non-fiction, Kindle, audiobook, game, console, PlayStation, Xbox, Switch, Steam, board game, RPG, esports
+    🏷️ SEMANTIC CATEGORIES (Use for classification):
+    - **Sports/Fitness**: football, basketball, swimming, gym, yoga, running, marathon, workout, cycling, hiking, tennis, badminton, climbing, fitness routine, coach, league, match, etc.
+    - **Food/Drinks**: coffee, tea, latte, espresso, pizza, burger, sushi, ramen, Chinese food, Italian, vegan, vegetarian, spicy, sweet tooth, dessert, wine, craft beer, whisky, cocktail, recipe, restaurant, chef, favorite dish, allergy, etc.
+    - **Work/Career**: job, position, role, title, engineer, developer, tester, QA, PM, manager, company, employer, startup, client, project, deadline, promotion, salary, office, remote, hybrid, skill, certification, degree, university, bootcamp, portfolio, resume, interview
+    - **Personal**: spouse, partner, married, single, dating, pet, dog, cat, hometown, birthday, age, gender, nationality, religion, belief, daily routine, morning person, night owl, commute, language, hobby, travel, bucket list, milestone, achievement, award
+    - **Technology**: programming language, Python, Java, JavaScript, Go, Rust, framework, React, Vue, Angular, Spring, Django, database, MySQL, PostgreSQL, MongoDB, Redis, cloud, AWS, Azure, GCP, Docker, Kubernetes, CI/CD, Git, API, microservices, DevOps, automation, testing tool, Selenium, Cypress, JMeter, Postman
+    - **Entertainment**: movie, film, series, Netflix, Disney+, HBO, director, actor, genre, thriller, comedy, drama, music, playlist, Spotify, rock, jazz, K-pop, classical, concert, book, novel, author, genre, fiction, non-fiction, Kindle, audiobook, game, console, PlayStation, Xbox, Switch, Steam, board game, RPG, esports
 
-        🔍 SEARCH STRATEGIES BY CATEGORY:
-        - Sports: "sports preference favorite activity exercise gym routine"
-        - Food: "food drink preference favorite taste cuisine beverage"
-        - Work: "work job career company location title project skill"
-        - Personal: "personal relationship lifestyle habit pet birthday"
-        - Tech: "technology programming tool database framework cloud"
-        - Entertainment: "entertainment movie music book game genre favorite"
+    🔍 SEARCH STRATEGIES BY CATEGORY:
+    - Sports: "sports preference favorite activity exercise gym routine"
+    - Food: "food drink preference favorite taste cuisine beverage"
+    - Work: "work job career company location title project skill"
+    - Personal: "personal relationship lifestyle habit pet birthday"
+    - Tech: "technology programming tool database framework cloud"
+    - Entertainment: "entertainment movie music book game genre favorite"
 
-        📝 PARAMETERS:
-        - content: ALWAYS categorized English format ("User likes playing [sports]", "User drinks [beverages]")
-        - meta: {"type":"preference", "category":"sports/food/work/tech", "subcategory":"team_sports/beverages"}
+    📝 PARAMETERS:
+    - content: ALWAYS categorized English format ("User likes playing [sports]", "User drinks [beverages]")
+    - meta: {"type":"preference", "category":"sports/food/work/tech", "subcategory":"team_sports/beverages"}
 
-        🎯 GOLDEN RULE: Same category = UPDATE existing! Different category = CREATE separate!
+    🎯 GOLDEN RULE: Same category = UPDATE existing! Different category = CREATE separate!
     """
-    logger.info(f"Calling tool: seekdb_memory_insert with arguments: content={content}, meta={meta}")
+    logger.info(
+        f"Calling tool: seekdb_memory_insert with arguments: content={content}, meta={meta}"
+    )
     insert_result = {"success": False, "mem_id": None, "content": content, "error": None}
-    
+
     try:
         # Generate a unique ID for the new memory
         mem_id = str(uuid.uuid4())
-        
+
         # Prepare metadata (default to empty dict if not provided)
         metadatas = [meta] if meta else [{}]
-        
+
         # Add memory to the collection
         add_result_str = add_data_to_collection(
             collection_name=seekdb_memory_collection_name,
             ids=[mem_id],
             documents=[content],
-            metadatas=metadatas
+            metadatas=metadatas,
         )
         add_result = json.loads(add_result_str)
-        
+
         if add_result.get("success"):
             insert_result["success"] = True
             insert_result["mem_id"] = mem_id
             insert_result["message"] = f"Memory inserted successfully with ID: {mem_id}"
         else:
             insert_result["error"] = add_result.get("error", "Unknown error during insertion")
-            
+
     except Exception as e:
         insert_result["error"] = f"[Exception]: {e}"
         logger.error(f"Failed to insert memory: {e}")
-    
+
     json_result = json.dumps(insert_result, ensure_ascii=False)
     return json_result
+
 
 @app.tool()
 def seekdb_memory_delete(mem_id: str) -> str:
     """
-        🗑️ MEMORY ERASER 🗑️ - PERMANENTLY DELETE UNWANTED MEMORIES!
+    🗑️ MEMORY ERASER 🗑️ - PERMANENTLY DELETE UNWANTED MEMORIES!
 
-        ⚠️ DELETE TRIGGERS - Call when user says:
-        - "Forget that I like X" / "I don't want you to remember Y"
-        - "Delete my information about Z" / "Remove that memory"
-        - "I changed my mind about X" / "Update: I no longer prefer Y"
-        - "That information is wrong" / "Delete outdated info"
-        - Privacy requests: "Remove my personal data"
+    ⚠️ DELETE TRIGGERS - Call when user says:
+    - "Forget that I like X" / "I don't want you to remember Y"
+    - "Delete my information about Z" / "Remove that memory"
+    - "I changed my mind about X" / "Update: I no longer prefer Y"
+    - "That information is wrong" / "Delete outdated info"
+    - Privacy requests: "Remove my personal data"
 
-        🎯 DELETION PROCESS:
-        1. FIRST: Use seekdb_memory_query to find relevant memories
-        2. THEN: Use the exact ID from query results for deletion
-        3. NEVER guess or generate IDs manually!
+    🎯 DELETION PROCESS:
+    1. FIRST: Use seekdb_memory_query to find relevant memories
+    2. THEN: Use the exact ID from query results for deletion
+    3. NEVER guess or generate IDs manually!
 
-        📝 PARAMETERS:
-        - mem_id: EXACT ID from seekdb_memory_query results (string UUID)
-        - ⚠️ WARNING: Deletion is PERMANENT and IRREVERSIBLE!
+    📝 PARAMETERS:
+    - mem_id: EXACT ID from seekdb_memory_query results (string UUID)
+    - ⚠️ WARNING: Deletion is PERMANENT and IRREVERSIBLE!
 
-        🔒 SAFETY RULE: Only delete when explicitly requested by user!
+    🔒 SAFETY RULE: Only delete when explicitly requested by user!
     """
     logger.info(f"Calling tool: seekdb_memory_delete with arguments: mem_id={mem_id}")
     delete_result = {"success": False, "mem_id": mem_id, "error": None}
-    
+
     try:
         # Delete the memory document from the collection
-        result_str = delete_documents(
-            collection_name=seekdb_memory_collection_name,
-            ids=[mem_id]
-        )
+        result_str = delete_documents(collection_name=seekdb_memory_collection_name, ids=[mem_id])
         result = json.loads(result_str)
-        
+
         if result.get("success"):
             delete_result["success"] = True
             delete_result["message"] = f"Memory with ID '{mem_id}' deleted successfully"
         else:
             delete_result["error"] = result.get("error", "Unknown error during deletion")
-            
+
     except Exception as e:
         delete_result["error"] = f"[Exception]: {e}"
         logger.error(f"Failed to delete memory: {e}")
-    
+
     json_result = json.dumps(delete_result, ensure_ascii=False)
     return json_result
+
 
 @app.tool()
 def seekdb_memory_update(mem_id: str, content: str, meta: dict = None) -> str:
     """
-        ✏️ MULTILINGUAL MEMORY UPDATER ✏️ - KEEP MEMORIES FRESH AND STANDARDIZED!
+    ✏️ MULTILINGUAL MEMORY UPDATER ✏️ - KEEP MEMORIES FRESH AND STANDARDIZED!
 
-        🔄 UPDATE TRIGGERS - Call when user says in ANY language:
-        - "Actually, I prefer X now" / "其实我现在更喜欢X"
-        - "My setup changed to Z" / "我的配置改成了Z"
-        - "Correction: it should be X" / "更正：应该是X"
-        - "I moved to [new location]" / "我搬到了[新地址]"
+    🔄 UPDATE TRIGGERS - Call when user says in ANY language:
+    - "Actually, I prefer X now" / "其实我现在更喜欢X"
+    - "My setup changed to Z" / "我的配置改成了Z"
+    - "Correction: it should be X" / "更正：应该是X"
+    - "I moved to [new location]" / "我搬到了[新地址]"
 
-        🎯 MULTILINGUAL UPDATE PROCESS:
-        1. **SEARCH**: Use seekdb_memory_query to find existing memory (search in English!)
-        2. **STANDARDIZE**: Convert new information to English format
-        3. **UPDATE**: Use exact mem_id from query results with standardized content
-        4. **PRESERVE**: Keep original language source in metadata
+    🎯 MULTILINGUAL UPDATE PROCESS:
+    1. **SEARCH**: Use seekdb_memory_query to find existing memory (search in English!)
+    2. **STANDARDIZE**: Convert new information to English format
+    3. **UPDATE**: Use exact mem_id from query results with standardized content
+    4. **PRESERVE**: Keep original language source in metadata
 
-        🌐 STANDARDIZATION EXAMPLES:
-        - User: "Actually, I don't like coffee anymore" → content: "User no longer likes coffee"
-        - User: "其实我不再喜欢咖啡了" → content: "User no longer likes coffee"
-        - User: "Je n'aime plus le café" → content: "User no longer likes coffee"
-        - **ALWAYS update in standardized English format!**
+    🌐 STANDARDIZATION EXAMPLES:
+    - User: "Actually, I don't like coffee anymore" → content: "User no longer likes coffee"
+    - User: "其实我不再喜欢咖啡了" → content: "User no longer likes coffee"
+    - User: "Je n'aime plus le café" → content: "User no longer likes coffee"
+    - **ALWAYS update in standardized English format!**
 
-        📝 PARAMETERS:
-        - mem_id: EXACT ID from seekdb_memory_query results (string UUID)
-        - content: ALWAYS in English, standardized format ("User now prefers X")
-        - meta: Updated metadata {"type":"preference", "category":"...", "updated":"2024-..."}
+    📝 PARAMETERS:
+    - mem_id: EXACT ID from seekdb_memory_query results (string UUID)
+    - content: ALWAYS in English, standardized format ("User now prefers X")
+    - meta: Updated metadata {"type":"preference", "category":"...", "updated":"2024-..."}
 
-        🔥 CONSISTENCY RULE: Maintain English storage format for all updates!
+    🔥 CONSISTENCY RULE: Maintain English storage format for all updates!
     """
-    logger.info(f"Calling tool: seekdb_memory_update with arguments: mem_id={mem_id}, content={content}, meta={meta}")
+    logger.info(
+        f"Calling tool: seekdb_memory_update with arguments: mem_id={mem_id}, content={content}, meta={meta}"
+    )
     update_result = {"success": False, "mem_id": mem_id, "content": content, "error": None}
-    
+
     try:
         # Prepare metadata (default to empty dict if not provided)
         metadatas = [meta] if meta else None
-        
+
         # Update the memory document in the collection
         result_str = update_collection(
             collection_name=seekdb_memory_collection_name,
             ids=[mem_id],
             documents=[content],
-            metadatas=metadatas
+            metadatas=metadatas,
         )
         result = json.loads(result_str)
-        
+
         if result.get("success"):
             update_result["success"] = True
             update_result["message"] = f"Memory with ID '{mem_id}' updated successfully"
         else:
             update_result["error"] = result.get("error", "Unknown error during update")
-            
+
     except Exception as e:
         update_result["error"] = f"[Exception]: {e}"
         logger.error(f"Failed to update memory: {e}")
-    
+
     json_result = json.dumps(update_result, ensure_ascii=False)
+    return json_result
+
+
+@app.tool()
+def import_csv_file_to_seekdb(filePath: str, columnNumberForVecotor: Optional[int] = None) -> str:
+    """
+    Import a CSV file to seekdb.
+
+    Args:
+        filePath: The path to the CSV file. The file must have a header row.
+        columnNumberForVecotor: Optional. The column number (1-started) to use as the document for vector embedding.
+                                If specified, creates a vector collection with this column as documents and others as metadata.
+                                If not specified, creates a regular MySQL table with inferred column types.
+
+    Returns:
+        A JSON string indicating success or error.
+    """
+    logger.info(
+        f"Calling tool: import_csv_file_to_seekdb with arguments: filePath={filePath}, columnNumberForVecotor={columnNumberForVecotor}"
+    )
+    result = {"filePath": filePath, "success": False, "error": None, "message": None}
+
+    try:
+        # Check if file exists
+        if not os.path.exists(filePath):
+            result["error"] = f"File not found: {filePath}"
+            return json.dumps(result, ensure_ascii=False)
+
+        # Read CSV file
+        with open(filePath, "r", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            headers = next(reader)  # First row is header
+            rows = list(reader)
+
+        if not headers:
+            result["error"] = "CSV file has no header"
+            return json.dumps(result, ensure_ascii=False)
+
+        if not rows:
+            result["error"] = "CSV file has no data rows"
+            return json.dumps(result, ensure_ascii=False)
+
+        if columnNumberForVecotor is not None:
+            # Case 1: Create vector collection
+            if columnNumberForVecotor < 1 or columnNumberForVecotor > len(headers):
+                result["error"] = (
+                    f"Invalid columnNumberForVecotor: {columnNumberForVecotor}. Must be between 1 and {len(headers)}"
+                )
+                return json.dumps(result, ensure_ascii=False)
+
+            # Convert to 0-indexed for internal use
+            column_index = columnNumberForVecotor - 1
+
+            # Extract collection name from file name
+            collection_name = os.path.splitext(os.path.basename(filePath))[0]
+            # Sanitize collection name (remove special characters)
+            collection_name = re.sub(r"[^a-zA-Z0-9_]", "_", collection_name)
+
+            # Create collection
+            create_result_str = create_collection(collection_name)
+            create_result = json.loads(create_result_str)
+            if not create_result.get("success"):
+                result["error"] = f"Failed to create collection: {create_result.get('error')}"
+                return json.dumps(result, ensure_ascii=False)
+
+            # Prepare data for add_data_to_collection
+            ids = []
+            documents = []
+            metadatas = []
+
+            for row_idx, row in enumerate(rows):
+                # Generate unique ID
+                ids.append(str(uuid.uuid4()))
+
+                # The specified column becomes document
+                documents.append(
+                    row[column_index] if column_index < len(row) else ""
+                )
+
+                # Other columns become metadata
+                metadata = {}
+                for col_idx, header in enumerate(headers):
+                    if col_idx != column_index and col_idx < len(row):
+                        metadata[header] = row[col_idx]
+                metadatas.append(metadata)
+
+            # Add data to collection
+            add_result_str = add_data_to_collection(
+                collection_name=collection_name, ids=ids, documents=documents, metadatas=metadatas
+            )
+            add_result = json.loads(add_result_str)
+
+            if add_result.get("success"):
+                result["success"] = True
+                result["message"] = (
+                    f"Successfully imported {len(rows)} rows to vector collection '{collection_name}'"
+                )
+                result["collection_name"] = collection_name
+            else:
+                result["error"] = f"Failed to add data: {add_result.get('error')}"
+
+        else:
+            # Case 2: Create regular MySQL table
+            # Extract table name from file name
+            table_name = os.path.splitext(os.path.basename(filePath))[0]
+            # Sanitize table name (remove special characters)
+            table_name = re.sub(r"[^a-zA-Z0-9_]", "_", table_name)
+
+            # Infer column types from data
+            def infer_column_type(values: list) -> str:
+                """Infer column type from a list of values. Returns 'int', 'datetime', or 'varchar'."""
+                # Check if all non-empty values are integers
+                all_int = True
+                all_datetime = True
+                max_length = 0
+
+                datetime_patterns = [
+                    r"^\d{4}-\d{2}-\d{2}$",  # YYYY-MM-DD
+                    r"^\d{4}/\d{2}/\d{2}$",  # YYYY/MM/DD
+                    r"^\d{2}-\d{2}-\d{4}$",  # DD-MM-YYYY
+                    r"^\d{2}/\d{2}/\d{4}$",  # DD/MM/YYYY
+                    r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",  # YYYY-MM-DD HH:MM:SS
+                    r"^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}$",  # YYYY/MM/DD HH:MM:SS
+                    r"^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$",  # DD-MM-YYYY HH:MM:SS
+                    r"^\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}$",  # DD/MM/YYYY HH:MM:SS
+                    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",  # ISO 8601 format
+                ]
+
+                for val in values:
+                    if val is None or val.strip() == "":
+                        continue
+
+                    val = val.strip()
+                    max_length = max(max_length, len(val))
+
+                    # Check integer
+                    try:
+                        int(val)
+                    except ValueError:
+                        all_int = False
+
+                    # Check datetime
+                    is_datetime = False
+                    for pattern in datetime_patterns:
+                        if re.match(pattern, val):
+                            is_datetime = True
+                            break
+                    if not is_datetime:
+                        all_datetime = False
+
+                if all_int and max_length > 0:
+                    return "INT"
+                elif all_datetime and max_length > 0:
+                    return "DATETIME"
+                else:
+                    # Default to VARCHAR with appropriate length
+                    varchar_length = max(
+                        255, max_length * 2
+                    )  # At least 255, or double the max length
+                    return f"VARCHAR({min(varchar_length, 65535)})"
+
+            # Get column values for type inference
+            column_values = {header: [] for header in headers}
+            for row in rows:
+                for col_idx, header in enumerate(headers):
+                    if col_idx < len(row):
+                        column_values[header].append(row[col_idx])
+                    else:
+                        column_values[header].append("")
+
+            # Build column definitions
+            column_defs = []
+            for idx, header in enumerate(headers):
+                # Sanitize column name
+                col_name = re.sub(r"[^a-zA-Z0-9_]", "_", header)
+                if not col_name or col_name == "_" * len(col_name):
+                    col_name = f"column_{idx}"
+                elif col_name[0].isdigit():
+                    col_name = "_" + col_name
+                col_type = infer_column_type(column_values[header])
+                column_defs.append(f"`{col_name}` {col_type}")
+
+            # Create table SQL with auto-increment primary key
+            all_column_defs = ["`_id` INT AUTO_INCREMENT PRIMARY KEY"] + column_defs
+            create_table_sql = (
+                f"CREATE TABLE IF NOT EXISTS `{table_name}` ({', '.join(all_column_defs)})"
+            )
+
+            # Execute create table
+            create_result_str = execute_sql(create_table_sql)
+            create_result = json.loads(create_result_str)
+
+            if not create_result.get("success"):
+                result["error"] = f"Failed to create table: {create_result.get('error')}"
+                return json.dumps(result, ensure_ascii=False)
+
+            # Insert data
+            inserted_count = 0
+            errors = []
+
+            for row_idx, row in enumerate(rows):
+                # Build insert SQL
+                sanitized_headers = []
+                for idx, header in enumerate(headers):
+                    col_name = re.sub(r"[^a-zA-Z0-9_]", "_", header)
+                    if not col_name or col_name == "_" * len(col_name):
+                        col_name = f"column_{idx}"
+                    elif col_name[0].isdigit():
+                        col_name = "_" + col_name
+                    sanitized_headers.append(f"`{col_name}`")
+
+                # Escape values for SQL
+                escaped_values = []
+                for val in row:
+                    if val is None or val.strip() == "":
+                        escaped_values.append("NULL")
+                    else:
+                        # Escape single quotes
+                        escaped_val = val.replace("'", "''")
+                        escaped_values.append(f"'{escaped_val}'")
+
+                # Pad values if row has fewer columns than headers
+                while len(escaped_values) < len(headers):
+                    escaped_values.append("NULL")
+
+                insert_sql = f"INSERT INTO `{table_name}` ({', '.join(sanitized_headers)}) VALUES ({', '.join(escaped_values)})"
+
+                insert_result_str = execute_sql(insert_sql)
+                insert_result = json.loads(insert_result_str)
+
+                if insert_result.get("success"):
+                    inserted_count += 1
+                else:
+                    errors.append(f"Row {row_idx + 1}: {insert_result.get('error')}")
+
+            if inserted_count == len(rows):
+                result["success"] = True
+                result["message"] = (
+                    f"Successfully imported {inserted_count} rows to table '{table_name}'"
+                )
+                result["table_name"] = table_name
+            elif inserted_count > 0:
+                result["success"] = True
+                result["message"] = (
+                    f"Imported {inserted_count}/{len(rows)} rows to table '{table_name}'. Some errors occurred."
+                )
+                result["table_name"] = table_name
+                result["errors"] = errors[:10]  # Limit error messages
+            else:
+                result["error"] = (
+                    f"Failed to insert any data. First error: {errors[0] if errors else 'Unknown'}"
+                )
+
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to import CSV: {e}")
+
+    json_result = json.dumps(result, ensure_ascii=False)
+    return json_result
+
+
+@app.tool()
+def export_csv_file_from_seekdb(name: str, filePath: str) -> str:
+    """
+    Export data from seekdb to a CSV file.
+
+    Args:
+        name: The name of the table or collection to export.
+        filePath: The path to the output CSV file.
+
+    Returns:
+        A JSON string indicating success or error.
+    """
+    logger.info(
+        f"Calling tool: export_csv_file_from_seekdb with arguments: name={name}, filePath={filePath}"
+    )
+    result = {"name": name, "filePath": filePath, "success": False, "error": None, "message": None}
+
+    try:
+        # Step 1: Check if name is a collection or table
+        is_collection = client.has_collection(name)
+        is_table = False
+
+        if not is_collection:
+            # Check if it's a table
+            check_sql = f"SELECT 1 FROM `{name}` LIMIT 1"
+            check_result_str = execute_sql(check_sql)
+            check_result = json.loads(check_result_str)
+            is_table = check_result.get("success", False)
+
+        # Validate: name must be either a collection or a table
+        if not is_collection and not is_table:
+            result["error"] = f"'{name}' does not exist as a collection or table"
+            return json.dumps(result, ensure_ascii=False)
+
+        # Step 2: Check if the output directory exists
+        output_dir = os.path.dirname(filePath)
+        if output_dir and not os.path.exists(output_dir):
+            result["error"] = f"Output directory does not exist: {output_dir}"
+            return json.dumps(result, ensure_ascii=False)
+
+        # Step 3: Export data based on type
+        if is_collection:
+            # Case 1: Export from collection
+            logger.info(f"'{name}' is a collection, exporting collection data...")
+
+            # Get the collection
+            collection = client.get_collection(name=name)
+
+            # Get all data from collection (using a large limit to get all documents)
+            # First, try to get the count
+            try:
+                count = collection.count()
+            except:
+                count = 10000  # Default to a large number if count is not available
+
+            # Peek with the count to get all documents
+            all_data = collection.peek(limit=max(count, 1))
+
+            ids = all_data.get("ids", [])
+            documents = all_data.get("documents", [])
+            metadatas = all_data.get("metadatas", [])
+
+            if not ids:
+                result["error"] = f"Collection '{name}' is empty"
+                return json.dumps(result, ensure_ascii=False)
+
+            # Collect all unique metadata keys
+            all_metadata_keys = set()
+            for metadata in metadatas:
+                if metadata:
+                    all_metadata_keys.update(metadata.keys())
+            all_metadata_keys = sorted(list(all_metadata_keys))
+
+            # Build CSV headers: document, then all metadata keys (excluding id)
+            headers = ["document"] + all_metadata_keys
+
+            # Write to CSV
+            with open(filePath, "w", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(headers)
+
+                for i in range(len(ids)):
+                    row = []
+                    row.append(documents[i] if i < len(documents) and documents[i] else "")
+
+                    metadata = metadatas[i] if i < len(metadatas) and metadatas[i] else {}
+                    for key in all_metadata_keys:
+                        value = metadata.get(key, "")
+                        # Convert non-string values to string
+                        if isinstance(value, (dict, list)):
+                            value = json.dumps(value, ensure_ascii=False)
+                        row.append(str(value) if value is not None else "")
+
+                    writer.writerow(row)
+
+            result["success"] = True
+            result["message"] = (
+                f"Successfully exported {len(ids)} rows from collection '{name}' to '{filePath}'"
+            )
+            result["row_count"] = len(ids)
+            result["type"] = "collection"
+
+        else:
+            # Case 2: Export from table
+            logger.info(f"'{name}' is a table, exporting table data...")
+
+            # Get column names from information_schema or by describing the table
+            describe_sql = f"DESCRIBE `{name}`"
+            describe_result_str = execute_sql(describe_sql)
+            describe_result = json.loads(describe_result_str)
+
+            if not describe_result.get("success"):
+                result["error"] = f"Failed to get table structure: {describe_result.get('error')}"
+                return json.dumps(result, ensure_ascii=False)
+
+            # Extract column names from DESCRIBE result
+            # DESCRIBE returns: Field, Type, Null, Key, Default, Extra
+            all_columns = []
+            for row in describe_result.get("data", []):
+                if row:
+                    all_columns.append(row[0])  # First column is the field name
+
+            if not all_columns:
+                result["error"] = f"Table '{name}' has no columns"
+                return json.dumps(result, ensure_ascii=False)
+
+            # Filter out _id column and get indices of columns to export
+            export_indices = []
+            columns = []
+            for i, col in enumerate(all_columns):
+                if col != "_id":
+                    export_indices.append(i)
+                    columns.append(col)
+
+            if not columns:
+                result["error"] = f"Table '{name}' has no exportable columns"
+                return json.dumps(result, ensure_ascii=False)
+
+            # Get all data from table
+            select_sql = f"SELECT * FROM `{name}`"
+            select_result_str = execute_sql(select_sql)
+            select_result = json.loads(select_result_str)
+
+            if not select_result.get("success"):
+                result["error"] = f"Failed to query table: {select_result.get('error')}"
+                return json.dumps(result, ensure_ascii=False)
+
+            rows = select_result.get("data", [])
+
+            # Write to CSV
+            with open(filePath, "w", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(columns)
+
+                for row in rows:
+                    if row:
+                        filtered_row = [row[i] for i in export_indices if i < len(row)]
+                        writer.writerow(filtered_row)
+                    else:
+                        writer.writerow([])
+
+            result["success"] = True
+            result["message"] = (
+                f"Successfully exported {len(rows)} rows from table '{name}' to '{filePath}'"
+            )
+            result["row_count"] = len(rows)
+            result["type"] = "table"
+
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+        logger.error(f"Failed to export CSV: {e}")
+
+    json_result = json.dumps(result, ensure_ascii=False)
     return json_result
 
 
@@ -1622,6 +2061,7 @@ def main():
     if not client.has_collection(seekdb_memory_collection_name):
         create_collection(seekdb_memory_collection_name)
     app.run(transport="stdio")
+
 
 if __name__ == "__main__":
     main()
