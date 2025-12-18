@@ -2,7 +2,7 @@ English | [简体中文](README_CN.md)
 
 # seekdb mcp server
 
-A Model Context Protocol (MCP) server that enables secure interaction with seekdb database. This server allows AI assistants to perform vector operations, manage collections, execute SQL queries and leverage AI functions through a controlled interface, making database exploration and analysis safer and more structured.
+A Model Context Protocol (MCP) server that enables interaction with seekdb database. This server allows AI assistants to perform vector operations, manage collections, execute SQL queries and leverage AI functions through a controlled interface, making database exploration and analysis safer and more structured.
 
 ## 📋 Table of Contents
 
@@ -51,7 +51,6 @@ A Model Context Protocol (MCP) server that enables secure interaction with seekd
 | Tool | Description |
 |------|-------------|
 | `full_text_search` | Perform full-text search using MATCH...AGAINST syntax |
-| `query_collection` | Vector similarity search with optional metadata filters |
 | `hybrid_search` | Combine full-text search and vector search with RRF ranking |
 
 ### AI Model Tools
@@ -102,8 +101,7 @@ seekdb supports two deployment modes:
   - Supported Python: 3.11 to 3.13 (pyseekdb), CPython 3.8 to 3.14 (pylibseekdb)
   - Supported Architecture: x86_64, aarch64
 
-- **Client/Server Mode**: Connect to a deployed seekdb or OceanBase database
-
+- **Client/Server Mode**: Connect to a deployed seekdb
 ## 🚀 Installation
 
 ### Install seekdb
@@ -116,9 +114,6 @@ pip install pyseekdb
 
 # Or use a mirror for faster installation
 pip install pyseekdb -i https://pypi.tuna.tsinghua.edu.cn/simple
-
-# Alternative: Install pylibseekdb for lower-level access
-pip install pylibseekdb
 ```
 
 If prompted that the pip version is too low, upgrade pip first:
@@ -138,8 +133,8 @@ pip install seekdb-mcp-server
 Or install from source:
 
 ```bash
-git clone https://github.com/oceanbase/mcp-oceanbase.git
-cd mcp-oceanbase/src/seekdb_mcp_server
+git clone https://github.com/oceanbase/awesome-oceanbase-mcp.git
+cd awesome-oceanbase-mcp/src/seekdb_mcp_server
 pip install .
 ```
 
@@ -179,7 +174,7 @@ Add the following content to your MCP client configuration file:
       "command": "uv",
       "args": [
         "--directory",
-        "path/to/awesome-oceanbase/src/seekdb_mcp_server",
+        "path/to/awesome-oceanbase-mcp/src/seekdb_mcp_server",
         "run",
         "seekdb_mcp_server"
       ]
@@ -289,6 +284,56 @@ The collection currently contains **1 document**.
 **User:** Delete the collection document
 
 **AI:** Done! The collection **"document"** has been permanently deleted along with all its data.
+
+### Search Tools
+
+**User:** Create a collection, hybrid_search_test
+
+**AI:** Done! The collection `hybrid_search_test` has been created successfully with:
+- **Dimension**: 384
+- **Distance metric**: L2
+
+---
+
+**User:** Insert the following documents:
+- "The weather forecast predicts sunny skies for the weekend."
+- "Mount Everest is the highest mountain peak in the world."
+- "Ocean waves crash against the rocky shoreline at sunset."
+- "Apple is a delicious red fruit that grows on trees in orchards."
+- "The new iPhone 17 Pro features an advanced camera system and titanium design."
+
+**AI:** Done! Successfully added 5 documents to the `hybrid_search_test` collection:
+
+| ID | Document |
+|------|----------|
+| doc1 | The weather forecast predicts sunny skies for the weekend. |
+| doc2 | Mount Everest is the highest mountain peak in the world. |
+| doc3 | Ocean waves crash against the rocky shoreline at sunset. |
+| doc4 | Apple is a delicious red fruit that grows on trees in orchards. |
+| doc5 | The new iPhone 17 Pro features an advanced camera system and titanium design. |
+
+---
+
+**User:** Perform a hybrid_search, full-text keyword "apple", semantic search "apple smartphone technology"
+
+**AI:** Here are the hybrid search results combining full-text keyword **"apple"** and semantic query **"apple smartphone technology"**:
+
+| Rank | ID | Document |
+|------|------|----------|
+| 1 | doc4 | Apple is a delicious red fruit that grows on trees in orchards. |
+| 2 | doc5 | The new iPhone 17 Pro features an advanced camera system and titanium design. |
+| 3 | doc2 | Mount Everest is the highest mountain peak in the world. |
+| 4 | doc1 | The weather forecast predicts sunny skies for the weekend. |
+| 5 | doc3 | Ocean waves crash against the rocky shoreline at sunset. |
+
+**Analysis:**
+- **doc4** ranks first due to the strong full-text match with the literal word "Apple"
+- **doc5** ranks second because it matches semantically with "smartphone technology" (iPhone is an Apple smartphone), even though it doesn't contain the word "apple" explicitly
+- The remaining documents have lower relevance scores as they don't match either search criterion well
+
+The hybrid search successfully combined keyword matching (BM25) with semantic similarity (vector search) using Reciprocal Rank Fusion (RRF) to produce these ranked results.
+
+---
 
 ## 🔒 Security
 
