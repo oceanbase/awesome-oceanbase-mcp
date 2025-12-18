@@ -33,7 +33,6 @@ from seekdb_mcp.server import (
     seekdb_memory_update,
     update_collection,
     seekdb_memory_collection_name,
-    client,
 )
 
 
@@ -93,7 +92,7 @@ def student_csv_file():
     with tempfile.TemporaryDirectory() as tmpdir:
         file_path = os.path.join(tmpdir, "student.csv")
         # Write CSV content
-        with open(file_path, 'w', encoding='utf-8', newline='') as f:
+        with open(file_path, "w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["name", "age"])
             writer.writerow(["张三", "20"])
@@ -111,7 +110,7 @@ def documents_csv_file():
     with tempfile.TemporaryDirectory() as tmpdir:
         file_path = os.path.join(tmpdir, "documents.csv")
         # Write CSV content
-        with open(file_path, 'w', encoding='utf-8', newline='') as f:
+        with open(file_path, "w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["document", "category"])
             writer.writerow(["Machine learning is a subset of artificial intelligence", "AI"])
@@ -611,7 +610,9 @@ def test_import_csv_file_to_seekdb_with_vector(documents_csv_file):
     # Verify the documents contain expected content
     documents = query_result1_dict["data"]["documents"]
     all_docs = [doc for docs in documents for doc in docs]
-    assert any("Machine learning is a subset of artificial intelligence" in doc for doc in all_docs), (
+    assert any(
+        "Machine learning is a subset of artificial intelligence" in doc for doc in all_docs
+    ), (
         f"Expected 'Machine learning is a subset of artificial intelligence' in documents, got {all_docs}"
     )
     assert any("Vector databases enable semantic search" in doc for doc in all_docs), (
@@ -625,6 +626,7 @@ def test_import_csv_file_to_seekdb_with_vector(documents_csv_file):
     assert "AI" in categories, f"Expected 'AI' in categories, got {categories}"
     assert "Database" in categories, f"Expected 'Database' in categories, got {categories}"
 
+
 def test_export_csv_file_from_seekdb_with_table(student_csv_file):
     file_path_input = student_csv_file
     table_name = os.path.splitext(os.path.basename(file_path_input))[0]
@@ -636,20 +638,24 @@ def test_export_csv_file_from_seekdb_with_table(student_csv_file):
     # Import CSV file to seekdb
     import_result = import_csv_file_to_seekdb(file_path_input)
     import_result_dict = json.loads(import_result)
-    assert import_result_dict["success"] is True, f"Expected import to succeed, got {import_result_dict}"
+    assert import_result_dict["success"] is True, (
+        f"Expected import to succeed, got {import_result_dict}"
+    )
 
     # Export data from seekdb to CSV file
     export_result = export_csv_file_from_seekdb(table_name, file_path_output)
     export_result_dict = json.loads(export_result)
-    assert export_result_dict["success"] is True, f"Expected export to succeed, got {export_result_dict}"
+    assert export_result_dict["success"] is True, (
+        f"Expected export to succeed, got {export_result_dict}"
+    )
 
     # Read input CSV file
-    with open(file_path_input, 'r', encoding='utf-8') as f:
+    with open(file_path_input, "r", encoding="utf-8") as f:
         input_reader = csv.reader(f)
         input_rows = list(input_reader)
 
     # Read output CSV file
-    with open(file_path_output, 'r', encoding='utf-8') as f:
+    with open(file_path_output, "r", encoding="utf-8") as f:
         output_reader = csv.reader(f)
         output_rows = list(output_reader)
 
@@ -682,20 +688,24 @@ def test_export_csv_file_from_seekdb_with_collection(documents_csv_file):
     # Import CSV file to seekdb as collection (with vector)
     import_result = import_csv_file_to_seekdb(file_path_input, 1)
     import_result_dict = json.loads(import_result)
-    assert import_result_dict["success"] is True, f"Expected import to succeed, got {import_result_dict}"
+    assert import_result_dict["success"] is True, (
+        f"Expected import to succeed, got {import_result_dict}"
+    )
 
     # Export data from seekdb collection to CSV file
     export_result = export_csv_file_from_seekdb(collection_name, file_path_output)
     export_result_dict = json.loads(export_result)
-    assert export_result_dict["success"] is True, f"Expected export to succeed, got {export_result_dict}"
+    assert export_result_dict["success"] is True, (
+        f"Expected export to succeed, got {export_result_dict}"
+    )
 
     # Read input CSV file
-    with open(file_path_input, 'r', encoding='utf-8') as f:
+    with open(file_path_input, "r", encoding="utf-8") as f:
         input_reader = csv.reader(f)
         input_rows = list(input_reader)
 
     # Read output CSV file
-    with open(file_path_output, 'r', encoding='utf-8') as f:
+    with open(file_path_output, "r", encoding="utf-8") as f:
         output_reader = csv.reader(f)
         output_rows = list(output_reader)
 

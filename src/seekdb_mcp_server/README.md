@@ -10,6 +10,7 @@ A Model Context Protocol (MCP) server that enables interaction with seekdb datab
 - [Available Tools](#%EF%B8%8F-available-tools)
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
+  - [Install uv](#install-uv-recommended)
   - [Install seekdb](#install-seekdb)
   - [Install seekdb mcp server](#install-seekdb-mcp-server)
 - [Configuration](#%EF%B8%8F-configuration)
@@ -103,6 +104,23 @@ seekdb supports two deployment modes:
 
 - **Client/Server Mode**: Connect to a deployed seekdb
 ## 🚀 Installation
+
+### Install uv (recommended)
+
+[uv](https://docs.astral.sh/uv/) is an extremely fast Python package installer and resolver. The `uvx` command (included with uv) is used to run Python tools.
+
+```bash
+# On macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Or install via pip
+pip install uv
+```
+
+After installation, restart your terminal or run `source ~/.bashrc` (or equivalent) to ensure `uvx` is available.
 
 ### Install seekdb
 

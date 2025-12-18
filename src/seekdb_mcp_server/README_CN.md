@@ -10,6 +10,7 @@
 - [可用工具](#%EF%B8%8F-可用工具)
 - [前提条件](#-前提条件)
 - [安装](#-安装)
+  - [安装 uv](#安装-uv推荐)
   - [安装 seekdb](#安装-seekdb)
   - [安装 seekdb mcp server](#安装-seekdb-mcp-server)
 - [配置](#%EF%B8%8F-配置)
@@ -104,6 +105,23 @@ seekdb 支持两种部署模式：
 - **客户端/服务器模式**: 连接到已部署的 seekdb
 
 ## 🚀 安装
+
+### 安装 uv（推荐）
+
+[uv](https://docs.astral.sh/uv/) 是一个极快的 Python 包安装器和解析器。`uvx` 命令（包含在 uv 中）用于运行 Python 工具。
+
+```bash
+# 在 macOS 和 Linux 上
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 在 Windows 上
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# 或通过 pip 安装
+pip install uv
+```
+
+安装完成后，重启终端或运行 `source ~/.bashrc`（或相应的配置文件）以确保 `uvx` 可用。
 
 ### 安装 seekdb
 

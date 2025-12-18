@@ -1,12 +1,10 @@
 from __future__ import annotations
 import logging
-import time
 from typing import Optional
 import json
 import csv
 import os
 import re
-from datetime import datetime
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error
@@ -1078,7 +1076,7 @@ def ai_complete(model_name: str, prompt: str, template_args: Optional[list[str]]
             # Direct prompt
             sql = f"SELECT AI_COMPLETE('{model_name}', '{escaped_prompt}') AS response"
 
-        logger.info(f"Executing AI_COMPLETE query")
+        logger.info("Executing AI_COMPLETE query")
 
         # Reuse execute_sql method
         sql_result = json.loads(execute_sql(sql))
@@ -1149,7 +1147,7 @@ def ai_rerank(model_name: str, query: str, documents: list[str]) -> str:
 
         sql = f"SELECT AI_RERANK('{model_name}', '{escaped_query}', '{escaped_documents}') AS rerank_result"
 
-        logger.info(f"Executing AI_RERANK query")
+        logger.info("Executing AI_RERANK query")
 
         # Reuse execute_sql method
         sql_result = json.loads(execute_sql(sql))
@@ -1701,9 +1699,7 @@ def import_csv_file_to_seekdb(filePath: str, columnNumberForVecotor: Optional[in
                 ids.append(str(uuid.uuid4()))
 
                 # The specified column becomes document
-                documents.append(
-                    row[column_index] if column_index < len(row) else ""
-                )
+                documents.append(row[column_index] if column_index < len(row) else "")
 
                 # Other columns become metadata
                 metadata = {}
@@ -1939,7 +1935,7 @@ def export_csv_file_from_seekdb(name: str, filePath: str) -> str:
             # First, try to get the count
             try:
                 count = collection.count()
-            except:
+            except Exception:
                 count = 10000  # Default to a large number if count is not available
 
             # Peek with the count to get all documents
@@ -2065,7 +2061,7 @@ def export_csv_file_from_seekdb(name: str, filePath: str) -> str:
 
 def main():
     """Main entry point to run the MCP server."""
-    logger.info(f"Starting OceanBase MCP server with stdio mode...")
+    logger.info("Starting OceanBase MCP server with stdio mode...")
     # Initialize seekdb connection
     _init_seekdb()
     if not client.has_collection(seekdb_memory_collection_name):
