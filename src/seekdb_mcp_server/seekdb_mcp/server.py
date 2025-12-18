@@ -23,9 +23,17 @@ logger = logging.getLogger("seekdb_mcp_server")
 load_dotenv()
 
 app = FastMCP("seekdb_mcp_server")
-client = pyseekdb.Client()
-seekdb.open()
+client = None  # Lazy initialization
 seekdb_memory_collection_name = "seekdb_memory_collection_v1"
+
+
+def _init_seekdb():
+    """Initialize seekdb client and database connection."""
+    global client
+    if client is None:
+        client = pyseekdb.Client()
+        seekdb.open()
+    return client
 
 
 @app.tool()
@@ -2058,6 +2066,8 @@ def export_csv_file_from_seekdb(name: str, filePath: str) -> str:
 def main():
     """Main entry point to run the MCP server."""
     logger.info(f"Starting OceanBase MCP server with stdio mode...")
+    # Initialize seekdb connection
+    _init_seekdb()
     if not client.has_collection(seekdb_memory_collection_name):
         create_collection(seekdb_memory_collection_name)
     app.run(transport="stdio")
