@@ -159,7 +159,7 @@ seekdb mcp server 仅支持 **stdio** 传输模式。
     "seekdb": {
       "command": "uvx",
       "args": [
-        "seekdb_mcp_server"
+        "seekdb-mcp-server"
       ]
     }
   }
@@ -177,7 +177,7 @@ seekdb mcp server 仅支持 **stdio** 传输模式。
         "--directory",
         "path/to/awesome-oceanbase-mcp/src/seekdb_mcp_server",
         "run",
-        "seekdb_mcp_server"
+        "seekdb-mcp-server"
       ]
     }
   }

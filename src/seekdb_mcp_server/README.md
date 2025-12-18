@@ -158,7 +158,7 @@ Add the following content to your MCP client configuration file:
     "seekdb": {
       "command": "uvx",
       "args": [
-        "seekdb_mcp_server"
+        "seekdb-mcp-server"
       ]
     }
   }
@@ -176,7 +176,7 @@ Add the following content to your MCP client configuration file:
         "--directory",
         "path/to/awesome-oceanbase-mcp/src/seekdb_mcp_server",
         "run",
-        "seekdb_mcp_server"
+        "seekdb-mcp-server"
       ]
     }
   }
