@@ -79,6 +79,11 @@ This repository provides complete MCP servers for the OceanBase ecosystem:
 <td>Enables OceanBase cluster creation, deployment and operations management through obshell</td>
 <td><a href="doc/obshell_mcp_server.md">📖 View</a></td>
 </tr>
+<tr>
+<td><strong>seekdb MCP Server</strong></td>
+<td>Provides vector operations, collection management, SQL queries and AI functions for seekdb database</td>
+<td><a href="src/seekdb_mcp_server/README.md">📖 View</a></td>
+</tr>
 </tbody>
 </table>
 
