@@ -1,6 +1,6 @@
 [project]
-name = "david-seekdb-mcp-server"
-version = "0.0.3"
+name = "seekdb-mcp-server"
+version = "0.0.1"
 description = "A Model Context Protocol (MCP) server that enables interaction with seekdb database. This server allows AI assistants to perform vector operations, manage collections, execute SQL queries and leverage AI functions through a controlled interface, making database exploration and analysis safer and more structured."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -33,7 +33,7 @@ dev = [
 ]
 
 [project.scripts]
-david-seekdb-mcp-server = "seekdb_mcp.server:main"
+seekdb-mcp-server = "seekdb_mcp.server:main"
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]
