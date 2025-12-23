@@ -15,6 +15,9 @@ A Model Context Protocol (MCP) server that enables interaction with seekdb datab
   - [Install seekdb mcp server](#install-seekdb-mcp-server)
 - [Configuration](#%EF%B8%8F-configuration)
 - [Quickstart](#-quickstart)
+  - [Stdio Mode](#stdio-mode)
+  - [SSE Mode](#sse-mode)
+  - [Streamable HTTP](#streamable-http)
 - [Advanced Features](#-advanced-features)
   - [AI Memory System](#-ai-memory-system)
 - [Examples](#-examples)
@@ -30,6 +33,7 @@ A Model Context Protocol (MCP) server that enables interaction with seekdb datab
 - **AI Memory System**: Persistent vector-based memory for AI assistants
 - **Data Import/Export**: Import CSV files to seekdb and export data to CSV
 - **SQL Operations**: Execute SQL queries on seekdb
+- **Multi-Transport**: Support for stdio, SSE, and Streamable HTTP modes
 
 ## 🛠️ Available Tools
 
@@ -158,17 +162,48 @@ pip install .
 
 ## ⚙️ Configuration
 
-seekdb mcp server uses embedded seekdb by default, which requires no additional configuration. The server automatically initializes the database when started.
+seekdb MCP Server supports two deployment modes:
+
+### Embedded Mode (Default)
+
+No configuration required. The server automatically initializes an embedded seekdb database when started. This mode is recommended for local development and personal use.
+
+> **Note**: Embedded mode currently only supports Linux (glibc >= 2.28).
+
+### Server Mode
+
+To connect to a deployed seekdb server, configure the following environment variables:
+
+**Method 1: Environment Variables**
+
+```bash
+SEEKDB_HOST=localhost      # Database host
+SEEKDB_PORT=2881           # Database port (default: 2881)
+SEEKDB_USER=your_username
+SEEKDB_PASSWORD=your_password
+SEEKDB_DATABASE=your_database
+```
+
+**Method 2: .env File**
+
+Copy `.env.template` to `.env` and fill in the values:
+
+```bash
+cp .env.template .env
+# Edit .env with your seekdb connection details
+```
+
+> **Note**: If `SEEKDB_USER` is not set, the server will automatically use embedded mode.
 
 ## 🚀 Quickstart
 
-seekdb mcp server supports **stdio** transport mode only.
+The seekdb MCP Server supports three transport modes:
 
 ### Stdio Mode
 
 Add the following content to your MCP client configuration file:
 
-**Using uvx (recommended):**
+**Embedded Mode (Using uvx):**
 
 ```json
 {
@@ -178,6 +213,28 @@ Add the following content to your MCP client configuration file:
       "args": [
         "seekdb-mcp-server"
       ]
+    }
+  }
+}
+```
+
+**Server Mode (Using uvx with env):**
+
+```json
+{
+  "mcpServers": {
+    "seekdb": {
+      "command": "uvx",
+      "args": [
+        "seekdb-mcp-server"
+      ],
+      "env": {
+        "SEEKDB_HOST": "your_host",
+        "SEEKDB_PORT": "2881",
+        "SEEKDB_USER": "your_username",
+        "SEEKDB_PASSWORD": "your_password",
+        "SEEKDB_DATABASE": "your_database"
+      }
     }
   }
 }
@@ -200,6 +257,95 @@ Add the following content to your MCP client configuration file:
   }
 }
 ```
+
+### SSE Mode
+
+Start the server in SSE mode:
+
+```bash
+uvx seekdb-mcp-server --transport sse --port 8000
+```
+
+**Parameters:**
+- `--transport`: MCP server transport type (default: stdio)
+- `--host`: Host to bind to (default: 127.0.0.1, use 0.0.0.0 for remote access)
+- `--port`: Port to listen on (default: 8000)
+
+**Alternative startup (from source):**
+```bash
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse --port 8000
+```
+
+**Configuration URL:** `http://ip:port/sse`
+
+#### Client Configuration Examples
+
+**VSCode Extension Cline:**
+```json
+"sse-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+
+**Cursor:**
+```json
+"sse-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+
+**Cherry Studio:**
+- MCP → General → Type: Select "Server-Sent Events (sse)" from dropdown
+
+### Streamable HTTP
+
+Start the server in Streamable HTTP mode:
+
+```bash
+uvx seekdb-mcp-server --transport streamable-http --port 8000
+```
+
+**Alternative startup (from source):**
+```bash
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport streamable-http --port 8000
+```
+
+**Configuration URL:** `http://ip:port/mcp`
+
+#### Client Configuration Examples
+
+**VSCode Extension Cline:**
+```json
+"streamable-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "streamableHttp",
+  "url": "http://ip:port/mcp"
+}
+```
+
+**Cursor:**
+```json
+"streamable-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "streamableHttp",
+  "url": "http://ip:port/mcp"
+}
+```
+
+**Cherry Studio:**
+- MCP → General → Type: Select "Streamable HTTP (streamableHttp)" from dropdown
 
 ## 🔧 Advanced Features
 
@@ -360,14 +506,15 @@ This MCP server uses embedded seekdb by default, which runs locally within your 
 ### Security Best Practices
 
 1. **Local Data Storage**: Embedded seekdb stores data locally, ensuring data privacy
-2. **No Network Exposure**: stdio mode doesn't expose any network endpoints
+2. **Network Security**: When using SSE or Streamable HTTP modes, ensure proper network security measures
 3. **File Permissions**: Ensure proper file permissions for the data directory
 
 ### Security Checklist
 
 - ✅ Data stays local with embedded mode
 - ✅ No credentials required for embedded mode
-- ✅ No network ports exposed
+- ✅ Stdio mode: No network ports exposed
+- ✅ SSE/HTTP modes: Use `--host 127.0.0.1` to restrict access to localhost only
 - ✅ Standard file system security applies
 
 ## 📄 License

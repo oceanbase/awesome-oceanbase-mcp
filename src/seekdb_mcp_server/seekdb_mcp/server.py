@@ -7,10 +7,12 @@ import os
 import re
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
-from mysql.connector import Error
+from mysql.connector import Error, connect
 import pyseekdb
 import pylibseekdb as seekdb
 import uuid
+from pydantic import BaseModel
+import argparse
 
 # Configure logging
 logging.basicConfig(
@@ -25,17 +27,43 @@ client = None  # Lazy initialization
 seekdb_memory_collection_name = "seekdb_memory_collection_v1"
 
 
+class SeekdbConnection(BaseModel):
+    host: str
+    port: int
+    user: Optional[str] = None
+    password: Optional[str] = None
+    database: Optional[str] = None
+
+
+db_conn_info = SeekdbConnection(
+    host=os.getenv("SEEKDB_HOST", "localhost"),
+    port=os.getenv("SEEKDB_PORT", 2881),
+    user=os.getenv("SEEKDB_USER"),
+    password=os.getenv("SEEKDB_PASSWORD"),
+    database=os.getenv("SEEKDB_DATABASE"),
+)
+
+
 def _init_seekdb():
     """Initialize seekdb client and database connection."""
     global client
     if client is None:
-        client = pyseekdb.Client()
-        seekdb.open()
+        # If environment variables are configured, use them to initialize client
+        if db_conn_info.user:
+            client = pyseekdb.Client(
+                host=db_conn_info.host,
+                port=db_conn_info.port,
+                database=db_conn_info.database,
+                user=db_conn_info.user,
+                password=db_conn_info.password or "",
+            )
+        else:
+            client = pyseekdb.Client()
+            seekdb.open()
     return client
 
 
-@app.tool()
-def execute_sql(sql: str) -> str:
+def _embed_mode_execute_sql(sql: str) -> str:
     """Execute a sql on the seekdb"""
     logger.info(f"Calling tool: execute_sql with arguments: {sql}")
     result = {"sql": sql, "success": False, "data": None, "error": None}
@@ -65,6 +93,39 @@ def execute_sql(sql: str) -> str:
         logger.error(f"SQL executed failed, result: {json_result}")
     print(json_result)
     return json_result
+
+
+def _server_model_execute_sql(sql: str) -> str:
+    """Execute an SQL on the seekdb server."""
+    logger.info(f"Calling tool: execute_sql11  with arguments: {sql}")
+    result = {"sql": sql, "success": False, "rows": 0, "columns": None, "data": None, "error": None}
+    try:
+        with connect(**db_conn_info.model_dump()) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql)
+                if cursor.description:
+                    result["columns"] = [column[0] for column in cursor.description]
+                    result["data"] = [[str(cell) for cell in row] for row in cursor.fetchall()]
+                else:
+                    conn.commit()
+                result["rows"] = cursor.rowcount
+                result["success"] = True
+    except Error as e:
+        result["error"] = f"[Error]: {e}"
+    except Exception as e:
+        result["error"] = f"[Exception]: {e}"
+    json_result = json.dumps(result)
+    if result["error"]:
+        logger.error(f"SQL executed failed, result: {json_result}")
+    return json_result
+
+
+@app.tool()
+def execute_sql(sql: str) -> str:
+    if db_conn_info.host and db_conn_info.user and db_conn_info.database:
+        return _server_model_execute_sql(sql)
+    else:
+        return _embed_mode_execute_sql(sql)
 
 
 @app.tool(name="get_current_time", description="Get current time")
@@ -2060,13 +2121,27 @@ def export_csv_file_from_seekdb(name: str, filePath: str) -> str:
 
 
 def main():
-    """Main entry point to run the MCP server."""
-    logger.info("Starting OceanBase MCP server with stdio mode...")
     # Initialize seekdb connection
+    """Main entry point to run the MCP server."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--transport",
+        type=str,
+        default="stdio",
+        help="Specify the MCP server transport type as stdio or sse or streamable-http.",
+    )
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
+    parser.add_argument("--port", type=int, default=6000, help="Port to listen on")
+    args = parser.parse_args()
+    transport = args.transport
+    logger.info(f"Starting seekdb MCP server with {transport} mode...")
+    if transport in {"sse", "streamable-http"}:
+        app.settings.host = args.host
+        app.settings.port = args.port
     _init_seekdb()
     if not client.has_collection(seekdb_memory_collection_name):
         create_collection(seekdb_memory_collection_name)
-    app.run(transport="stdio")
+    app.run(transport=transport)
 
 
 if __name__ == "__main__":
