@@ -60,6 +60,7 @@ def _init_seekdb():
             )
         else:
             import pylibseekdb
+
             seekdb = pylibseekdb
             client = pyseekdb.Client()
             seekdb.open()
