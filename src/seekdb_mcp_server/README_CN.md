@@ -15,6 +15,9 @@
   - [安装 seekdb mcp server](#安装-seekdb-mcp-server)
 - [配置](#%EF%B8%8F-配置)
 - [快速开始](#-快速开始)
+  - [Stdio 模式](#stdio-模式)
+  - [SSE 模式](#sse-模式)
+  - [Streamable HTTP](#streamable-http)
 - [高级功能](#-高级功能)
   - [AI 记忆系统](#-ai-记忆系统)
 - [示例](#-示例)
@@ -30,6 +33,7 @@
 - **AI 记忆系统**: 为 AI 助手提供基于向量的持久化记忆
 - **数据导入/导出**: 导入 CSV 文件到 seekdb 并将数据导出为 CSV
 - **SQL 操作**: 在 seekdb 上执行 SQL 查询
+- **多传输模式**: 支持 stdio、SSE 和 Streamable HTTP 模式
 
 ## 🛠️ 可用工具
 
@@ -159,17 +163,48 @@ pip install .
 
 ## ⚙️ 配置
 
-seekdb mcp server 默认使用嵌入式 seekdb，无需额外配置。服务器启动时会自动初始化数据库。
+seekdb MCP Server 支持两种部署模式：
+
+### 嵌入式模式（默认）
+
+无需配置。服务器启动时会自动初始化嵌入式 seekdb 数据库。此模式推荐用于本地开发和个人使用。
+
+> **注意**：嵌入式模式目前仅支持 Linux（glibc >= 2.28）。
+
+### 服务器模式
+
+要连接到已部署的 seekdb 服务器，请配置以下环境变量：
+
+**方式一：环境变量**
+
+```bash
+SEEKDB_HOST=localhost      # 数据库主机
+SEEKDB_PORT=2881           # 数据库端口（默认：2881）
+SEEKDB_USER=your_username
+SEEKDB_PASSWORD=your_password
+SEEKDB_DATABASE=your_database
+```
+
+**方式二：.env 文件**
+
+将 `.env.template` 复制为 `.env` 并填写相应值：
+
+```bash
+cp .env.template .env
+# 编辑 .env 填写你的 seekdb 连接信息
+```
+
+> **注意**：如果未设置 `SEEKDB_USER`，服务器将自动使用嵌入式模式。
 
 ## 🚀 快速开始
 
-seekdb mcp server 仅支持 **stdio** 传输模式。
+seekdb MCP Server 支持三种传输模式：
 
 ### Stdio 模式
 
 在你的 MCP 客户端配置文件中添加以下内容：
 
-**使用 uvx（推荐）：**
+**嵌入式模式（使用 uvx）：**
 
 ```json
 {
@@ -179,6 +214,28 @@ seekdb mcp server 仅支持 **stdio** 传输模式。
       "args": [
         "seekdb-mcp-server"
       ]
+    }
+  }
+}
+```
+
+**服务器模式（使用 uvx 配置 env）：**
+
+```json
+{
+  "mcpServers": {
+    "seekdb": {
+      "command": "uvx",
+      "args": [
+        "seekdb-mcp-server"
+      ],
+      "env": {
+        "SEEKDB_HOST": "your_host",
+        "SEEKDB_PORT": "2881",
+        "SEEKDB_USER": "your_username",
+        "SEEKDB_PASSWORD": "your_password",
+        "SEEKDB_DATABASE": "your_database"
+      }
     }
   }
 }
@@ -201,6 +258,95 @@ seekdb mcp server 仅支持 **stdio** 传输模式。
   }
 }
 ```
+
+### SSE 模式
+
+以 SSE 模式启动服务器：
+
+```bash
+uvx seekdb-mcp-server --transport sse --port 8000
+```
+
+**参数说明：**
+- `--transport`: MCP 服务器传输类型（默认：stdio）
+- `--host`: 绑定的主机（默认：127.0.0.1，使用 0.0.0.0 以允许远程访问）
+- `--port`: 监听端口（默认：8000）
+
+**从源码启动：**
+```bash
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse --port 8000
+```
+
+**配置 URL：** `http://ip:port/sse`
+
+#### 客户端配置示例
+
+**VSCode 扩展 Cline：**
+```json
+"sse-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+
+**Cursor：**
+```json
+"sse-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "sse",
+  "url": "http://ip:port/sse"
+}
+```
+
+**Cherry Studio：**
+- MCP → General → Type: 从下拉菜单选择 "Server-Sent Events (sse)"
+
+### Streamable HTTP
+
+以 Streamable HTTP 模式启动服务器：
+
+```bash
+uvx seekdb-mcp-server --transport streamable-http --port 8000
+```
+
+**从源码启动：**
+```bash
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport streamable-http --port 8000
+```
+
+**配置 URL：** `http://ip:port/mcp`
+
+#### 客户端配置示例
+
+**VSCode 扩展 Cline：**
+```json
+"streamable-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "streamableHttp",
+  "url": "http://ip:port/mcp"
+}
+```
+
+**Cursor：**
+```json
+"streamable-seekdb": {
+  "autoApprove": [],
+  "disabled": false,
+  "timeout": 60,
+  "type": "streamableHttp",
+  "url": "http://ip:port/mcp"
+}
+```
+
+**Cherry Studio：**
+- MCP → General → Type: 从下拉菜单选择 "Streamable HTTP (streamableHttp)"
 
 ## 🔧 高级功能
 
@@ -361,14 +507,15 @@ AI 记忆系统使你的 AI 助手能够基于 seekdb 的向量能力维护持�
 ### 安全最佳实践
 
 1. **本地数据存储**: 嵌入式 seekdb 在本地存储数据，确保数据隐私
-2. **无网络暴露**: stdio 模式不暴露任何网络端点
+2. **网络安全**: 使用 SSE 或 Streamable HTTP 模式时，确保采取适当的网络安全措施
 3. **文件权限**: 确保数据目录有适当的文件权限
 
 ### 安全检查清单
 
 - ✅ 嵌入式模式下数据保持本地
 - ✅ 嵌入式模式无需凭证
-- ✅ 无网络端口暴露
+- ✅ Stdio 模式：无网络端口暴露
+- ✅ SSE/HTTP 模式：使用 `--host 127.0.0.1` 限制仅本地访问
 - ✅ 适用标准文件系统安全
 
 ## 📄 许可证

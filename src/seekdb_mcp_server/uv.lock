@@ -228,44 +228,6 @@ wheels = [
 ]
 
 [[package]]
-name = "david-seekdb-mcp-server"
-version = "0.0.1"
-source = { editable = "." }
-dependencies = [
-    { name = "beautifulsoup4" },
-    { name = "certifi" },
-    { name = "fastmcp" },
-    { name = "mcp" },
-    { name = "mysql-connector-python" },
-    { name = "pydantic" },
-    { name = "pyseekdb" },
-    { name = "python-dotenv" },
-    { name = "sqlalchemy" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beautifulsoup4", specifier = ">=4.13.5" },
-    { name = "certifi", specifier = ">=2022.12.7" },
-    { name = "fastmcp", specifier = ">=2.12.0" },
-    { name = "mcp", specifier = ">=1.13.1" },
-    { name = "mysql-connector-python", specifier = ">=9.1.0" },
-    { name = "pydantic", specifier = ">=2.11.7" },
-    { name = "pyseekdb", specifier = ">=1.0.0b2" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
-    { name = "python-dotenv", specifier = ">=1.1.1" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.32" },
-]
-provides-extras = ["dev"]
-
-[[package]]
 name = "distro"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1282,6 +1244,44 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/08/a5/34276984705bfe069cd383101c45077ee029c3fe3b28225bf67aa35f0647/ruff-0.12.11-py3-none-win_amd64.whl", hash = "sha256:a3283325960307915b6deb3576b96919ee89432ebd9c48771ca12ee8afe4a0fd", size = 13046600, upload-time = "2025-08-28T13:59:04.751Z" },
     { url = "https://files.pythonhosted.org/packages/84/a8/001d4a7c2b37623a3fd7463208267fb906df40ff31db496157549cfd6e72/ruff-0.12.11-py3-none-win_arm64.whl", hash = "sha256:bae4d6e6a2676f8fb0f98b74594a048bae1b944aab17e9f5d504062303c6dbea", size = 12135290, upload-time = "2025-08-28T13:59:06.933Z" },
 ]
+
+[[package]]
+name = "seekdb-mcp-server"
+version = "0.0.1"
+source = { editable = "." }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "certifi" },
+    { name = "fastmcp" },
+    { name = "mcp" },
+    { name = "mysql-connector-python" },
+    { name = "pydantic" },
+    { name = "pyseekdb" },
+    { name = "python-dotenv" },
+    { name = "sqlalchemy" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.13.5" },
+    { name = "certifi", specifier = ">=2022.12.7" },
+    { name = "fastmcp", specifier = ">=2.12.0" },
+    { name = "mcp", specifier = ">=1.13.1" },
+    { name = "mysql-connector-python", specifier = ">=9.1.0" },
+    { name = "pydantic", specifier = ">=2.11.7" },
+    { name = "pyseekdb", specifier = ">=1.0.0b2" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
+    { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.32" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "six"
