@@ -6,4 +6,3 @@ from seekdb_mcp.server import _init_seekdb
 def init_seekdb():
     """Automatically initialize seekdb client before all tests."""
     _init_seekdb()
-
