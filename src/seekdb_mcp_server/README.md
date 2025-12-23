@@ -262,18 +262,36 @@ Add the following content to your MCP client configuration file:
 
 Start the server in SSE mode:
 
+**Step 1: Configure .env file in current directory**
 ```bash
-uvx seekdb-mcp-server --transport sse --port 8000
+# Create .env file with your seekdb connection details
+cat > .env << EOF
+SEEKDB_HOST=your_host
+SEEKDB_PORT=2881
+SEEKDB_USER=your_username
+SEEKDB_PASSWORD=your_password
+SEEKDB_DATABASE=your_database
+EOF
+```
+
+**Step 2: Load environment variables**
+```bash
+source .env
+```
+
+**Step 3: Start the server**
+```bash
+uvx seekdb-mcp-server --transport sse --port 6000
 ```
 
 **Parameters:**
 - `--transport`: MCP server transport type (default: stdio)
 - `--host`: Host to bind to (default: 127.0.0.1, use 0.0.0.0 for remote access)
-- `--port`: Port to listen on (default: 8000)
+- `--port`: Port to listen on (default: 6000)
 
 **Alternative startup (from source):**
 ```bash
-uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse --port 8000
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse --port 6000
 ```
 
 **Configuration URL:** `http://ip:port/sse`
@@ -287,7 +305,7 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse -
   "disabled": false,
   "timeout": 60,
   "type": "sse",
-  "url": "http://ip:port/sse"
+  "url": "http://127.0.0.1:6000/sse"
 }
 ```
 
@@ -298,24 +316,48 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse -
   "disabled": false,
   "timeout": 60,
   "type": "sse",
-  "url": "http://ip:port/sse"
+  "url": "http://127.0.0.1:6000/sse"
 }
 ```
 
 **Cherry Studio:**
 - MCP → General → Type: Select "Server-Sent Events (sse)" from dropdown
+- URL: `http://127.0.0.1:6000/sse`
 
 ### Streamable HTTP
 
 Start the server in Streamable HTTP mode:
 
+**Step 1: Configure .env file in current directory**
 ```bash
-uvx seekdb-mcp-server --transport streamable-http --port 8000
+# Create .env file with your seekdb connection details
+cat > .env << EOF
+SEEKDB_HOST=your_host
+SEEKDB_PORT=2881
+SEEKDB_USER=your_username
+SEEKDB_PASSWORD=your_password
+SEEKDB_DATABASE=your_database
+EOF
 ```
+
+**Step 2: Load environment variables**
+```bash
+source .env
+```
+
+**Step 3: Start the server**
+```bash
+uvx seekdb-mcp-server --transport streamable-http --port 6000
+```
+
+**Parameters:**
+- `--transport`: MCP server transport type (default: stdio)
+- `--host`: Host to bind to (default: 127.0.0.1, use 0.0.0.0 for remote access)
+- `--port`: Port to listen on (default: 6000)
 
 **Alternative startup (from source):**
 ```bash
-uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport streamable-http --port 8000
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport streamable-http --port 6000
 ```
 
 **Configuration URL:** `http://ip:port/mcp`
@@ -329,7 +371,7 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport strea
   "disabled": false,
   "timeout": 60,
   "type": "streamableHttp",
-  "url": "http://ip:port/mcp"
+  "url": "http://127.0.0.1:6000/mcp"
 }
 ```
 
@@ -340,12 +382,13 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport strea
   "disabled": false,
   "timeout": 60,
   "type": "streamableHttp",
-  "url": "http://ip:port/mcp"
+  "url": "http://127.0.0.1:6000/mcp"
 }
 ```
 
 **Cherry Studio:**
 - MCP → General → Type: Select "Streamable HTTP (streamableHttp)" from dropdown
+- URL: `http://127.0.0.1:6000/mcp`
 
 ## 🔧 Advanced Features
 
