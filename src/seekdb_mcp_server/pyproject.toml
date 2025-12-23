@@ -1,6 +1,6 @@
 [project]
 name = "seekdb-mcp-server"
-version = "0.0.1"
+version = "0.0.2"
 description = "A Model Context Protocol (MCP) server that enables interaction with seekdb database. This server allows AI assistants to perform vector operations, manage collections, execute SQL queries and leverage AI functions through a controlled interface, making database exploration and analysis safer and more structured."
 readme = "README.md"
 license = { file = "LICENSE" }
