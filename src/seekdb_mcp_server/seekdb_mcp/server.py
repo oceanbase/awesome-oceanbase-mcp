@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error, connect
 import pyseekdb
-import pylibseekdb as seekdb
+
 import uuid
 from pydantic import BaseModel
 import argparse
@@ -24,6 +24,7 @@ load_dotenv()
 
 app = FastMCP("seekdb_mcp_server")
 client = None  # Lazy initialization
+seekdb = None  # Lazy initialization for embedded mode
 seekdb_memory_collection_name = "seekdb_memory_collection_v1"
 
 
@@ -46,7 +47,7 @@ db_conn_info = SeekdbConnection(
 
 def _init_seekdb():
     """Initialize seekdb client and database connection."""
-    global client
+    global client, seekdb
     if client is None:
         # If environment variables are configured, use them to initialize client
         if db_conn_info.user:
@@ -58,6 +59,8 @@ def _init_seekdb():
                 password=db_conn_info.password or "",
             )
         else:
+            import pylibseekdb
+            seekdb = pylibseekdb
             client = pyseekdb.Client()
             seekdb.open()
     return client
