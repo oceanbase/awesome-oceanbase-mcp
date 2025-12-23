@@ -263,18 +263,36 @@ seekdb MCP Server 支持三种传输模式：
 
 以 SSE 模式启动服务器：
 
+**步骤 1：在当前目录配置 .env 文件**
 ```bash
-uvx seekdb-mcp-server --transport sse --port 8000
+# 创建 .env 文件，填写 seekdb 连接信息
+cat > .env << EOF
+SEEKDB_HOST=your_host
+SEEKDB_PORT=2881
+SEEKDB_USER=your_username
+SEEKDB_PASSWORD=your_password
+SEEKDB_DATABASE=your_database
+EOF
+```
+
+**步骤 2：加载环境变量**
+```bash
+source .env
+```
+
+**步骤 3：启动服务器**
+```bash
+uvx seekdb-mcp-server --transport sse --port 6000
 ```
 
 **参数说明：**
 - `--transport`: MCP 服务器传输类型（默认：stdio）
 - `--host`: 绑定的主机（默认：127.0.0.1，使用 0.0.0.0 以允许远程访问）
-- `--port`: 监听端口（默认：8000）
+- `--port`: 监听端口（默认：6000）
 
 **从源码启动：**
 ```bash
-uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse --port 8000
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse --port 6000
 ```
 
 **配置 URL：** `http://ip:port/sse`
@@ -288,7 +306,7 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse -
   "disabled": false,
   "timeout": 60,
   "type": "sse",
-  "url": "http://ip:port/sse"
+  "url": "http://127.0.0.1:6000/sse"
 }
 ```
 
@@ -299,24 +317,48 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport sse -
   "disabled": false,
   "timeout": 60,
   "type": "sse",
-  "url": "http://ip:port/sse"
+  "url": "http://127.0.0.1:6000/sse"
 }
 ```
 
 **Cherry Studio：**
 - MCP → General → Type: 从下拉菜单选择 "Server-Sent Events (sse)"
+- URL: `http://127.0.0.1:6000/sse`
 
 ### Streamable HTTP
 
 以 Streamable HTTP 模式启动服务器：
 
+**步骤 1：在当前目录配置 .env 文件**
 ```bash
-uvx seekdb-mcp-server --transport streamable-http --port 8000
+# 创建 .env 文件，填写 seekdb 连接信息
+cat > .env << EOF
+SEEKDB_HOST=your_host
+SEEKDB_PORT=2881
+SEEKDB_USER=your_username
+SEEKDB_PASSWORD=your_password
+SEEKDB_DATABASE=your_database
+EOF
 ```
+
+**步骤 2：加载环境变量**
+```bash
+source .env
+```
+
+**步骤 3：启动服务器**
+```bash
+uvx seekdb-mcp-server --transport streamable-http --port 6000
+```
+
+**参数说明：**
+- `--transport`: MCP 服务器传输类型（默认：stdio）
+- `--host`: 绑定的主机（默认：127.0.0.1，使用 0.0.0.0 以允许远程访问）
+- `--port`: 监听端口（默认：6000）
 
 **从源码启动：**
 ```bash
-uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport streamable-http --port 8000
+uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport streamable-http --port 6000
 ```
 
 **配置 URL：** `http://ip:port/mcp`
@@ -330,7 +372,7 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport strea
   "disabled": false,
   "timeout": 60,
   "type": "streamableHttp",
-  "url": "http://ip:port/mcp"
+  "url": "http://127.0.0.1:6000/mcp"
 }
 ```
 
@@ -341,12 +383,13 @@ uv --directory path/to/seekdb_mcp_server run seekdb-mcp-server --transport strea
   "disabled": false,
   "timeout": 60,
   "type": "streamableHttp",
-  "url": "http://ip:port/mcp"
+  "url": "http://127.0.0.1:6000/mcp"
 }
 ```
 
 **Cherry Studio：**
 - MCP → General → Type: 从下拉菜单选择 "Streamable HTTP (streamableHttp)"
+- URL: `http://127.0.0.1:6000/mcp`
 
 ## 🔧 高级功能
 
