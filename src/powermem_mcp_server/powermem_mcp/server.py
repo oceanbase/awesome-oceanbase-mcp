@@ -57,7 +57,6 @@ def get_user_memory():
     """
     global _user_memory_instance
     if _user_memory_instance is None:
-        # auto_config() will automatically load configuration from .env files
         config = auto_config()
         _user_memory_instance = UserMemory(config=config)
     return _user_memory_instance
@@ -131,7 +130,8 @@ def add_memory(
     Add new memory to storage
 
     Args:
-        messages: Memory content, can be string, message dict, or message list
+        messages: Memory content, can be string, message dict, or message list.
+            IMPORTANT: Each message dict MUST contain 'role' and 'content' fields.
         user_id: User identifier
         agent_id: Agent identifier
         run_id: Run/session identifier
@@ -140,17 +140,117 @@ def add_memory(
 
     Returns:
         JSON formatted string
+
+    Examples:
+        # Example 1: Simple string message
+        add_memory(messages="用户喜欢吃西瓜", user_id="user123")
+
+        # Example 2: Single message dict (MUST include 'role' field)
+        add_memory(
+            messages={"role": "user", "content": "我喜欢吃西瓜"},
+            user_id="user123"
+        )
+
+        # Example 3: Conversation message list (recommended format)
+        add_memory(
+            messages=[
+                {"role": "user", "content": "你好，我叫张三"},
+                {"role": "assistant", "content": "你好张三！很高兴认识你"},
+                {"role": "user", "content": "我喜欢吃西瓜和苹果"}
+            ],
+            user_id="user123",
+            agent_id="agent1"
+        )
+
+        # Example 4: With metadata
+        add_memory(
+            messages=[{"role": "user", "content": "我的生日是1月1日"}],
+            user_id="user123",
+            metadata={"source": "chat", "importance": "high"}
+        )
+
+    Note:
+        - messages CANNOT be empty or blank
+        - Each dict message MUST have 'role' (user/assistant/system) and 'content' fields
+        - If 'role' is missing, it will be automatically set to 'user'
     """
-    memory = get_memory()
-    result = memory.add(
-        messages=messages,
-        user_id=user_id,
-        agent_id=agent_id,
-        run_id=run_id,
-        metadata=metadata,
-        infer=infer,
+    print(
+        f"[add_memory] Called with user_id={user_id}, agent_id={agent_id}, run_id={run_id}, infer={infer}"
     )
-    return format_memories_for_llm(result)
+    print(f"[add_memory] messages type: {type(messages).__name__}, content: {messages}")
+
+    # Validate messages is not empty
+    if not messages:
+        print(f"[add_memory] Warning: Empty messages received: {messages}")
+        return json.dumps(
+            {
+                "success": False,
+                "error": "messages parameter cannot be empty. Please provide conversation content to store.",
+            },
+            ensure_ascii=False,
+        )
+
+    # If messages is a string, check it's not blank
+    if isinstance(messages, str) and not messages.strip():
+        print(f"[add_memory] Warning: Blank string messages received")
+        return json.dumps(
+            {
+                "success": False,
+                "error": "messages content cannot be blank. Please provide valid conversation content.",
+            },
+            ensure_ascii=False,
+        )
+
+    # If messages is a list, check if it has valid content and ensure proper format
+    if isinstance(messages, list):
+        valid_messages = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                content = msg.get("content", "")
+                if content and str(content).strip():
+                    # Ensure 'role' field exists, default to 'user' if missing
+                    if "role" not in msg:
+                        msg = {**msg, "role": "user"}
+                        print(f"[add_memory] Added default role 'user' to message")
+                    valid_messages.append(msg)
+            elif isinstance(msg, str) and msg.strip():
+                # Convert string to proper message format
+                valid_messages.append({"role": "user", "content": msg})
+                print(f"[add_memory] Converted string message to dict format")
+
+        if not valid_messages:
+            print(f"[add_memory] Warning: List contains no valid messages: {messages}")
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": "messages list contains no valid content. Each message must have non-empty content.",
+                },
+                ensure_ascii=False,
+            )
+
+        messages = valid_messages
+        print(
+            f"[add_memory] Valid messages count: {len(messages)}, formatted: {messages}"
+        )
+
+    try:
+        memory = get_memory()
+        result = memory.add(
+            messages=messages,
+            user_id=user_id,
+            agent_id=agent_id,
+            run_id=run_id,
+            metadata=metadata,
+            infer=infer,
+        )
+        print(f"[add_memory] Successfully added memory")
+        return format_memories_for_llm(result)
+    except Exception as e:
+        print(f"[add_memory] Error: {e}")
+        return json.dumps(
+            {"success": False, "error": f"Failed to add memory: {str(e)}"},
+            ensure_ascii=False,
+        )
 
 
 @mcp.tool()
@@ -344,7 +444,8 @@ def add_memory_with_profile(
     2. Extract user profile information using LLM and save it
 
     Args:
-        messages: Conversation content, can be string, message dict, or message list
+        messages: Conversation content, can be string, message dict, or message list.
+            IMPORTANT: Each message dict MUST contain 'role' and 'content' fields.
         user_id: User identifier (required for profile extraction)
         agent_id: Agent identifier
         run_id: Run/session identifier
@@ -365,20 +466,97 @@ def add_memory_with_profile(
         - profile_extracted: Whether profile was extracted
         - profile_content: Extracted profile text (when profile_type="content")
         - topics: Extracted structured topics (when profile_type="topics")
+
+    Examples:
+        # Example 1: Simple string message with user profile extraction
+        add_memory_with_profile(
+            messages="我叫张三，今年25岁，喜欢吃西瓜",
+            user_id="user123"
+        )
+
+        # Example 2: Single message dict (MUST include 'role' field)
+        add_memory_with_profile(
+            messages={"role": "user", "content": "我的爱好是打篮球和游泳"},
+            user_id="user123"
+        )
+
+        # Example 3: Conversation message list (recommended format)
+        add_memory_with_profile(
+            messages=[
+                {"role": "user", "content": "你好，我叫张三，今年25岁"},
+                {"role": "assistant", "content": "你好张三！很高兴认识你，25岁正是充满活力的年纪"},
+                {"role": "user", "content": "是的，我喜欢打篮球，周末经常和朋友一起运动"}
+            ],
+            user_id="user123",
+            agent_id="agent1"
+        )
+
+        # Example 4: With structured topic extraction
+        add_memory_with_profile(
+            messages=[{"role": "user", "content": "我住在北京，在一家科技公司工作"}],
+            user_id="user123",
+            profile_type="topics",
+            custom_topics='{"personal_info": {"location": "居住地", "occupation": "职业"}}'
+        )
+
+    Note:
+        - messages CANNOT be empty or blank
+        - user_id is REQUIRED for profile extraction
+        - Each dict message MUST have 'role' (user/assistant/system) and 'content' fields
+        - If 'role' is missing, it will be automatically set to 'user'
     """
-    user_memory = get_user_memory()
-    result = user_memory.add(
-        messages=messages,
-        user_id=user_id,
-        agent_id=agent_id,
-        run_id=run_id,
-        metadata=metadata,
-        infer=infer,
-        profile_type=profile_type,
-        custom_topics=custom_topics,
-        strict_mode=strict_mode,
+    print(
+        f"[add_memory_with_profile] Called with user_id={user_id}, agent_id={agent_id}, run_id={run_id}, infer={infer}, profile_type={profile_type}"
     )
-    return format_memories_for_llm(result)
+    print(
+        f"[add_memory_with_profile] messages type: {type(messages).__name__}, content: {messages}"
+    )
+
+    # Validate messages is not empty
+    if not messages:
+        print(f"[add_memory_with_profile] Warning: Empty messages received: {messages}")
+        return json.dumps(
+            {
+                "success": False,
+                "error": "messages parameter cannot be empty. Please provide conversation content to store.",
+            },
+            ensure_ascii=False,
+        )
+
+    # If messages is a string, check it's not blank
+    if isinstance(messages, str) and not messages.strip():
+        print(f"[add_memory_with_profile] Warning: Blank string messages received")
+        return json.dumps(
+            {
+                "success": False,
+                "error": "messages content cannot be blank. Please provide valid conversation content.",
+            },
+            ensure_ascii=False,
+        )
+
+    try:
+        user_memory = get_user_memory()
+        result = user_memory.add(
+            messages=messages,
+            user_id=user_id,
+            agent_id=agent_id,
+            run_id=run_id,
+            metadata=metadata,
+            infer=infer,
+            profile_type=profile_type,
+            custom_topics=custom_topics,
+            strict_mode=strict_mode,
+        )
+        print(
+            f"[add_memory_with_profile] Successfully added memory with profile for agent_id={agent_id}, user_id={user_id}, result={result}"
+        )
+        return format_memories_for_llm(result)
+    except Exception as e:
+        print(f"[add_memory_with_profile] Error: {e}")
+        return json.dumps(
+            {"success": False, "error": f"Failed to add memory with profile: {str(e)}"},
+            ensure_ascii=False,
+        )
 
 
 @mcp.tool()
@@ -452,7 +630,9 @@ def get_user_profile(user_id: str) -> str:
     user_memory = get_user_memory()
     result = user_memory.profile(user_id=user_id)
     if result is None:
-        return format_memories_for_llm({"error": f"Profile for user {user_id} not found"})
+        return format_memories_for_llm(
+            {"error": f"Profile for user {user_id} not found"}
+        )
     return format_memories_for_llm(result)
 
 
@@ -513,11 +693,15 @@ def delete_user_profile(user_id: str) -> str:
     """
     user_memory = get_user_memory()
     success = user_memory.delete_profile(user_id=user_id)
-    return format_memories_for_llm({
-        "success": success,
-        "user_id": user_id,
-        "message": f"Profile for user {user_id} deleted" if success else f"Profile for user {user_id} not found"
-    })
+    return format_memories_for_llm(
+        {
+            "success": success,
+            "user_id": user_id,
+            "message": f"Profile for user {user_id} deleted"
+            if success
+            else f"Profile for user {user_id} not found",
+        }
+    )
 
 
 @mcp.tool()
