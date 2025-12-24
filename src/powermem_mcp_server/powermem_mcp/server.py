@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*
+# -*- coding: UTF-8 -*-
 """
 PowerMem MCP Server
 
@@ -34,7 +34,7 @@ def get_memory():
     Get or create Memory instance
 
     Uses singleton pattern, automatically loads configuration from .env and creates Memory instance on first call
-    Similar to run_obdiag_command function in obdiag example, encapsulates underlying operations
+    Similar to run_powermem_command function in powermem example, encapsulates underlying operations
 
     create_memory() will automatically call auto_config() to load configuration, searches for .env files in:
     1. Current working directory's .env
@@ -143,20 +143,20 @@ def add_memory(
 
     Examples:
         # Example 1: Simple string message
-        add_memory(messages="用户喜欢吃西瓜", user_id="user123")
+        add_memory(messages="User likes watermelon", user_id="user123")
 
         # Example 2: Single message dict (MUST include 'role' field)
         add_memory(
-            messages={"role": "user", "content": "我喜欢吃西瓜"},
+            messages={"role": "user", "content": "I like watermelon"},
             user_id="user123"
         )
 
         # Example 3: Conversation message list (recommended format)
         add_memory(
             messages=[
-                {"role": "user", "content": "你好，我叫张三"},
-                {"role": "assistant", "content": "你好张三！很高兴认识你"},
-                {"role": "user", "content": "我喜欢吃西瓜和苹果"}
+                {"role": "user", "content": "Hello, my name is John"},
+                {"role": "assistant", "content": "Hello John! Nice to meet you"},
+                {"role": "user", "content": "I like watermelon and apples"}
             ],
             user_id="user123",
             agent_id="agent1"
@@ -164,7 +164,7 @@ def add_memory(
 
         # Example 4: With metadata
         add_memory(
-            messages=[{"role": "user", "content": "我的生日是1月1日"}],
+            messages=[{"role": "user", "content": "My birthday is January 1st"}],
             user_id="user123",
             metadata={"source": "chat", "importance": "high"}
         )
@@ -192,7 +192,7 @@ def add_memory(
 
     # If messages is a string, check it's not blank
     if isinstance(messages, str) and not messages.strip():
-        print(f"[add_memory] Warning: Blank string messages received")
+        print("[add_memory] Warning: Blank string messages received")
         return json.dumps(
             {
                 "success": False,
@@ -211,12 +211,12 @@ def add_memory(
                     # Ensure 'role' field exists, default to 'user' if missing
                     if "role" not in msg:
                         msg = {**msg, "role": "user"}
-                        print(f"[add_memory] Added default role 'user' to message")
+                        print("[add_memory] Added default role 'user' to message")
                     valid_messages.append(msg)
             elif isinstance(msg, str) and msg.strip():
                 # Convert string to proper message format
                 valid_messages.append({"role": "user", "content": msg})
-                print(f"[add_memory] Converted string message to dict format")
+                print("[add_memory] Converted string message to dict format")
 
         if not valid_messages:
             print(f"[add_memory] Warning: List contains no valid messages: {messages}")
@@ -243,7 +243,7 @@ def add_memory(
             metadata=metadata,
             infer=infer,
         )
-        print(f"[add_memory] Successfully added memory")
+        print("[add_memory] Successfully added memory")
         return format_memories_for_llm(result)
     except Exception as e:
         print(f"[add_memory] Error: {e}")
@@ -288,7 +288,7 @@ def search_memories(
         threshold=threshold,
         filters=filters,
     )
-    print(f"result of search_memories: {result}")
+    print(f"[search_memories] result: {result}")
     return format_memories_for_llm(result)
 
 
@@ -411,7 +411,6 @@ def list_memories(
     Returns:
         JSON formatted string
     """
-
     memory = get_memory()
     result = memory.get_all(
         user_id=user_id, agent_id=agent_id, run_id=run_id, limit=limit, offset=offset
@@ -470,22 +469,22 @@ def add_memory_with_profile(
     Examples:
         # Example 1: Simple string message with user profile extraction
         add_memory_with_profile(
-            messages="我叫张三，今年25岁，喜欢吃西瓜",
+            messages="My name is John, I am 25 years old, and I like watermelon",
             user_id="user123"
         )
 
         # Example 2: Single message dict (MUST include 'role' field)
         add_memory_with_profile(
-            messages={"role": "user", "content": "我的爱好是打篮球和游泳"},
+            messages={"role": "user", "content": "My hobbies are basketball and swimming"},
             user_id="user123"
         )
 
         # Example 3: Conversation message list (recommended format)
         add_memory_with_profile(
             messages=[
-                {"role": "user", "content": "你好，我叫张三，今年25岁"},
-                {"role": "assistant", "content": "你好张三！很高兴认识你，25岁正是充满活力的年纪"},
-                {"role": "user", "content": "是的，我喜欢打篮球，周末经常和朋友一起运动"}
+                {"role": "user", "content": "Hello, my name is John, I am 25 years old"},
+                {"role": "assistant", "content": "Hello John! Nice to meet you, 25 is a vibrant age"},
+                {"role": "user", "content": "Yes, I like playing basketball, I often exercise with friends on weekends"}
             ],
             user_id="user123",
             agent_id="agent1"
@@ -493,10 +492,10 @@ def add_memory_with_profile(
 
         # Example 4: With structured topic extraction
         add_memory_with_profile(
-            messages=[{"role": "user", "content": "我住在北京，在一家科技公司工作"}],
+            messages=[{"role": "user", "content": "I live in Beijing and work at a tech company"}],
             user_id="user123",
             profile_type="topics",
-            custom_topics='{"personal_info": {"location": "居住地", "occupation": "职业"}}'
+            custom_topics='{"personal_info": {"location": "residence", "occupation": "job title"}}'
         )
 
     Note:
@@ -525,7 +524,7 @@ def add_memory_with_profile(
 
     # If messages is a string, check it's not blank
     if isinstance(messages, str) and not messages.strip():
-        print(f"[add_memory_with_profile] Warning: Blank string messages received")
+        print("[add_memory_with_profile] Warning: Blank string messages received")
         return json.dumps(
             {
                 "success": False,
@@ -769,7 +768,11 @@ def main():
         transport = sys.argv[1]  # stdio, sse, streamable-http
 
     if len(sys.argv) > 2:
-        port = int(sys.argv[2])
+        try:
+            port = int(sys.argv[2])
+        except ValueError:
+            print(f"Invalid port number: {sys.argv[2]}, using default port 8000")
+            port = 8000
 
     # Start server based on transport method
     if transport == "stdio":
