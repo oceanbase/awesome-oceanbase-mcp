@@ -13,7 +13,7 @@ import sys
 from typing import Optional, Dict, Any, List, Union
 from datetime import datetime, date
 from fastmcp import FastMCP
-from powermem import create_memory
+from powermem import create_memory, auto_config
 from powermem.user_memory import UserMemory
 import json
 
@@ -57,7 +57,9 @@ def get_user_memory():
     """
     global _user_memory_instance
     if _user_memory_instance is None:
-        _user_memory_instance = UserMemory()
+        # auto_config() will automatically load configuration from .env files
+        config = auto_config()
+        _user_memory_instance = UserMemory(config=config)
     return _user_memory_instance
 
 
