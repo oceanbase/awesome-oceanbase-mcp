@@ -11,7 +11,6 @@
 - [前提条件](#-前提条件)
 - [安装](#-安装)
   - [安装 uv](#安装-uv推荐)
-  - [安装 seekdb](#安装-seekdb)
   - [安装 seekdb mcp server](#安装-seekdb-mcp-server)
 - [配置](#%EF%B8%8F-配置)
 - [快速开始](#-快速开始)
@@ -105,8 +104,14 @@ seekdb 支持两种部署模式：
   - 支持的操作系统: Linux (glibc >= 2.28)
   - 支持的 Python 版本: 3.11 到 3.13 (pyseekdb), CPython 3.8 到 3.14 (pylibseekdb)
   - 支持的架构: x86_64, aarch64
+  - 部署方式: 使用 `pyseekdb` SDK 部署
 
 - **客户端/服务器模式**: 连接到已部署的 seekdb
+  - 使用 `yum install` 部署
+  - 在容器环境中部署
+  - 使用 [OceanBase Desktop](https://www.oceanbase.ai/docs/deploy-overview/) 部署（GUI 应用）
+
+详细部署说明请参阅 [seekdb 部署概述](https://www.oceanbase.ai/docs/deploy-overview/)。
 
 ## 🚀 安装
 
@@ -126,24 +131,6 @@ pip install uv
 ```
 
 安装完成后，重启终端或运行 `source ~/.bashrc`（或相应的配置文件）以确保 `uvx` 可用。
-
-### 安装 seekdb
-
-seekdb 可以作为嵌入式库安装。使用 pip 安装：
-
-```bash
-# 安装 pyseekdb（推荐，包含嵌入式 seekdb）
-pip install pyseekdb
-
-# 或使用镜像加速安装
-pip install pyseekdb -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-如果提示 pip 版本过低，请先升级 pip：
-
-```bash
-pip install --upgrade pip
-```
 
 ### 安装 seekdb mcp server
 

@@ -11,7 +11,6 @@ A Model Context Protocol (MCP) server that enables interaction with seekdb datab
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
   - [Install uv](#install-uv-recommended)
-  - [Install seekdb](#install-seekdb)
   - [Install seekdb mcp server](#install-seekdb-mcp-server)
 - [Configuration](#%EF%B8%8F-configuration)
 - [Quickstart](#-quickstart)
@@ -105,8 +104,15 @@ seekdb supports two deployment modes:
   - Supported OS: Linux (glibc >= 2.28)
   - Supported Python: 3.11 to 3.13 (pyseekdb), CPython 3.8 to 3.14 (pylibseekdb)
   - Supported Architecture: x86_64, aarch64
+  - Deployment: Deploy using the `pyseekdb` SDK
 
 - **Client/Server Mode**: Connect to a deployed seekdb
+  - Deploy using `yum install`
+  - Deploy in a container environment
+  - Deploy using [OceanBase Desktop](https://www.oceanbase.ai/docs/deploy-overview/) (GUI application)
+
+For detailed deployment instructions, see the [seekdb Deployment Overview](https://www.oceanbase.ai/docs/deploy-overview/).
+
 ## 🚀 Installation
 
 ### Install uv (recommended)
@@ -125,24 +131,6 @@ pip install uv
 ```
 
 After installation, restart your terminal or run `source ~/.bashrc` (or equivalent) to ensure `uvx` is available.
-
-### Install seekdb
-
-seekdb can be installed as an embedded library. Use pip to install:
-
-```bash
-# Install pyseekdb (recommended, includes embedded seekdb)
-pip install pyseekdb
-
-# Or use a mirror for faster installation
-pip install pyseekdb -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-If prompted that the pip version is too low, upgrade pip first:
-
-```bash
-pip install --upgrade pip
-```
 
 ### Install seekdb mcp server
 
