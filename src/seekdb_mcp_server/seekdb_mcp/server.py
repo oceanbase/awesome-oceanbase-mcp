@@ -68,7 +68,7 @@ def _init_seekdb():
 
 
 def _embed_mode_execute_sql(sql: str) -> str:
-    """Execute a sql on the seekdb"""
+    """Execute a sql on the embed mode seekdb"""
     logger.info(f"Calling tool: execute_sql with arguments: {sql}")
     result = {"sql": sql, "success": False, "data": None, "error": None}
     conn = None
@@ -100,7 +100,7 @@ def _embed_mode_execute_sql(sql: str) -> str:
 
 
 def _server_model_execute_sql(sql: str) -> str:
-    """Execute an SQL on the seekdb server."""
+    """Execute a sql on the server mode seekdb"""
     logger.info(f"Calling tool: execute_sql11  with arguments: {sql}")
     result = {"sql": sql, "success": False, "rows": 0, "columns": None, "data": None, "error": None}
     try:
@@ -126,13 +126,36 @@ def _server_model_execute_sql(sql: str) -> str:
 
 @app.tool()
 def execute_sql(sql: str) -> str:
-    if db_conn_info.host and db_conn_info.user and db_conn_info.database:
+    """
+    Execute a SQL statement on the seekdb database.
+
+    This tool automatically selects the appropriate execution mode based on the
+    database connection configuration:
+    - Server mode: Used when host, user, and database are configured, connecting
+      to a remote seekdb server via MySQL protocol.
+    - Embed mode: Used when no remote connection info is provided, running seekdb
+      in embedded/local mode.
+
+    Args:
+        sql: The SQL statement to execute. Supports SELECT, INSERT, UPDATE, DELETE,
+             CREATE, DROP, and other standard SQL operations.
+
+    Returns:
+        A JSON string containing the execution result with the following fields:
+        - sql: The executed SQL statement
+        - success: Boolean indicating whether the execution was successful
+        - data: Query results (for SELECT statements) or None
+        - error: Error message if execution failed, otherwise None
+        - rows: Number of affected rows (server mode only)
+        - columns: Column names (server mode only, for SELECT statements)
+    """
+    if db_conn_info.user:
         return _server_model_execute_sql(sql)
     else:
         return _embed_mode_execute_sql(sql)
 
 
-@app.tool(name="get_current_time", description="Get current time")
+@app.tool()
 def get_current_time() -> str:
     """Get current time from seekdb database."""
     logger.info("Calling tool: get_current_time")
