@@ -84,6 +84,11 @@ This repository provides complete MCP servers for the OceanBase ecosystem:
 <td>Provides vector operations, collection management, SQL queries and AI functions for seekdb database</td>
 <td><a href="src/seekdb_mcp_server/README.md">📖 View</a></td>
 </tr>
+<tr>
+<td><strong>PowerMem MCP Server</strong></td>
+<td>Provides AI memory management capabilities, supporting memory storage, search, and intelligent retrieval with Ebbinghaus forgetting curve</td>
+<td><a href="src/powermem_mcp_server/README.md">📖 View</a></td>
+</tr>
 </tbody>
 </table>
 
