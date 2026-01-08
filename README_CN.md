@@ -79,6 +79,11 @@ Model Context Protocol (MCP) 是一个开放协议，旨在实现 AI 应用程�
 <td>通过 obshell 实现 OceanBase 集群的创建、部署和运维管理</td>
 <td><a href="doc/obshell_mcp_server_CN.md">📖 查看</a></td>
 </tr>
+<tr>
+<td><strong>seekdb MCP Server</strong></td>
+<td>提供 seekdb 数据库的向量操作、集合管理、SQL 查询和 AI 功能</td>
+<td><a href="src/seekdb_mcp_server/README_CN.md">📖 查看</a></td>
+</tr>
 </tbody>
 </table>
 

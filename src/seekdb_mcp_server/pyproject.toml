@@ -1,0 +1,55 @@
+[project]
+name = "seekdb-mcp-server"
+version = "0.0.4"
+description = "A Model Context Protocol (MCP) server that enables interaction with seekdb database. This server allows AI assistants to perform vector operations, manage collections, execute SQL queries and leverage AI functions through a controlled interface, making database exploration and analysis safer and more structured."
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+keywords = [
+    "seekdb",
+    "mcp",
+]
+requires-python = ">=3.11,<3.13" # ≥ 3.11 required by pyseekdb
+dependencies = [
+    "mcp>=1.13.1",
+    "fastmcp>=2.12.0",
+    "mysql-connector-python>=9.1.0",
+    "SQLAlchemy>=2.0.32",
+    "beautifulsoup4>=4.13.5",
+    "pydantic>=2.11.7",
+    "python-dotenv>=1.1.1",
+    "certifi>=2022.12.7",
+    "pyseekdb>=1.0.0b2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0",
+    "pytest>=7.0.0"
+]
+
+[project.scripts]
+seekdb-mcp-server = "seekdb_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Tool configurations
+[tool.uv]
+# Default configuration for basic installation
+index-url = "https://pypi.org/simple"
+extra-index-url = ["https://download.pytorch.org/whl/cpu"]
+index-strategy = "unsafe-best-match"
+
+[tool.uv.pip]
+# Force use of precompiled wheels to avoid compilation issues
+# only-binary = ["numpy"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
