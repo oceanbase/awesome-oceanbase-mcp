@@ -445,7 +445,7 @@ def oceanbase_text_search(
 
 
 @app.tool()
-def oceabase_vector_search(
+def oceanbase_vector_search(
     table_name: str,
     vector_data: list[float],
     vec_column_name: str = "vector",
@@ -467,7 +467,7 @@ def oceabase_vector_search(
         output_column_name: Returned table fields.
     """
     logger.info(
-        f"Calling tool: oceabase_vector_search  with arguments: {table_name}, {vector_data[:10]}, {vec_column_name}"
+        f"Calling tool: oceanbase_vector_search  with arguments: {table_name}, {vector_data[:10]}, {vec_column_name}"
     )
     client = ObVecClient(
         uri=db_conn_info.host + ":" + str(db_conn_info.port),
