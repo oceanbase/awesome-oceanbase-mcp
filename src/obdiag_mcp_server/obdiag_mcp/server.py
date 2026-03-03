@@ -140,7 +140,9 @@ async def obdiag_display_list(cluster_name: str = None) -> str:
 
 
 @mcp.tool()
-async def obdiag_display_run(scene: str, env_dict: dict = None, cluster_name: str = None) -> str:
+async def obdiag_display_run(
+    scene: str, env_dict: dict = None, cluster_name: str = None
+) -> str:
     """
     obdiag 集群信息查询功能，执行获取的指令列表，需要功能来自obdiag_display_list的返回结果。只需要返回obdiag_display_list结果
     :param scene: 指令名，来自obdiag_display_list的返回结果，如 'obdiag display scene run --scene=observer.all_tenant',则赋值 scene=observer.all_tenant
