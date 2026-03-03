@@ -9,7 +9,7 @@ obdiag (OceanBase Diagnostic Tool) MCP Server.
 在使用 obdiag MCP Server 之前，请确保：
 
 1. **已安装 obdiag**：服务器需要 obdiag 已安装并可通过 `obdiag` 命令访问。
-2. **配置文件存在**：obdiag 配置文件应存在于 `~/.obdiag/config.yml`。
+2. **配置文件存在**：`~/.obdiag/` 目录下至少存在一个 obdiag 配置文件（如 `config.yml`）。
 
 安装obdiag请参考:
 
@@ -46,14 +46,26 @@ Claude Desktop config example:
 ```
 
 
+## 多集群支持
+
+当存在多个 OceanBase 集群时，可将每个集群的配置分别放在 `~/.obdiag/` 下的独立 `.yml` 文件中（如 `ob_test.yml`、`ob_prod.yml`）。通过 `cluster_name` 参数（文件名前缀，不含 `.yml`）指定要操作的集群。
+
+- 先调用 **obdiag_cluster_list** 获取可用集群名称
+- 需要时在其他工具中传入 `cluster_name`（如 `ob_test`）
+- 不传 `cluster_name` 时使用默认的 `config.yml`
+
 ## 可用工具
 
 obdiag MCP Server 提供以下诊断工具：
 
+- **obdiag_cluster_list**：列出可用的集群配置名称（`~/.obdiag/` 下的文件名前缀，已排除 `ai.yml`）
 - **obdiag_check_run**：执行集群巡检并返回巡检报告
 - **obdiag_analyze_log**：分析集群日志，找出发生过的错误信息
 - **obdiag_display_list**：查询可用的诊断命令并返回支持的指令列表
 - **obdiag_display_run**：执行特定的诊断命令，支持可选的环境变量
+- **obdiag_gather_log**：收集集群日志，支持时间范围、grep、scope 等过滤参数
+
+除 `obdiag_cluster_list` 外，其余工具均支持可选的 `cluster_name` 参数以指定目标集群。
 
 ## 社区
 
