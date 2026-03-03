@@ -19,6 +19,9 @@ import subprocess
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 mcp = FastMCP("OBDiag MCP Server")
 
+OBDIAG_CONFIG_DIR = os.path.expanduser("~/.obdiag")
+EXCLUDED_CONFIG_FILES = ["ai.yml"]
+
 
 # 确认obdiag是否安装,是否存在 obdiag 命令
 def check_obdiag_installed():
@@ -29,14 +32,52 @@ def check_config_exist():
     return Path(os.path.expanduser("~/.obdiag/config.yml")).exists()
 
 
-def run_obdiag_command(command: str, silent=True) -> str:
+def get_available_cluster_names():
+    """
+    获取可用的集群配置名称列表（文件名前缀，不含 .yml）
+    排除 ai.yml 等非集群配置文件
+    """
+    config_dir = Path(OBDIAG_CONFIG_DIR)
+    if not config_dir.exists():
+        return []
+    clusters = []
+    for f in config_dir.glob("*.yml"):
+        if f.name.lower() not in EXCLUDED_CONFIG_FILES:
+            clusters.append(f.stem)
+    return sorted(clusters)
+
+
+def resolve_config_path(cluster_name):
+    """
+    将 cluster_name（文件前缀）解析为完整配置文件路径
+    支持输入 ob_test 或 ob_test.yml，均解析为 ~/.obdiag/ob_test.yml
+    """
+    if not cluster_name or not str(cluster_name).strip():
+        return None
+    name = str(cluster_name).strip()
+    if name.lower().endswith(".yml"):
+        name = name[:-4]
+    config_path = os.path.join(OBDIAG_CONFIG_DIR, "{}.yml".format(name))
+    return config_path if os.path.exists(config_path) else None
+
+
+def run_obdiag_command(command: str, silent=True, cluster_name=None) -> str:
     """
     运行 obdiag 命令并返回结果
     :param command: 完整的 obdiag 命令
     :param silent: 是否静默执行
+    :param cluster_name: 集群配置文件名前缀，如 ob_test 表示使用 ob_test.yml
     :return: 指令执行的输出结果
     """
     try:
+        if cluster_name:
+            config_path = resolve_config_path(cluster_name)
+            if not config_path:
+                available = get_available_cluster_names()
+                return "Error: cluster config not found for '{}'. Available clusters: {}".format(
+                    cluster_name, ", ".join(available) if available else "none"
+                )
+            command += " -c {}".format(config_path)
         if silent:
             command += " --inner_config obdiag.logger.silent=True"
         else:
@@ -55,39 +96,56 @@ def run_obdiag_command(command: str, silent=True) -> str:
 
 
 @mcp.tool()
-async def obdiag_check_run() -> str:
+async def obdiag_cluster_list() -> str:
+    """
+    列出可用的集群配置名称列表，用于在其他工具中指定 cluster_name 参数
+    返回 ~/.obdiag/ 目录下所有 .yml 配置文件的文件名前缀（不含 .yml），已排除 ai.yml
+    例如：ob_test.yml 对应 cluster_name=ob_test，config.yml 对应 cluster_name=config
+    :return: 可用集群名称列表，格式为逗号分隔的字符串
+    """
+    clusters = get_available_cluster_names()
+    if not clusters:
+        return "No cluster config found in ~/.obdiag/. Please add .yml config files (e.g. config.yml)."
+    return "Available clusters: " + ", ".join(clusters)
+
+
+@mcp.tool()
+async def obdiag_check_run(cluster_name: str = None) -> str:
     """
     巡检集群，并返回巡检报告
+    :param cluster_name: 集群配置文件名前缀，可选。如 ob_test 表示使用 ~/.obdiag/ob_test.yml。不传则使用默认 config.yml
     :return: 指令执行的输出结果
     """
-    return run_obdiag_command("obdiag check run")
+    return run_obdiag_command("obdiag check run", cluster_name=cluster_name)
 
 
 @mcp.tool()
-async def obdiag_analyze_log() -> str:
+async def obdiag_analyze_log(cluster_name: str = None) -> str:
     """
     分析集群日志，找出发生过的错误信息并返回
+    :param cluster_name: 集群配置文件名前缀，可选。如 ob_test 表示使用 ~/.obdiag/ob_test.yml。不传则使用默认 config.yml
     :return: 指令执行的输出结果
     """
-    return run_obdiag_command("obdiag analyze log")
+    return run_obdiag_command("obdiag analyze log", cluster_name=cluster_name)
 
 
 @mcp.tool()
-async def obdiag_display_list() -> str:
+async def obdiag_display_list(cluster_name: str = None) -> str:
     """
-    obdiag 集群信息查询功能功能，返回支持的指令列表
+    obdiag 集群信息查询功能，返回支持的指令列表
+    :param cluster_name: 集群配置文件名前缀，可选。如 ob_test 表示使用 ~/.obdiag/ob_test.yml。不传则使用默认 config.yml
     :return: 支持的指令列表
     """
-
-    return run_obdiag_command("obdiag display scene list")
+    return run_obdiag_command("obdiag display scene list", cluster_name=cluster_name)
 
 
 @mcp.tool()
-async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
+async def obdiag_display_run(scene: str, env_dict: dict = None, cluster_name: str = None) -> str:
     """
     obdiag 集群信息查询功能，执行获取的指令列表，需要功能来自obdiag_display_list的返回结果。只需要返回obdiag_display_list结果
     :param scene: 指令名，来自obdiag_display_list的返回结果，如 'obdiag display scene run --scene=observer.all_tenant',则赋值 scene=observer.all_tenant
     :param env_dict: 环境变量，来自obdiag_display_list的返回结果,只有在要求填入env的时候才需要赋值，如 'oobdiag display scene run --scene=observer.index --env database_name=test --env table_name=test',则赋值 env_dict={'database_name':'test','table_name':'test'}
+    :param cluster_name: 集群配置文件名前缀，可选。如 ob_test 表示使用 ~/.obdiag/ob_test.yml。不传则使用默认 config.yml
     :return: 洞察结果
     """
     if env_dict is None:
@@ -98,11 +156,11 @@ async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
             env_name = env
             env_value = env_dict[env]
             cmd += " --env {}={}".format(env_name, env_value)
-    return run_obdiag_command(cmd, silent=False)
+    return run_obdiag_command(cmd, silent=False, cluster_name=cluster_name)
 
 
 @mcp.tool()
-async def obdiag_gather_log(var: str) -> str:
+async def obdiag_gather_log(var: str, cluster_name: str = None) -> str:
     """
     obdiag 收集集群日志，根据需求添加参数或者默认不加任何参数收集日志
     :param var: 可以根据不同的需求使用不同的参数：
@@ -112,10 +170,11 @@ async def obdiag_gather_log(var: str) -> str:
     4.选择收集的OceanBase集群日志类型使用--scope参数，可配置的值为：observer、election、rootservice、all，默认值为all，例如obdiag gather log --scope=all
     5.选择存储结果的本地路径使用--store_dir参数，默认值为当前目录，例如obdiag gather log --store_dir=/home/obdiag/log
     6.远端节点在日志收集过程中产生的临时文件存储路径使用--temp_dir参数，默认值为/tmp，例如obdiag gather log --temp_dir=/home/obdiag/log
+    :param cluster_name: 集群配置文件名前缀，可选。如 ob_test 表示使用 ~/.obdiag/ob_test.yml。不传则使用默认 config.yml
     :return: 指令执行的输出结果
     """
     cmd = "obdiag gather log {}".format(var)
-    return run_obdiag_command(cmd, silent=True)
+    return run_obdiag_command(cmd, silent=True, cluster_name=cluster_name)
 
 
 # 启动 MCP 服务
