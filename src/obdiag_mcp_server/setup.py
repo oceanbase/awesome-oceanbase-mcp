@@ -46,7 +46,7 @@ def get_requirements():
 
 setup(
     name="obdiag-mcp",
-    version="0.0.3",
+    version="0.0.4",
     description="OBDiag MCP Server - Model Context Protocol server for OceanBase Diagnostic Tool",
     long_description=read_readme(),
     long_description_content_type="text/markdown",

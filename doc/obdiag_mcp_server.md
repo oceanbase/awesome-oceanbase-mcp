@@ -9,7 +9,7 @@ English | [简体中文](obdiag_mcp_server_CN.md)
 Before using the obdiag MCP Server, please ensure:
 
 1. **obdiag is installed**: The server requires obdiag to be installed and accessible via the `obdiag` command.
-2. **Configuration file exists**: The obdiag configuration file should exist at `~/.obdiag/config.yml`.
+2. **Configuration file exists**: At least one obdiag configuration file should exist in `~/.obdiag/` (e.g. `config.yml`).
 
 For obdiag installation, please refer to:
 
@@ -46,14 +46,26 @@ Claude Desktop config example:
 }
 ```
 
+## Multi-Cluster Support
+
+When you have multiple OceanBase clusters, place each cluster's config as a separate `.yml` file in `~/.obdiag/` (e.g. `ob_test.yml`, `ob_prod.yml`). Use the `cluster_name` parameter (file prefix without `.yml`) to specify which cluster to operate on.
+
+- Call **obdiag_cluster_list** first to get available cluster names
+- Pass `cluster_name` (e.g. `ob_test`) to other tools when needed
+- If `cluster_name` is omitted, the default `config.yml` is used
+
 ## Available Tools
 
 The obdiag MCP Server provides the following diagnostic tools:
 
+- **obdiag_cluster_list**: List available cluster config names (file prefixes in `~/.obdiag/`, excluding `ai.yml`)
 - **obdiag_check_run**: Execute cluster inspection and return inspection report
 - **obdiag_analyze_log**: Analyze cluster logs to find error messages that have occurred
 - **obdiag_display_list**: Query available diagnostic commands and return supported command list
 - **obdiag_display_run**: Execute specific diagnostic commands with optional environment variables
+- **obdiag_gather_log**: Collect cluster logs with optional filters (time range, grep, scope, etc.)
+
+All tools except `obdiag_cluster_list` accept an optional `cluster_name` parameter to target a specific cluster.
 
 ## Community
 
