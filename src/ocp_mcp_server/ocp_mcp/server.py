@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 from pydantic import BaseModel
-import ocp_tool
+
+from ocp_mcp import ocp_tool
 
 
 logger = logging.getLogger(__name__)

@@ -16,6 +16,7 @@ cd awesome-oceanbase-mcp/src/ocp_mcp_server
 #### 2. 安装 Python 包管理器并创建虚拟环境
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 uv venv
 source .venv/bin/activate  # 在Windows系统上执行 `.venv\Scripts\activate`
 ```
