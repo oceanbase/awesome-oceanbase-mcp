@@ -37,11 +37,12 @@ def main() -> None:
     transport = args.transport
     logger.info(f"Starting OCP MCP server with {transport} mode...")
 
+    run_kwargs: dict = {}
     if transport in {"sse", "streamable-http"}:
-        app.settings.host = args.host
-        app.settings.port = args.port
+        run_kwargs["host"] = args.host
+        run_kwargs["port"] = args.port
 
-    app.run(transport=transport)
+    app.run(transport=transport, **run_kwargs)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,9 @@
-"""OCP API client with signature authentication."""
+"""OCP API client with AK/SK signature authentication.
+
+Signature rules per OCP doc: toSignString = HttpMethod + "\\n" + Md5Payload + "\\n"
++ ContentType + "\\n" + RequestDate + "\\n" + Host + "\\n" + OCP-Headers + "\\n"
++ PathAndQueryParams. Sign with BASE64(HMAC-SHA1(AccessKeySecret, string-to-sign)).
+"""
 
 import base64
 import hashlib
@@ -14,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class OCPClient:
-    """OCP API client with signature authentication."""
+    """OCP API client with AK/SK signature authentication."""
 
     def __init__(
         self,
@@ -27,9 +32,9 @@ class OCPClient:
         Initialize OCP client.
 
         Args:
-            host: OCP server host (e.g., "127.0.0.1:8080")
-            access_key_id: Access key ID
-            access_key_secret: Access key secret
+            host: OCP server host (e.g. "127.0.0.1:8080" or "http://xxx:8080")
+            access_key_id: Access key ID (AK)
+            access_key_secret: Access key secret (SK)
             timeout: Request timeout in seconds
         """
         if not host:
@@ -43,10 +48,15 @@ class OCPClient:
                 "access_key_secret parameter is required and cannot be None or empty"
             )
 
-        self.host = host
+        raw = host.strip()
+        if raw.startswith("http://"):
+            raw = raw[7:]
+        elif raw.startswith("https://"):
+            raw = raw[8:]
+        self.host = raw.rstrip("/")
         self.access_key_id = access_key_id
         self.access_key_secret = access_key_secret
-        self.base_url = f"http://{host}" if not host.startswith("http") else host
+        self.base_url = f"http://{self.host}"
         self.client = httpx.Client(timeout=timeout)
 
     def _get_rfc_date(self) -> str:
@@ -180,11 +190,8 @@ class OCPClient:
         if headers is None:
             headers = {}
 
-        # Set default headers
-        if json is not None:
-            headers["Content-Type"] = "application/json"
+        headers.setdefault("Content-Type", "application/json")
 
-        # Add OCP origin header
         headers["x-ocp-origin"] = "mcp-server"
 
         # Prepare body
@@ -214,7 +221,17 @@ class OCPClient:
         headers["Date"] = rfc_date
 
         # Make request
-        url = f"{self.base_url}{path}"
+        if params:
+            sorted_params = sorted(params.items())
+            encoded = [
+                f"{quote(str(k), safe='')}={quote(str(v), safe='')}"
+                for k, v in sorted_params
+            ]
+            url = f"{self.base_url}{path}?{'&'.join(encoded)}"
+            request_params = None
+        else:
+            url = f"{self.base_url}{path}"
+            request_params = None
 
         logger.debug(
             f"Making {method} request to {url}" + (" (binary)" if return_binary else "")
@@ -225,7 +242,7 @@ class OCPClient:
         response = self.client.request(
             method=method,
             url=url,
-            params=params,
+            params=request_params,
             content=body,
             headers=headers,
         )
