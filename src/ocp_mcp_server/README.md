@@ -73,7 +73,7 @@ Add the following to your MCP client configuration file:
         "ocp_mcp_server"
       ],
       "env": {
-        "OCP_URL": "localhost:8080",
+        "OCP_URL": "your_ocp_url",
         "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
         "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
       }
@@ -102,6 +102,42 @@ cd ocp_mcp/ && python3 -m server --transport sse --port 8000
 
 **Configuration URL:** `http://ip:port/sse`
 
+Add the following to your MCP client configuration file:
+
+```json
+{
+  "mcpServers": {
+    "sse-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "sse",
+      "url": "http://ip:port/sse"
+    }
+  }
+}
+```
+
+When not using uv to start the server, configure `OCP_URL`, `OCP_ACCESS_KEY_ID`, and `OCP_ACCESS_KEY_SECRET` in your client or environment.
+
+```json
+{
+  "mcpServers": {
+    "sse-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "sse",
+      "url": "http://ip:port/sse",
+      "env": {
+        "OCP_URL": "your_ocp_url",
+        "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
+        "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
+      }
+    }
+  }
+}
+```
 ### Streamable HTTP Mode
 
 Start the Streamable HTTP mode server:
@@ -117,27 +153,40 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 
 **Configuration URL:** `http://ip:port/mcp`
 
-#### Client Configuration Examples
+Add the following to your MCP client configuration file:
 
-**VSCode Plugin Cline:**
 ```json
-"streamable-ob": {
-  "autoApprove": [],
-  "disabled": false,
-  "timeout": 60,
-  "type": "streamableHttp",
-  "url": "http://ip:port/mcp"
+{
+  "mcpServers": {
+    "streamable-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": "http://ip:port/mcp"
+    }
+  }
 }
 ```
 
-**Cursor:**
+When not using uv to start the server, configure `OCP_URL`, `OCP_ACCESS_KEY_ID`, and `OCP_ACCESS_KEY_SECRET` in your client or environment.
+
 ```json
-"streamable-ob": {
-  "autoApprove": [],
-  "disabled": false,
-  "timeout": 60,
-  "type": "streamableHttp", // "type": "http" is also acceptable
-  "url": "http://ip:port/mcp"
+{
+  "mcpServers": {
+    "streamable-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": "http://ip:port/mcp",
+      "env": {
+        "OCP_URL": "your_ocp_url",
+        "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
+        "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
+      }
+    }
+  }
 }
 ```
 
@@ -212,7 +261,7 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
 
 When you need help, you can find developers and other community members at [https://github.com/oceanbase/awesome-oceanbase-mcp/](https://github.com/oceanbase/awesome-oceanbase-mcp/).
 
-When you discover project issues, please create a new issue on the [issues](https://github.com/oceanbase/awesome-oceanbase-mcp) page.
+When you discover project issues, please create a new issue on the [issues](https://github.com/oceanbase/awesome-oceanbase-mcp/issues) page.
 
 ## License
 
