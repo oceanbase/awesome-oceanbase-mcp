@@ -21,7 +21,7 @@ uv venv
 source .venv/bin/activate  # 在Windows系统上执行 `.venv\Scripts\activate`
 ```
 
-#### 3. 配置环境（可选）
+#### 3. 配置环境
 如果你想使用 `.env` 文件进行配置：
 ```bash
 cp .env.template .env
@@ -39,7 +39,7 @@ export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
 uv pip install .
 ```
 
-### 配置
+### 配置环境变量 （可选）
 
 在.env配置 OCP 连接信息：
 
@@ -68,7 +68,7 @@ OCP MCP Server 支持三种传输模式：
         "ocp_mcp_server"
       ],
       "env": {
-        "OCP_URL": "localhost:8080",
+        "OCP_URL": "your_ocp_url",
         "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
         "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
       }
@@ -92,10 +92,26 @@ uv run ocp_mcp_server --transport sse --port 8000
 
 **替代启动方式（不使用 uv）:**
 ```bash
-cd ocp_mcp/ && python3 -m server --transport sse --port 8000
+python3 -m ocp_mcp.server --transport sse --port 8000
 ```
 
 **配置 URL:** `http://ip:port/sse`
+
+在你的 MCP 客户端配置文件中添加以下内容：
+
+```json
+{
+  "mcpServers": {
+    "sse-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "sse",
+      "url": "http://ip:port/sse"
+    }
+  }
+}
+```
 
 ### Streamable HTTP 模式
 
@@ -107,32 +123,24 @@ uv run ocp_mcp_server --transport streamable-http --port 8000
 
 **替代启动方式（不使用 uv）:**
 ```bash
-cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
+python3 -m ocp_mcp.server --transport streamable-http --port 8000
 ```
 
 **配置 URL:** `http://ip:port/mcp`
 
-#### 客户端配置示例
+在你的 MCP 客户端配置文件中添加以下内容：
 
-**VSCode 插件 Cline:**
 ```json
-"streamable-ob": {
-  "autoApprove": [],
-  "disabled": false,
-  "timeout": 60,
-  "type": "streamableHttp",
-  "url": "http://ip:port/mcp"
-}
-```
-
-**Cursor:**
-```json
-"streamable-ob": {
-  "autoApprove": [],
-  "disabled": false,
-  "timeout": 60,
-  "type": "streamableHttp", // "type": "http" 也是可以的
-  "url": "http://ip:port/mcp"
+{
+  "mcpServers": {
+    "streamable-ob": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": "http://ip:port/mcp"
+    }
+  }
 }
 ```
 
