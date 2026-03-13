@@ -22,7 +22,7 @@ uv venv
 source .venv/bin/activate  # On Windows: `.venv\Scripts\activate`
 ```
 
-#### 3. Configure Environment (Optional)
+#### 3. Configure Environment 
 
 If you want to use a `.env` file for configuration:
 
@@ -97,7 +97,7 @@ uv run ocp_mcp_server --transport sse --port 8000
 
 **Alternative startup method (without uv):**
 ```bash
-cd ocp_mcp/ && python3 -m server --transport sse --port 8000
+python3 -m ocp_mcp.server --transport sse --port 8000
 ```
 
 **Configuration URL:** `http://ip:port/sse`
@@ -118,26 +118,6 @@ Add the following to your MCP client configuration file:
 }
 ```
 
-When not using uv to start the server, configure `OCP_URL`, `OCP_ACCESS_KEY_ID`, and `OCP_ACCESS_KEY_SECRET` in your client or environment.
-
-```json
-{
-  "mcpServers": {
-    "sse-ob": {
-      "autoApprove": [],
-      "disabled": false,
-      "timeout": 60,
-      "type": "sse",
-      "url": "http://ip:port/sse",
-      "env": {
-        "OCP_URL": "your_ocp_url",
-        "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
-        "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
-      }
-    }
-  }
-}
-```
 ### Streamable HTTP Mode
 
 Start the Streamable HTTP mode server:
@@ -148,7 +128,7 @@ uv run ocp_mcp_server --transport streamable-http --port 8000
 
 **Alternative startup method (without uv):**
 ```bash
-cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
+python3 -m ocp_mcp.server --transport streamable-http --port 8000
 ```
 
 **Configuration URL:** `http://ip:port/mcp`
@@ -164,27 +144,6 @@ Add the following to your MCP client configuration file:
       "timeout": 60,
       "type": "streamableHttp",
       "url": "http://ip:port/mcp"
-    }
-  }
-}
-```
-
-When not using uv to start the server, configure `OCP_URL`, `OCP_ACCESS_KEY_ID`, and `OCP_ACCESS_KEY_SECRET` in your client or environment.
-
-```json
-{
-  "mcpServers": {
-    "streamable-ob": {
-      "autoApprove": [],
-      "disabled": false,
-      "timeout": 60,
-      "type": "streamableHttp",
-      "url": "http://ip:port/mcp",
-      "env": {
-        "OCP_URL": "your_ocp_url",
-        "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
-        "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
-      }
     }
   }
 }

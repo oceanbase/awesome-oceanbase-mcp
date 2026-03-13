@@ -21,7 +21,7 @@ uv venv
 source .venv/bin/activate  # 在Windows系统上执行 `.venv\Scripts\activate`
 ```
 
-#### 3. 配置环境（可选）
+#### 3. 配置环境
 如果你想使用 `.env` 文件进行配置：
 ```bash
 cp .env.template .env
@@ -92,7 +92,7 @@ uv run ocp_mcp_server --transport sse --port 8000
 
 **替代启动方式（不使用 uv）:**
 ```bash
-cd ocp_mcp/ && python3 -m server --transport sse --port 8000
+python3 -m ocp_mcp.server --transport sse --port 8000
 ```
 
 **配置 URL:** `http://ip:port/sse`
@@ -112,26 +112,6 @@ cd ocp_mcp/ && python3 -m server --transport sse --port 8000
   }
 }
 ```
-不使用 uv 启动时，配置文件需要配置环境变量 OCP_URL，OCP_ACCESS_KEY_ID，OCP_ACCESS_KEY_SECRET 。
-
-```json
-{
-  "mcpServers": {
-    "sse-ob": {
-      "autoApprove": [],
-      "disabled": false,
-      "timeout": 60,
-      "type": "sse",
-      "url": "http://ip:port/sse",
-      "env": {
-        "OCP_URL": "your_ocp_url",
-        "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
-        "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
-      }
-    }
-  }
-}
-```
 
 ### Streamable HTTP 模式
 
@@ -143,7 +123,7 @@ uv run ocp_mcp_server --transport streamable-http --port 8000
 
 **替代启动方式（不使用 uv）:**
 ```bash
-cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
+python3 -m ocp_mcp.server --transport streamable-http --port 8000
 ```
 
 **配置 URL:** `http://ip:port/mcp`
@@ -159,27 +139,6 @@ cd ocp_mcp/ && python3 -m server --transport streamable-http --port 8000
       "timeout": 60,
       "type": "streamableHttp",
       "url": "http://ip:port/mcp"
-    }
-  }
-}
-```
-
-不使用 uv 启动时，配置文件需要配置环境变量OCP_URL，OCP_ACCESS_KEY_ID，OCP_ACCESS_KEY_SECRET 。
-
-```json
-{
-  "mcpServers": {
-    "streamable-ob": {
-      "autoApprove": [],
-      "disabled": false,
-      "timeout": 60,
-      "type": "streamableHttp",
-      "url": "http://ip:port/mcp",
-      "env": {
-        "OCP_URL": "your_ocp_url",
-        "OCP_ACCESS_KEY_ID": "your_ocp_access_key_id",
-        "OCP_ACCESS_KEY_SECRET": "your_ocp_access_key_secret"
-      }
     }
   }
 }
