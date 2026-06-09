@@ -38,16 +38,14 @@ def get_requirements():
         except ImportError:
             # Manual fallback for Python 3.10
             requirements = [
-                "powermem>=0.1.0",
-                "fastmcp>=1.0",
-                "uvicorn>=0.27.1",
+                "powermem[mcp,seekdb]==1.1.3",
             ]
     return requirements
 
 
 setup(
     name="powermem-mcp",
-    version="0.1.0",
+    version="1.1.3",
     description="PowerMem MCP Server - Model Context Protocol server for PowerMem memory management",
     long_description=read_readme(),
     long_description_content_type="text/markdown",

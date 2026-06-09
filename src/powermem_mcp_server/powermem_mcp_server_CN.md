@@ -4,16 +4,25 @@ PowerMem MCP Server - 用于 PowerMem 内存管理的模型上下文协议服务
 
 [English](README.md) | 简体中文
 
+## 安装
+
+推荐直接使用 `uvx` 运行；发布后的 `powermem-mcp` 包会自动安装所需的 PowerMem 运行依赖。
+
+```shell
+uvx powermem-mcp --help
+```
+
+如果需要固定安装到本地环境：
+
+```shell
+pip install powermem-mcp
+```
+
 ## 前置条件
 
 在使用 PowerMem MCP Server 之前，请确保：
 
-1. **已安装 PowerMem**：服务器需要 PowerMem 已安装。您可以通过以下方式安装：
-   ```shell
-   pip install powermem
-   ```
-
-2. **配置文件存在**：在工作目录或项目根目录创建 `.env` 文件，包含 PowerMem 配置。服务器会自动在以下位置搜索 `.env` 文件：
+1. **配置文件存在**：在工作目录或项目根目录创建 `.env` 文件，包含 PowerMem 配置。服务器会自动在以下位置搜索 `.env` 文件：
    - 当前工作目录的 `.env`
    - 项目根目录的 `.env`
    - `examples/configs/.env`
