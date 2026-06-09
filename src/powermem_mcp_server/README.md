@@ -4,6 +4,20 @@ PowerMem MCP Server - Model Context Protocol server for PowerMem memory manageme
 
 English | [简体中文](powermem_mcp_server_CN.md)
 
+## Installation
+
+Run directly with `uvx`; the published `powermem-mcp` package installs the required PowerMem runtime dependencies automatically.
+
+```shell
+uvx powermem-mcp --help
+```
+
+For a persistent local installation:
+
+```shell
+pip install powermem-mcp
+```
+
 ## Startup
 
 ### Support for multiple types of MCP
