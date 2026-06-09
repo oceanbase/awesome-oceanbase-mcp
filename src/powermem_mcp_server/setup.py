@@ -39,8 +39,6 @@ def get_requirements():
             # Manual fallback for Python 3.10
             requirements = [
                 "powermem[mcp,seekdb]==1.1.3",
-                "fastmcp>=1.0",
-                "uvicorn>=0.27.1",
             ]
     return requirements
 
