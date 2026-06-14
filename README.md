@@ -27,6 +27,7 @@ English | [简体中文](README_CN.md)
 ## 🔍 What is MCP?
 
 The Model Context Protocol (MCP) is an open protocol designed to enable seamless integration between AI applications and external data sources and tools. It provides a standardized way for AI models to access the contextual information and capabilities they need.
+- [Helium MCP](https://github.com/connerlambden/helium-mcp) — Real-time news with 37-dimension bias scoring, ML options pricing, and live market data. [Interactive demo](https://connerlambden.github.io/helium-news-explorer/) · [REST API](https://heliumtrades.com/mcp-page/)
 
 ## 🚀 Quick Start
 
