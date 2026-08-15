@@ -9,6 +9,7 @@ English | [简体中文](README_CN.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-green.svg)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[Xquik](https://github.com/Xquik-dev/x-twitter-scraper)
 
 </div>
 
@@ -109,7 +110,7 @@ We highly value community feedback and contributions!
 If you encounter any issues during usage:
 
 1. First check the documentation for the corresponding MCP server
-2. Search [existing Issues](https://github.com/oceanbase/mcp-oceanbase/issues) to confirm if the issue is known
+2. Search [existing Issues](https://github.com/oceanbase/awesome-oceanbase-mcp/issues) to confirm if the issue is known
 3. If it's a new issue, please [create a new Issue](https://github.com/oceanbase/mcp-oceanbase/issues/new)
 
 ### 🤝 Contributing
