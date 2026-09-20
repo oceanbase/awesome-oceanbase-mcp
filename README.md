@@ -25,6 +25,7 @@ English | [简体中文](README_CN.md)
 - 🚀 **Ready to Use**: Simple configuration to get started
 
 ## 🔍 What is MCP?
+- [Continuum-AI-Corp/OrcaReplay](https://github.com/Continuum-AI-Corp/OrcaReplay) — ships an MCP server exposing the local trace library.
 
 The Model Context Protocol (MCP) is an open protocol designed to enable seamless integration between AI applications and external data sources and tools. It provides a standardized way for AI models to access the contextual information and capabilities they need.
 
