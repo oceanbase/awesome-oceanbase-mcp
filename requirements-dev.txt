@@ -4,4 +4,5 @@ pytest-cov>=4.1.0
 black>=23.0.0
 isort>=5.12.0
 mypy>=1.0.0
-ruff>=0.11.2
+# Ruff 0.16 expands the default lint rules; retain the existing CI rule set.
+ruff>=0.11.2,<0.16
