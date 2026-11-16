@@ -31,7 +31,6 @@
     "shx": "^0.4.0",
     "typescript": "^5.0.4"
   },
-  "repository": "git@code.alipay.com:oceanbase/mcp-server-oceanbase.git",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   }
